@@ -429,7 +429,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
           Nenhum aluno cadastrado nesta turma de aplicação.
         </div>
       ) : (
-        <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', overflowX: 'auto' }}>
+        <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)' }}>
           
           <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '11.5px', color: '#1e40af', lineHeight: 1.5 }}>
             <i className="ti ti-info-circle"></i>
@@ -505,111 +505,146 @@ const NotasPage: React.FC<NotasPageProps> = ({
             </button>
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--text-muted)', fontWeight: 800 }}>
-                <th style={{ padding: '10px', textAlign: 'left', minWidth: '200px' }}>Aluno</th>
-                {atividadesFiltradas.map(at => {
-                  const colors = badgeColor(at.tipo);
+          {/* Container de Rolagem da Tabela com Cabeçalho Congelado */}
+          <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 290px)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
+            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' }}>
+              <thead>
+                <tr style={{ color: 'var(--text-muted)', fontWeight: 800 }}>
+                  <th style={{ 
+                    padding: '12px 10px', 
+                    textAlign: 'left', 
+                    minWidth: '200px',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10,
+                    background: '#fff',
+                    boxShadow: 'inset 0 -2px 0 var(--border)'
+                  }}>
+                    Aluno
+                  </th>
+                  {atividadesFiltradas.map(at => {
+                    const colors = badgeColor(at.tipo);
+                    return (
+                      <th 
+                        key={at.id} 
+                        style={{ 
+                          padding: '12px 10px', 
+                          textAlign: 'center', 
+                          width: '120px',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 10,
+                          background: '#fff',
+                          boxShadow: 'inset 0 -2px 0 var(--border)'
+                        }}
+                      >
+                        <div className="nota-col-label" style={{ display: 'inline-block', padding: '6px 10px', borderRadius: '10px', background: colors.bg, color: colors.text, minWidth: '110px' }}>
+                          <div style={{ fontWeight: 700, color: colors.text, fontSize: '13px' }}>{at.nome}</div>
+                          {at.descricao && <div className="nt-tip">{at.descricao}</div>}
+                        </div>
+                      </th>
+                    );
+                  })}
+                  <th style={{ 
+                    padding: '12px 10px', 
+                    textAlign: 'center', 
+                    width: '120px', 
+                    background: '#fafafa',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10,
+                    boxShadow: 'inset 0 -2px 0 var(--border)'
+                  }}>
+                    Média Bimestral
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {alunosFiltrados.map((aluno, alunoIdx) => {
+                  const media = calcularMediaAluno(aluno.id);
+                  const mediaNum = media !== '—' ? Number(media) : null;
+                  const isFail = mediaNum !== null && mediaNum < 6.0;
+
                   return (
-                    <th key={at.id} style={{ padding: '10px', textAlign: 'center', width: '120px' }}>
-                      <div className="nota-col-label" style={{ display: 'inline-block', padding: '6px 10px', borderRadius: '10px', background: colors.bg, color: colors.text, minWidth: '110px' }}>
-                        <div style={{ fontWeight: 700, color: colors.text, fontSize: '13px' }}>{at.nome}</div>
-                        {at.descricao && <div className="nt-tip">{at.descricao}</div>}
-                      </div>
-                    </th>
+                    <tr key={aluno.id} className="table-row-hover">
+                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-main)', borderBottom: '1px solid var(--border)' }}>{aluno.nome}</td>
+                      
+                      {atividadesFiltradas.map((at, atIdx) => {
+                        const eOcultavel = at.tipo === 'prova' || at.tipo === 'trabalho' || at.tipo === 'pluraal';
+                        const celulaOculta = eOcultavel && notasOcultas;
+
+                        const notaVal = obterNotaValor(aluno.id, at.id);
+                        const displayVal = celulaOculta ? '***' : (notaVal === '-1' ? '' : notaVal);
+                        const cellKey = `${aluno.id}_${at.id}`;
+                        const isSaving = !!savingCells[cellKey];
+                        const notaColors = getNotaCellColors(displayVal, celulaOculta);
+
+                        return (
+                          <td key={at.id} style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
+                            <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
+                              <input 
+                                key={celulaOculta ? 'oculto' : 'visivel'}
+                                id={`input-nota-${alunoIdx}-${atIdx}`}
+                                defaultValue={displayVal}
+                                disabled={celulaOculta}
+                                onBlur={(e) => {
+                                  if (!celulaOculta) {
+                                    salvarNota(aluno.id, at.id, e.target.value);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const proximoInput = document.getElementById(`input-nota-${alunoIdx + 1}-${atIdx}`);
+                                    if (proximoInput) {
+                                      (proximoInput as HTMLInputElement).focus();
+                                      (proximoInput as HTMLInputElement).select();
+                                    } else {
+                                      (e.target as HTMLInputElement).blur();
+                                    }
+                                  }
+                                }}
+                                placeholder={celulaOculta ? 'Oculto' : `0-${obterNotaMaxima(at.tipo)}`}
+                                style={{ 
+                                  width: '100%', 
+                                  textAlign: 'center', 
+                                  padding: '6px', 
+                                  border: `1px solid ${notaColors.border}`,
+                                  borderRadius: '8px', 
+                                  fontSize: '13px', 
+                                  fontWeight: 700,
+                                  background: notaColors.bg,
+                                  color: notaColors.text,
+                                  cursor: celulaOculta ? 'not-allowed' : 'text',
+                                  transition: 'background 160ms ease, border-color 160ms ease'
+                                }}
+                              />
+                              {isSaving && (
+                                <div style={{ position: 'absolute', top: '2px', right: '2px', fontSize: '9px' }}>⏳</div>
+                              )}
+                            </div>
+                          </td>
+                        );
+                      })}
+
+                      {/* Média Bimestral */}
+                      <td style={{ padding: '10px', textAlign: 'center', background: '#fafafa', fontWeight: 800, borderBottom: '1px solid var(--border)' }}>
+                        <span style={{ 
+                          color: isFail ? '#dc2626' : mediaNum !== null ? '#166534' : 'var(--text-muted)',
+                          background: isFail ? '#fee2e2' : mediaNum !== null ? '#dcfce7' : 'none',
+                          padding: mediaNum !== null ? '4px 10px' : '0',
+                          borderRadius: '6px',
+                          fontSize: '13px'
+                        }}>
+                          {media}
+                        </span>
+                      </td>
+                    </tr>
                   );
                 })}
-                <th style={{ padding: '10px', textAlign: 'center', width: '120px', background: '#fafafa' }}>
-                  Média Bimestral
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {alunosFiltrados.map((aluno, alunoIdx) => {
-                const media = calcularMediaAluno(aluno.id);
-                const mediaNum = media !== '—' ? Number(media) : null;
-                const isFail = mediaNum !== null && mediaNum < 6.0;
-
-                return (
-                  <tr key={aluno.id} style={{ borderBottom: '1px solid var(--border)' }} className="table-row-hover">
-                    <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-main)' }}>{aluno.nome}</td>
-                    
-                    {atividadesFiltradas.map((at, atIdx) => {
-                      const eOcultavel = at.tipo === 'prova' || at.tipo === 'trabalho' || at.tipo === 'pluraal';
-                      const celulaOculta = eOcultavel && notasOcultas;
-
-                      const notaVal = obterNotaValor(aluno.id, at.id);
-                      const displayVal = celulaOculta ? '***' : (notaVal === '-1' ? '' : notaVal);
-                      const cellKey = `${aluno.id}_${at.id}`;
-                      const isSaving = !!savingCells[cellKey];
-                      const notaColors = getNotaCellColors(displayVal, celulaOculta);
-
-                      return (
-                        <td key={at.id} style={{ padding: '6px', textAlign: 'center' }}>
-                          <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
-                            <input 
-                              key={celulaOculta ? 'oculto' : 'visivel'}
-                              id={`input-nota-${alunoIdx}-${atIdx}`}
-                              defaultValue={displayVal}
-                              disabled={celulaOculta}
-                              onBlur={(e) => {
-                                if (!celulaOculta) {
-                                  salvarNota(aluno.id, at.id, e.target.value);
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const proximoInput = document.getElementById(`input-nota-${alunoIdx + 1}-${atIdx}`);
-                                  if (proximoInput) {
-                                    (proximoInput as HTMLInputElement).focus();
-                                    (proximoInput as HTMLInputElement).select();
-                                  } else {
-                                    (e.target as HTMLInputElement).blur();
-                                  }
-                                }
-                              }}
-                              placeholder={celulaOculta ? 'Oculto' : `0-${obterNotaMaxima(at.tipo)}`}
-                              style={{ 
-                                width: '100%', 
-                                textAlign: 'center', 
-                                padding: '6px', 
-                                border: `1px solid ${notaColors.border}`,
-                                borderRadius: '8px', 
-                                fontSize: '13px', 
-                                fontWeight: 700,
-                                background: notaColors.bg,
-                                color: notaColors.text,
-                                cursor: celulaOculta ? 'not-allowed' : 'text',
-                                transition: 'background 160ms ease, border-color 160ms ease'
-                              }}
-                            />
-                            {isSaving && (
-                              <div style={{ position: 'absolute', top: '2px', right: '2px', fontSize: '9px' }}>⏳</div>
-                            )}
-                          </div>
-                        </td>
-                      );
-                    })}
-
-                    {/* Média Bimestral */}
-                    <td style={{ padding: '10px', textAlign: 'center', background: '#fafafa', fontWeight: 800 }}>
-                      <span style={{ 
-                        color: isFail ? '#dc2626' : mediaNum !== null ? '#166534' : 'var(--text-muted)',
-                        background: isFail ? '#fee2e2' : mediaNum !== null ? '#dcfce7' : 'none',
-                        padding: mediaNum !== null ? '4px 10px' : '0',
-                        borderRadius: '6px',
-                        fontSize: '13px'
-                      }}>
-                        {media}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
