@@ -21,7 +21,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   setSyncStatus,
 }) => {
   const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa'>('prova');
+  const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal'>('prova');
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
@@ -122,6 +122,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   const badgeColor = (t: string) => {
     if (t === 'prova') return { bg: '#fee2e2', text: '#991b1b' };
     if (t === 'trabalho') return { bg: '#eff6ff', text: '#1e40af' };
+    if (t === 'pluraal') return { bg: '#f3e8ff', text: '#6b21a8' };
     return { bg: '#f0fdf4', text: '#166534' };
   };
 
@@ -150,6 +151,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
               <select value={tipo} onChange={(e) => setTipo(e.target.value as any)}>
                 <option value="prova">📝 Prova / Exame</option>
                 <option value="trabalho">📚 Trabalho / Seminário</option>
+                <option value="pluraal">💜 Atividade PLURAAL</option>
                 <option value="qualitativa">🌟 Avaliação Qualitativa</option>
               </select>
             </div>

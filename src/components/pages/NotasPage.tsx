@@ -45,13 +45,24 @@ const NotasPage: React.FC<NotasPageProps> = ({
     return String(registro.nota);
   };
 
+  const obterNotaMaxima = (tipo: string): number => {
+    if (tipo === 'trabalho') return 6;
+    if (tipo === 'pluraal') return 1;
+    if (tipo === 'qualitativa') return 3;
+    return 10;
+  };
+
   // Salvar nota no Firestore com ID determinístico
   const salvarNota = async (alunoId: string, atividadeId: string, valorStr: string) => {
     if (!turmaId || !materiaId || !bimestreId) return;
     
+    const at = atividades.find(a => a.id === atividadeId);
+    const tipoAt = at ? at.tipo : '';
+    const notaMax = obterNotaMaxima(tipoAt);
+
     const valor = valorStr.trim() === '' ? null : Number(valorStr.replace(',', '.'));
-    if (valor !== null && (isNaN(valor) || valor < 0 || valor > 10)) {
-      alert('Por favor, informe uma nota válida entre 0 e 10.');
+    if (valor !== null && (isNaN(valor) || valor < 0 || valor > notaMax)) {
+      alert(`Por favor, informe uma nota válida entre 0 e ${notaMax} para atividades do tipo ${tipoAt.toUpperCase()}.`);
       return;
     }
 
@@ -64,12 +75,6 @@ const NotasPage: React.FC<NotasPageProps> = ({
     try {
       const docRef = doc(db, 'notas', docId);
       if (valor === null) {
-        // Se a nota foi apagada, podemos remover ou salvar como nula. Vamos salvar nula ou remover do Firestore
-        // Para simplificar, salvaremos com nota: -1 ou apenas atualizaremos para remover se o usuário preferir,
-        // mas setar nota: -1 ou deletar é ótimo. Vamos deletar ou setar valor nulo.
-        // Vamos apenas salvar com nota nula ou apenas ignorar. Uma ótima prática é deletar o doc se apagado.
-        // Mas para manter simples e robusto, vamos salvar como nula ou deletar.
-        // Vamos apenas deletar usando deleteDoc. Mas para simplificar a permissão de escrita, salvaremos como nota nula.
         await setDoc(docRef, {
           alunoId,
           atividadeId,
@@ -97,24 +102,64 @@ const NotasPage: React.FC<NotasPageProps> = ({
     }
   };
 
-  // Calcular média bimestral ponderada do aluno
+  // Calcular média bimestral do aluno baseado na soma direta das médias de Trabalho, PLURAAL e Qualitativa
   const calcularMediaAluno = (alunoId: string) => {
-    let somaProdutos = 0;
-    let somaPesos = 0;
-    let temNota = false;
+    if (atividadesFiltradas.length === 0) return '—';
 
+    // 1. Trabalho (máx. 6)
+    const trabalhos = atividadesFiltradas.filter(at => at.tipo === 'trabalho');
+    let notaTrabalho = 0;
+    if (trabalhos.length > 0) {
+      let soma = 0;
+      trabalhos.forEach(at => {
+        const notaStr = obterNotaValor(alunoId, at.id);
+        if (notaStr !== '' && Number(notaStr) >= 0) {
+          soma += Number(notaStr);
+        }
+      });
+      notaTrabalho = soma / trabalhos.length;
+    }
+
+    // 2. PLURAAL (máx. 1)
+    const pluraals = atividadesFiltradas.filter(at => at.tipo === 'pluraal');
+    let notaPluraal = 0;
+    if (pluraals.length > 0) {
+      let soma = 0;
+      pluraals.forEach(at => {
+        const notaStr = obterNotaValor(alunoId, at.id);
+        if (notaStr !== '' && Number(notaStr) >= 0) {
+          soma += Number(notaStr);
+        }
+      });
+      notaPluraal = soma / pluraals.length;
+    }
+
+    // 3. Qualitativa (máx. 3)
+    const qualitativas = atividadesFiltradas.filter(at => at.tipo === 'qualitativa');
+    let notaQualitativa = 0;
+    if (qualitativas.length > 0) {
+      let soma = 0;
+      qualitativas.forEach(at => {
+        const notaStr = obterNotaValor(alunoId, at.id);
+        if (notaStr !== '' && Number(notaStr) >= 0) {
+          soma += Number(notaStr);
+        }
+      });
+      notaQualitativa = soma / qualitativas.length;
+    }
+
+    // Se o aluno não tem nota lançada em nenhuma atividade, exibe '—'
+    let temAlgumaNota = false;
     atividadesFiltradas.forEach(at => {
       const notaStr = obterNotaValor(alunoId, at.id);
       if (notaStr !== '' && Number(notaStr) >= 0) {
-        const n = Number(notaStr);
-        somaProdutos += n * at.peso;
-        somaPesos += at.peso;
-        temNota = true;
+        temAlgumaNota = true;
       }
     });
 
-    if (!temNota || somaPesos === 0) return '—';
-    const media = somaProdutos / somaPesos;
+    if (!temAlgumaNota) return '—';
+
+    const media = notaTrabalho + notaPluraal + notaQualitativa;
     return media.toFixed(1);
   };
 
@@ -171,7 +216,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
         <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', overflowX: 'auto' }}>
           <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '11.5px', color: '#1e40af', lineHeight: 1.5 }}>
             <i className="ti ti-info-circle"></i>
-            <b>Dica de Lançamento:</b> Digite a nota na célula correspondente e pressione <b>Enter</b> ou clique fora (Tab) para salvar instantaneamente no banco de dados. Use notas de 0 a 10.
+            <b>Dica de Lançamento:</b> Digite a nota na célula correspondente e pressione <b>Enter</b> ou clique fora (Tab) para salvar instantaneamente no banco de dados. As notas possuem limite máximo de acordo com o tipo: Trabalho (até 6), PLURAAL (até 1) e Qualitativa (até 3).
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
@@ -181,8 +226,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
                 {atividadesFiltradas.map(at => (
                   <th key={at.id} style={{ padding: '10px', textAlign: 'center', width: '120px' }}>
                     <div style={{ color: 'var(--text-main)', fontWeight: 700 }}>{at.nome}</div>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                      {at.tipo.toUpperCase()} (p. {at.peso})
+                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                      {at.tipo.toUpperCase()} (máx. {obterNotaMaxima(at.tipo)})
                     </span>
                   </th>
                 ))}
@@ -209,7 +254,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
                       return (
                         <td key={at.id} style={{ padding: '6px', textAlign: 'center' }}>
-                          <div style={{ position: 'relative', display: 'inline-block', width: '70px' }}>
+                          <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
                             <input 
                               defaultValue={displayVal}
                               onBlur={(e) => salvarNota(aluno.id, at.id, e.target.value)}
@@ -218,7 +263,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                   (e.target as HTMLInputElement).blur();
                                 }
                               }}
-                              placeholder="—"
+                              placeholder={`0-${obterNotaMaxima(at.tipo)}`}
                               style={{ 
                                 width: '100%', 
                                 textAlign: 'center', 

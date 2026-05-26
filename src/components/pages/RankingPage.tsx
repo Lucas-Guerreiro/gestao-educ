@@ -19,29 +19,87 @@ const RankingPage: React.FC<RankingPageProps> = ({
   const [turmaId, setTurmaId] = useState('');
   const [filtroSerie, setFiltroSerie] = useState('');
 
-  // Calcular média global de um aluno
+  // Calcular média global de um aluno (média de suas médias bimestrais de todas as matérias/bimestres)
   const obterMediaGlobalAluno = (alunoId: string, alunoTurmaId: string) => {
     const t = turmas.find(x => x.id === alunoTurmaId);
     if (!t) return null;
 
     const ativsDaTurma = atividades.filter(at => at.turmaId === alunoTurmaId);
+    if (ativsDaTurma.length === 0) return null;
 
-    let somaProdutos = 0;
-    let somaPesos = 0;
-    let temNota = false;
+    // Identificar todas as matérias e bimestres que possuem atividades na turma
+    const materiaIds = Array.from(new Set(ativsDaTurma.map(at => at.materiaId)));
+    const bimestreIds = Array.from(new Set(ativsDaTurma.map(at => at.bimestreId)));
 
-    // Calcular notas
-    ativsDaTurma.forEach(at => {
-      const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
-      if (reg && reg.nota !== undefined && reg.nota >= 0) {
-        somaProdutos += reg.nota * at.peso;
-        somaPesos += at.peso;
-        temNota = true;
-      }
+    let somaMediasBimestrais = 0;
+    let qtdMediasBimestrais = 0;
+
+    materiaIds.forEach(matId => {
+      bimestreIds.forEach(bimId => {
+        const ativs = ativsDaTurma.filter(at => at.materiaId === matId && at.bimestreId === bimId);
+        if (ativs.length === 0) return;
+
+        // Calcular média desta matéria/bimestre
+        // 1. Trabalho (máx. 6)
+        const trabalhos = ativs.filter(at => at.tipo === 'trabalho');
+        let notaTrabalho = 0;
+        if (trabalhos.length > 0) {
+          let soma = 0;
+          trabalhos.forEach(at => {
+            const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+            if (reg && reg.nota !== undefined && reg.nota >= 0) {
+              soma += reg.nota;
+            }
+          });
+          notaTrabalho = soma / trabalhos.length;
+        }
+
+        // 2. PLURAAL (máx. 1)
+        const pluraals = ativs.filter(at => at.tipo === 'pluraal');
+        let notaPluraal = 0;
+        if (pluraals.length > 0) {
+          let soma = 0;
+          pluraals.forEach(at => {
+            const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+            if (reg && reg.nota !== undefined && reg.nota >= 0) {
+              soma += reg.nota;
+            }
+          });
+          notaPluraal = soma / pluraals.length;
+        }
+
+        // 3. Qualitativa (máx. 3)
+        const qualitativas = ativs.filter(at => at.tipo === 'qualitativa');
+        let notaQualitativa = 0;
+        if (qualitativas.length > 0) {
+          let soma = 0;
+          qualitativas.forEach(at => {
+            const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+            if (reg && reg.nota !== undefined && reg.nota >= 0) {
+              soma += reg.nota;
+            }
+          });
+          notaQualitativa = soma / qualitativas.length;
+        }
+
+        // Se tem ao menos uma nota lançada
+        let temAlgumaNota = false;
+        ativs.forEach(at => {
+          const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+          if (reg && reg.nota !== undefined && reg.nota >= 0) {
+            temAlgumaNota = true;
+          }
+        });
+
+        if (temAlgumaNota) {
+          somaMediasBimestrais += (notaTrabalho + notaPluraal + notaQualitativa);
+          qtdMediasBimestrais++;
+        }
+      });
     });
 
-    if (!temNota || somaPesos === 0) return null;
-    return somaProdutos / somaPesos;
+    if (qtdMediasBimestrais === 0) return null;
+    return somaMediasBimestrais / qtdMediasBimestrais;
   };
 
   // Filtrar alunos
