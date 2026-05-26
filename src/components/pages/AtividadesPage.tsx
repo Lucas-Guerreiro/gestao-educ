@@ -29,6 +29,11 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   const [descricao, setDescricao] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   
+  // Estados para Duplicação em Lote
+  const [isDuplicarModalOpen, setIsDuplicarModalOpen] = useState(false);
+  const [atividadeParaDuplicar, setAtividadeParaDuplicar] = useState<Atividade | null>(null);
+  const [turmasSelecionadas, setTurmasSelecionadas] = useState<string[]>([]);
+  
   // Filters state
   const [filtroTurma, setFiltroTurma] = useState('');
   const [filtroBimestre, setFiltroBimestre] = useState('');
@@ -97,16 +102,62 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
     setDescricao(ativ.descricao || '');
   };
 
-  const duplicar = (ativ: Atividade) => {
-    setEditingId(null);
-    setNome(ativ.nome);
-    setTipo(ativ.tipo);
-    setMateriaId(ativ.materiaId);
-    setBimestreId(ativ.bimestreId);
-    setPeso(ativ.peso);
-    setDescricao(ativ.descricao || '');
-    setTurmaId('');
-    alert(`Atividade "${ativ.nome}" copiada para o formulário! Agora selecione a nova Turma Vinculada e clique em Cadastrar.`);
+  const abrirDuplicarModal = (ativ: Atividade) => {
+    setAtividadeParaDuplicar(ativ);
+    setTurmasSelecionadas([]);
+    setIsDuplicarModalOpen(true);
+  };
+
+  const fecharDuplicarModal = () => {
+    setAtividadeParaDuplicar(null);
+    setTurmasSelecionadas([]);
+    setIsDuplicarModalOpen(false);
+  };
+
+  const handleToggleTurma = (tId: string) => {
+    setTurmasSelecionadas(prev => 
+      prev.includes(tId) ? prev.filter(id => id !== tId) : [...prev, tId]
+    );
+  };
+
+  const turmasDisponiveisParaDuplicar = React.useMemo(() => {
+    if (!atividadeParaDuplicar) return [];
+    const turmaOrigem = turmas.find(t => t.id === atividadeParaDuplicar.turmaId);
+    if (!turmaOrigem) return [];
+    return turmas.filter(t => t.escolaId === turmaOrigem.escolaId && t.id !== atividadeParaDuplicar.turmaId);
+  }, [atividadeParaDuplicar, turmas]);
+
+  const confirmarDuplicacaoLote = async () => {
+    if (!atividadeParaDuplicar || turmasSelecionadas.length === 0) {
+      alert('Por favor, selecione ao menos uma turma para duplicar a atividade.');
+      return;
+    }
+
+    setSyncStatus('saving');
+    try {
+      const batch = writeBatch(db);
+
+      turmasSelecionadas.forEach(tId => {
+        const docRef = doc(collection(db, 'atividades'));
+        batch.set(docRef, {
+          nome: atividadeParaDuplicar.nome,
+          tipo: atividadeParaDuplicar.tipo,
+          turmaId: tId,
+          materiaId: atividadeParaDuplicar.materiaId,
+          bimestreId: atividadeParaDuplicar.bimestreId,
+          peso: Number(atividadeParaDuplicar.peso),
+          descricao: (atividadeParaDuplicar.descricao || '').trim(),
+        });
+      });
+
+      await batch.commit();
+      setSyncStatus('ok');
+      alert(`Atividade duplicada com sucesso para ${turmasSelecionadas.length} turma(s)!`);
+      fecharDuplicarModal();
+    } catch (err) {
+      setSyncStatus('err');
+      alert('Erro ao duplicar atividades em lote: ' + (err as Error).message);
+    }
   };
 
   const deletar = async (id: string) => {
@@ -311,7 +362,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#bae6fd', color: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => duplicar(ativ)}>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#bae6fd', color: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => abrirDuplicarModal(ativ)}>
                       <i className="ti ti-copy"></i> Duplicar
                     </button>
                     <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => editar(ativ)}>
@@ -327,6 +378,139 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
           })()}
         </div>
       </div>
+
+      {isDuplicarModalOpen && atividadeParaDuplicar && (() => {
+        const mat = materias.find(m => m.id === atividadeParaDuplicar.materiaId);
+        const bim = bimestres.find(b => b.id === atividadeParaDuplicar.bimestreId);
+        const colors = badgeColor(atividadeParaDuplicar.tipo);
+
+        return (
+          <div className="sd-modal-overlay open" style={{ display: 'flex', alignItems: 'center' }}>
+            <div className="sd-modal" style={{ maxWidth: '520px', padding: '20px', borderRadius: '16px' }}>
+              <div className="sd-modal-header" style={{ marginBottom: '14px', paddingBottom: '10px' }}>
+                <div className="sd-modal-title" style={{ fontSize: '15px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <i className="ti ti-squares-filled" style={{ color: 'var(--primary)', fontSize: '18px' }}></i>
+                  Duplicar Atividade em Lote
+                </div>
+                <button 
+                  type="button" 
+                  onClick={fecharDuplicarModal}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--text-muted)' }}
+                >
+                  <i className="ti ti-x"></i>
+                </button>
+              </div>
+
+              {/* Card de Resumo da Atividade */}
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px', marginBottom: '14px' }}>
+                <div style={{ fontWeight: 800, fontSize: '13.5px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>{atividadeParaDuplicar.nome}</span>
+                  <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                    {atividadeParaDuplicar.tipo.toUpperCase()}
+                  </span>
+                </div>
+                {atividadeParaDuplicar.descricao && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    📝 {atividadeParaDuplicar.descricao}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '9.5px', background: '#eff6ff', color: '#1e40af', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                    📖 {mat ? mat.nome : '—'}
+                  </span>
+                  <span style={{ fontSize: '9.5px', background: '#eff6ff', color: '#1e40af', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                    📅 {bim ? bim.nome : '—'}
+                  </span>
+                  <span style={{ fontSize: '9.5px', background: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                    ⚖️ Peso: {atividadeParaDuplicar.peso}
+                  </span>
+                </div>
+              </div>
+
+              {/* Instruções */}
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: '1.4' }}>
+                Selecione as turmas adicionais para as quais deseja copiar esta atividade. O sistema criará as cópias de forma instantânea com todas as especificações acima.
+              </div>
+
+              {/* Lista de Checkboxes de Turmas */}
+              <div style={{ 
+                border: '1px solid var(--border)', 
+                borderRadius: '12px', 
+                padding: '10px 14px', 
+                maxHeight: '180px', 
+                overflowY: 'auto',
+                background: '#fff',
+                marginBottom: '18px'
+              }}>
+                {turmasDisponiveisParaDuplicar.length === 0 ? (
+                  <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12px', textAlign: 'center', padding: '16px 0' }}>
+                    Nenhuma outra turma cadastrada na mesma escola desta atividade.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {turmasDisponiveisParaDuplicar.map(turma => (
+                      <label 
+                        key={turma.id} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '10px', 
+                          cursor: 'pointer',
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          background: turmasSelecionadas.includes(turma.id) ? '#f5f3ff' : 'transparent',
+                          transition: 'background 0.2s ease'
+                        }}
+                      >
+                        <input 
+                          type="checkbox" 
+                          checked={turmasSelecionadas.includes(turma.id)}
+                          onChange={() => handleToggleTurma(turma.id)}
+                          style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                        />
+                        <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)' }}>
+                          {turma.nome}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Botões de Ação */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button 
+                  type="button" 
+                  className="btn" 
+                  onClick={fecharDuplicarModal}
+                  style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: 600 }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  className="btn pri" 
+                  onClick={confirmarDuplicacaoLote}
+                  disabled={turmasSelecionadas.length === 0}
+                  style={{ 
+                    padding: '8px 18px', 
+                    fontSize: '12.5px', 
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    opacity: turmasSelecionadas.length === 0 ? 0.6 : 1,
+                    cursor: turmasSelecionadas.length === 0 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <i className="ti ti-copy"></i>
+                  Duplicar em Lote ({turmasSelecionadas.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );
