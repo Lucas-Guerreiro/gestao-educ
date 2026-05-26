@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Atividade, Turma, Materia, Bimestre, Escola } from '@/types';
 
@@ -77,14 +77,25 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   };
 
   const deletar = async (id: string) => {
-    if (!confirm('Deseja realmente deletar esta atividade? Todas as notas associadas serão perdidas.')) return;
+    if (!confirm('Deseja realmente deletar esta atividade? Todas as notas associadas serão perdidas permanentemente.')) return;
     setSyncStatus('saving');
     try {
-      await deleteDoc(doc(db, 'atividades', id));
+      const batch = writeBatch(db);
+      
+      // 1. Deletar atividade
+      batch.delete(doc(db, 'atividades', id));
+      
+      // 2. Notas associadas
+      const notasSnap = await getDocs(query(collection(db, 'notas'), where('atividadeId', '==', id)));
+      for (const notaDoc of notasSnap.docs) {
+        batch.delete(doc(db, 'notas', notaDoc.id));
+      }
+      
+      await batch.commit();
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
-      alert('Erro ao deletar atividade: ' + (err as Error).message);
+      alert('Erro ao deletar atividade e suas notas: ' + (err as Error).message);
     }
   };
 
@@ -126,7 +137,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
               <label>Bimestre *</label>
               <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)}>
                 <option value="">— selecione —</option>
-                {bimestres.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
+                {bimestres.map(b => <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>)}
               </select>
             </div>
           </div>
@@ -212,7 +223,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                         📖 {mat ? mat.nome : '—'}
                       </span>
                       <span style={{ fontSize: '9px', background: '#eff6ff', color: '#1e40af', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                        📅 {bim ? bim.nome : '—'}
+                        📅 {bim ? `${bim.nome}${bim.ano ? ` (${bim.ano})` : ''}` : '—'}
                       </span>
                       <span style={{ fontSize: '9px', background: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
                         ⚖️ Peso: {ativ.peso}

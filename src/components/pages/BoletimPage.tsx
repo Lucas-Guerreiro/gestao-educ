@@ -32,6 +32,10 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
   const escola = turma ? escolas.find(e => e.id === turma.escolaId) : null;
   const materiasEscola = escola ? materias.filter(m => m.escolaId === escola.id) : [];
 
+  // Obter ano letivo a partir de bimestres
+  const anosBimestres = Array.from(new Set(bimestres.map(b => b.ano).filter(Boolean)));
+  const anoLetivoExibicao = anosBimestres.length > 0 ? anosBimestres.sort().join(' / ') : new Date().getFullYear();
+
   // Calcular média ponderada para o aluno, matéria e bimestre específicos
   const obterMediaBimestral = (materiaId: string, bimestreId: string) => {
     const ativs = atividades.filter(
@@ -120,7 +124,7 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
               </div>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: '11px', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '4px 10px', borderRadius: '6px', color: '#1e40af', fontWeight: 800 }}>
-                  ANO LETIVO: {new Date().getFullYear()}
+                  ANO LETIVO: {anoLetivoExibicao}
                 </span>
               </div>
             </div>
@@ -151,8 +155,8 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
                 <tr style={{ background: 'var(--dark)', color: '#fff', fontWeight: 800 }}>
                   <th style={{ padding: '12px', textAlign: 'left', borderRadius: '8px 0 0 0' }}>COMPONENTE CURRICULAR</th>
                   {bimestres.map(b => (
-                    <th key={b.id} style={{ padding: '12px', textAlign: 'center', width: '100px' }}>
-                      {b.nome.replace(' Bimestre', 'º B')}
+                    <th key={b.id} style={{ padding: '12px', textAlign: 'center', width: '110px' }}>
+                      {b.nome.replace(' Bimestre', 'º B')}{b.ano ? ` (${b.ano})` : ''}
                     </th>
                   ))}
                   <th style={{ padding: '12px', textAlign: 'center', width: '100px' }}>MÉDIA</th>

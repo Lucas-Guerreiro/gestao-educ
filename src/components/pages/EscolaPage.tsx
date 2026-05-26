@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Escola, Turma } from '@/types';
 
@@ -45,14 +45,111 @@ const EscolaPage: React.FC<EscolaPageProps> = ({ escolas, turmas, setSyncStatus 
   };
 
   const deletarEscola = async (id: string) => {
-    if (!confirm('Deseja realmente deletar esta escola? Todas as turmas associadas perderão o vínculo.')) return;
+    if (!confirm('Deseja realmente deletar esta escola? Todas as turmas, matérias, alunos, atividades, aulas, sequências didáticas e notas vinculadas serão excluídos permanentemente.')) return;
     setSyncStatus('saving');
     try {
-      await deleteDoc(doc(db, 'escolas', id));
+      const batch = writeBatch(db);
+      
+      // 1. Deletar a escola
+      batch.delete(doc(db, 'escolas', id));
+      
+      // 2. Buscar turmas vinculadas para deletar em cascata
+      const turmasSnap = await getDocs(query(collection(db, 'turmas'), where('escolaId', '==', id)));
+      for (const turmaDoc of turmasSnap.docs) {
+        const turmaId = turmaDoc.id;
+        batch.delete(doc(db, 'turmas', turmaId));
+        
+        // Alunos da turma
+        const alunosSnap = await getDocs(query(collection(db, 'alunos'), where('turmaId', '==', turmaId)));
+        for (const alunoDoc of alunosSnap.docs) {
+          batch.delete(doc(db, 'alunos', alunoDoc.id));
+          // Notas do aluno
+          const notasSnap = await getDocs(query(collection(db, 'notas'), where('alunoId', '==', alunoDoc.id)));
+          for (const notaDoc of notasSnap.docs) {
+            batch.delete(doc(db, 'notas', notaDoc.id));
+          }
+        }
+        
+        // Atividades da turma
+        const atividadesSnap = await getDocs(query(collection(db, 'atividades'), where('turmaId', '==', turmaId)));
+        for (const atividadeDoc of atividadesSnap.docs) {
+          batch.delete(doc(db, 'atividades', atividadeDoc.id));
+          // Notas da atividade
+          const notasSnap = await getDocs(query(collection(db, 'notas'), where('atividadeId', '==', atividadeDoc.id)));
+          for (const notaDoc of notasSnap.docs) {
+            batch.delete(doc(db, 'notas', notaDoc.id));
+          }
+        }
+        
+        // Capítulos da turma
+        const capitulosSnap = await getDocs(query(collection(db, 'capitulos'), where('turmaId', '==', turmaId)));
+        for (const capituloDoc of capitulosSnap.docs) {
+          batch.delete(doc(db, 'capitulos', capituloDoc.id));
+        }
+        
+        // Aulas da turma
+        const aulasSnap = await getDocs(query(collection(db, 'aulas'), where('turmaId', '==', turmaId)));
+        for (const aulaDoc of aulasSnap.docs) {
+          batch.delete(doc(db, 'aulas', aulaDoc.id));
+        }
+        
+        // Sequências didáticas da turma
+        const sdsSnap = await getDocs(query(collection(db, 'sequencias_didaticas'), where('turmaId', '==', turmaId)));
+        for (const sdDoc of sdsSnap.docs) {
+          batch.delete(doc(db, 'sequencias_didaticas', sdDoc.id));
+        }
+      }
+      
+      // 3. Buscar matérias vinculadas para deletar em cascata
+      const materiasSnap = await getDocs(query(collection(db, 'materias'), where('escolaId', '==', id)));
+      for (const materiaDoc of materiasSnap.docs) {
+        const materiaId = materiaDoc.id;
+        batch.delete(doc(db, 'materias', materiaId));
+        
+        // Atividades da matéria
+        const atividadesSnap = await getDocs(query(collection(db, 'atividades'), where('materiaId', '==', materiaId)));
+        for (const atividadeDoc of atividadesSnap.docs) {
+          batch.delete(doc(db, 'atividades', atividadeDoc.id));
+          const notasSnap = await getDocs(query(collection(db, 'notas'), where('atividadeId', '==', atividadeDoc.id)));
+          for (const notaDoc of notasSnap.docs) {
+            batch.delete(doc(db, 'notas', notaDoc.id));
+          }
+        }
+        
+        // Capítulos da matéria
+        const capitulosSnap = await getDocs(query(collection(db, 'capitulos'), where('materiaId', '==', materiaId)));
+        for (const capituloDoc of capitulosSnap.docs) {
+          batch.delete(doc(db, 'capitulos', capituloDoc.id));
+        }
+        
+        // Aulas da matéria
+        const aulasSnap = await getDocs(query(collection(db, 'aulas'), where('materiaId', '==', materiaId)));
+        for (const aulaDoc of aulasSnap.docs) {
+          batch.delete(doc(db, 'aulas', aulaDoc.id));
+        }
+        
+        // Sequências didáticas da matéria
+        const sdsSnap = await getDocs(query(collection(db, 'sequencias_didaticas'), where('materiaId', '==', materiaId)));
+        for (const sdDoc of sdsSnap.docs) {
+          batch.delete(doc(db, 'sequencias_didaticas', sdDoc.id));
+        }
+        
+        // Remover referência em professores
+        const professoresSnap = await getDocs(collection(db, 'professores'));
+        for (const profDoc of professoresSnap.docs) {
+          const profData = profDoc.data();
+          if (Array.isArray(profData.materias) && profData.materias.includes(materiaId)) {
+            const updated = profData.materias.filter((m: string) => m !== materiaId);
+            batch.update(doc(db, 'professores', profDoc.id), { materias: updated });
+          }
+        }
+      }
+      
+      await batch.commit();
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
-      alert('Erro ao deletar escola: ' + (err as Error).message);
+      alert('Erro ao deletar escola e seus vínculos: ' + (err as Error).message);
     }
   };
 
@@ -96,14 +193,63 @@ const EscolaPage: React.FC<EscolaPageProps> = ({ escolas, turmas, setSyncStatus 
   };
 
   const deletarTurma = async (id: string) => {
-    if (!confirm('Deseja realmente deletar esta turma?')) return;
+    if (!confirm('Deseja realmente deletar esta turma? Todos os alunos, atividades, aulas, capítulos, sequências didáticas e notas vinculados serão deletados permanentemente.')) return;
     setSyncStatus('saving');
     try {
-      await deleteDoc(doc(db, 'turmas', id));
+      const batch = writeBatch(db);
+      
+      // 1. Deletar a turma
+      batch.delete(doc(db, 'turmas', id));
+      
+      // 2. Alunos
+      const alunosSnap = await getDocs(query(collection(db, 'alunos'), where('turmaId', '==', id)));
+      for (const alunoDoc of alunosSnap.docs) {
+        batch.delete(doc(db, 'alunos', alunoDoc.id));
+        const notasSnap = await getDocs(query(collection(db, 'notas'), where('alunoId', '==', alunoDoc.id)));
+        for (const notaDoc of notasSnap.docs) {
+          batch.delete(doc(db, 'notas', notaDoc.id));
+        }
+      }
+      
+      // 3. Atividades
+      const atividadesSnap = await getDocs(query(collection(db, 'atividades'), where('turmaId', '==', id)));
+      for (const atividadeDoc of atividadesSnap.docs) {
+        batch.delete(doc(db, 'atividades', atividadeDoc.id));
+        const notasSnap = await getDocs(query(collection(db, 'notas'), where('atividadeId', '==', atividadeDoc.id)));
+        for (const notaDoc of notasSnap.docs) {
+          batch.delete(doc(db, 'notas', notaDoc.id));
+        }
+      }
+      
+      // 4. Capítulos
+      const capitulosSnap = await getDocs(query(collection(db, 'capitulos'), where('turmaId', '==', id)));
+      for (const capituloDoc of capitulosSnap.docs) {
+        batch.delete(doc(db, 'capitulos', capituloDoc.id));
+      }
+      
+      // 5. Aulas
+      const aulasSnap = await getDocs(query(collection(db, 'aulas'), where('turmaId', '==', id)));
+      for (const aulaDoc of aulasSnap.docs) {
+        batch.delete(doc(db, 'aulas', aulaDoc.id));
+      }
+      
+      // 6. Sequências didáticas
+      const sdsSnap = await getDocs(query(collection(db, 'sequencias_didaticas'), where('turmaId', '==', id)));
+      for (const sdDoc of sdsSnap.docs) {
+        batch.delete(doc(db, 'sequencias_didaticas', sdDoc.id));
+      }
+      
+      // 7. Notas órfãs (caso existam notas soltas por turmaId)
+      const notasOrfasSnap = await getDocs(query(collection(db, 'notas'), where('turmaId', '==', id)));
+      for (const notaDoc of notasOrfasSnap.docs) {
+        batch.delete(doc(db, 'notas', notaDoc.id));
+      }
+      
+      await batch.commit();
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
-      alert('Erro ao deletar turma: ' + (err as Error).message);
+      alert('Erro ao deletar turma e seus vínculos: ' + (err as Error).message);
     }
   };
 

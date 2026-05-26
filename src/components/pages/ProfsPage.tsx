@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Professor, Materia, Escola } from '@/types';
 
@@ -59,14 +59,25 @@ const ProfsPage: React.FC<ProfsPageProps> = ({ professores, materias, escolas, s
   };
 
   const deletar = async (id: string) => {
-    if (!confirm('Deseja realmente deletar este professor?')) return;
+    if (!confirm('Deseja realmente deletar este professor? Todos os planejamentos de Sequências Didáticas associados a ele serão excluídos permanentemente.')) return;
     setSyncStatus('saving');
     try {
-      await deleteDoc(doc(db, 'professores', id));
+      const batch = writeBatch(db);
+      
+      // 1. Deletar professor
+      batch.delete(doc(db, 'professores', id));
+      
+      // 2. Sequências didáticas associadas
+      const sdsSnap = await getDocs(query(collection(db, 'sequencias_didaticas'), where('professorId', '==', id)));
+      for (const sdDoc of sdsSnap.docs) {
+        batch.delete(doc(db, 'sequencias_didaticas', sdDoc.id));
+      }
+      
+      await batch.commit();
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
-      alert('Erro ao deletar professor: ' + (err as Error).message);
+      alert('Erro ao deletar professor e seus planejamentos: ' + (err as Error).message);
     }
   };
 

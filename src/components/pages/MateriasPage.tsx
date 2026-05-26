@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Materia, Escola } from '@/types';
 
@@ -50,14 +50,63 @@ const MateriasPage: React.FC<MateriasPageProps> = ({ materias, escolas, setSyncS
   };
 
   const deletar = async (id: string) => {
-    if (!confirm('Deseja realmente deletar esta matéria?')) return;
+    if (!confirm('Deseja realmente deletar esta matéria? Todas as atividades, capítulos, aulas, sequências didáticas e notas vinculadas serão excluídos permanentemente.')) return;
     setSyncStatus('saving');
     try {
-      await deleteDoc(doc(db, 'materias', id));
+      const batch = writeBatch(db);
+      
+      // 1. Deletar a matéria
+      batch.delete(doc(db, 'materias', id));
+      
+      // 2. Atividades
+      const atividadesSnap = await getDocs(query(collection(db, 'atividades'), where('materiaId', '==', id)));
+      for (const atividadeDoc of atividadesSnap.docs) {
+        batch.delete(doc(db, 'atividades', atividadeDoc.id));
+        const notasSnap = await getDocs(query(collection(db, 'notas'), where('atividadeId', '==', atividadeDoc.id)));
+        for (const notaDoc of notasSnap.docs) {
+          batch.delete(doc(db, 'notas', notaDoc.id));
+        }
+      }
+      
+      // 3. Capítulos
+      const capitulosSnap = await getDocs(query(collection(db, 'capitulos'), where('materiaId', '==', id)));
+      for (const capituloDoc of capitulosSnap.docs) {
+        batch.delete(doc(db, 'capitulos', capituloDoc.id));
+      }
+      
+      // 4. Aulas
+      const aulasSnap = await getDocs(query(collection(db, 'aulas'), where('materiaId', '==', id)));
+      for (const aulaDoc of aulasSnap.docs) {
+        batch.delete(doc(db, 'aulas', aulaDoc.id));
+      }
+      
+      // 5. Sequências didáticas
+      const sdsSnap = await getDocs(query(collection(db, 'sequencias_didaticas'), where('materiaId', '==', id)));
+      for (const sdDoc of sdsSnap.docs) {
+        batch.delete(doc(db, 'sequencias_didaticas', sdDoc.id));
+      }
+      
+      // 6. Notas órfãs (por segurança adicional se houver por materiaId)
+      const notasOrfasSnap = await getDocs(query(collection(db, 'notas'), where('materiaId', '==', id)));
+      for (const notaDoc of notasOrfasSnap.docs) {
+        batch.delete(doc(db, 'notas', notaDoc.id));
+      }
+      
+      // 7. Atualizar professores retirando o ID da matéria de suas listas
+      const professoresSnap = await getDocs(collection(db, 'professores'));
+      for (const profDoc of professoresSnap.docs) {
+        const profData = profDoc.data();
+        if (Array.isArray(profData.materias) && profData.materias.includes(id)) {
+          const updatedMaterias = profData.materias.filter((m: string) => m !== id);
+          batch.update(doc(db, 'professores', profDoc.id), { materias: updatedMaterias });
+        }
+      }
+      
+      await batch.commit();
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
-      alert('Erro ao deletar matéria: ' + (err as Error).message);
+      alert('Erro ao deletar matéria e seus vínculos: ' + (err as Error).message);
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { deleteDoc, doc } from 'firebase/firestore';
+import { doc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Escola } from '@/types';
 
@@ -24,14 +24,25 @@ const AlunosPage: React.FC<AlunosPageProps> = ({
   const [filtroTurma, setFiltroTurma] = useState('');
 
   const deletarAluno = async (id: string) => {
-    if (!confirm('Deseja realmente excluir este aluno?')) return;
+    if (!confirm('Deseja realmente excluir este aluno? Todas as notas associadas a ele serão perdidas permanentemente.')) return;
     setSyncStatus('saving');
     try {
-      await deleteDoc(doc(db, 'alunos', id));
+      const batch = writeBatch(db);
+      
+      // 1. Deletar o aluno
+      batch.delete(doc(db, 'alunos', id));
+      
+      // 2. Buscar e deletar as notas associadas
+      const notasSnap = await getDocs(query(collection(db, 'notas'), where('alunoId', '==', id)));
+      for (const notaDoc of notasSnap.docs) {
+        batch.delete(doc(db, 'notas', notaDoc.id));
+      }
+      
+      await batch.commit();
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
-      alert('Erro ao excluir aluno: ' + (err as Error).message);
+      alert('Erro ao excluir aluno e suas notas: ' + (err as Error).message);
     }
   };
 

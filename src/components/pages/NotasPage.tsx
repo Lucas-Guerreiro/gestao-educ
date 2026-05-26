@@ -148,7 +148,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
             <label>Selecione o Bimestre *</label>
             <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)}>
               <option value="">— selecione —</option>
-              {bimestres.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
+              {bimestres.map(b => <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>)}
             </select>
           </div>
         </div>

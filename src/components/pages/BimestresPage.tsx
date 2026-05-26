@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Bimestre } from '@/types';
 
@@ -11,12 +11,13 @@ interface BimestresPageProps {
 const BimestresPage: React.FC<BimestresPageProps> = ({ bimestres, setSyncStatus }) => {
   const [nome, setNome] = useState('');
   const [peso, setPeso] = useState(1);
+  const [ano, setAno] = useState<number>(new Date().getFullYear());
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nome.trim() || peso <= 0) {
-      alert('Preencha o nome e um peso maior que zero.');
+    if (!nome.trim() || peso <= 0 || !ano) {
+      alert('Preencha o nome, ano letivo e um peso maior que zero.');
       return;
     }
 
@@ -24,7 +25,8 @@ const BimestresPage: React.FC<BimestresPageProps> = ({ bimestres, setSyncStatus 
     try {
       const payload = {
         nome: nome.trim(),
-        peso: Number(peso)
+        peso: Number(peso),
+        ano: Number(ano)
       };
 
       if (editingId) {
@@ -35,6 +37,7 @@ const BimestresPage: React.FC<BimestresPageProps> = ({ bimestres, setSyncStatus 
       }
       setNome('');
       setPeso(1);
+      setAno(new Date().getFullYear());
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
@@ -46,17 +49,39 @@ const BimestresPage: React.FC<BimestresPageProps> = ({ bimestres, setSyncStatus 
     setEditingId(bim.id);
     setNome(bim.nome);
     setPeso(bim.peso);
+    setAno(bim.ano || new Date().getFullYear());
   };
 
   const deletar = async (id: string) => {
-    if (!confirm('Deseja realmente deletar este bimestre?')) return;
     setSyncStatus('saving');
     try {
+      // 1. Verificar se existem atividades usando este bimestre
+      const atividadesSnap = await getDocs(query(collection(db, 'atividades'), where('bimestreId', '==', id)));
+      if (!atividadesSnap.empty) {
+        setSyncStatus('ok');
+        alert('Não é possível deletar este bimestre. Existem atividades/avaliações ativas vinculadas a ele (ON DELETE RESTRICT).');
+        return;
+      }
+      
+      // 2. Verificar se existem notas usando este bimestre
+      const notasSnap = await getDocs(query(collection(db, 'notas'), where('bimestreId', '==', id)));
+      if (!notasSnap.empty) {
+        setSyncStatus('ok');
+        alert('Não é possível deletar este bimestre. Existem notas de alunos vinculadas a ele (ON DELETE RESTRICT).');
+        return;
+      }
+      
+      // 3. Confirmar e deletar
+      if (!confirm('Deseja realmente deletar este bimestre?')) {
+        setSyncStatus('ok');
+        return;
+      }
+      
       await deleteDoc(doc(db, 'bimestres', id));
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
-      alert('Erro ao deletar bimestre: ' + (err as Error).message);
+      alert('Erro ao verificar/deletar bimestre: ' + (err as Error).message);
     }
   };
 
@@ -79,20 +104,32 @@ const BimestresPage: React.FC<BimestresPageProps> = ({ bimestres, setSyncStatus 
             />
           </div>
           
-          <div className="f">
-            <label>Peso Computacional (ex: 2) *</label>
-            <input 
-              type="number"
-              min="0.1"
-              step="0.1"
-              value={peso} 
-              onChange={(e) => setPeso(parseFloat(e.target.value) || 1)} 
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div className="f">
+              <label>Ano Letivo *</label>
+              <input 
+                type="number"
+                min="2000"
+                max="2100"
+                value={ano} 
+                onChange={(e) => setAno(parseInt(e.target.value) || new Date().getFullYear())} 
+              />
+            </div>
+            <div className="f">
+              <label>Peso Computacional *</label>
+              <input 
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={peso} 
+                onChange={(e) => setPeso(parseFloat(e.target.value) || 1)} 
+              />
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
             {editingId && (
-              <button type="button" className="btn" onClick={() => { setEditingId(null); setNome(''); setPeso(1); }}>
+              <button type="button" className="btn" onClick={() => { setEditingId(null); setNome(''); setPeso(1); setAno(new Date().getFullYear()); }}>
                 Cancelar
               </button>
             )}
@@ -120,7 +157,10 @@ const BimestresPage: React.FC<BimestresPageProps> = ({ bimestres, setSyncStatus 
               >
                 <div>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{bim.nome}</span>
-                  <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600 }}>⚖️ Peso: {bim.peso}</div>
+                  <div style={{ display: 'flex', gap: '8px', fontSize: '11px', marginTop: '2px' }}>
+                    <span style={{ color: 'var(--primary)', fontWeight: 600 }}>⚖️ Peso: {bim.peso}</span>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>📅 Ano: {bim.ano || '—'}</span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => editar(bim)}>

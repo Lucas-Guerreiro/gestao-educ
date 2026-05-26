@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Capitulo, Turma, Materia, Escola } from '@/types';
 
@@ -67,14 +67,38 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
   };
 
   const deletar = async (id: string) => {
-    if (!confirm('Deseja realmente deletar este capítulo?')) return;
+    if (!confirm('Deseja realmente deletar este capítulo? Todas as referências em aulas e planejamentos serão atualizadas.')) return;
     setSyncStatus('saving');
     try {
-      await deleteDoc(doc(db, 'capitulos', id));
+      const batch = writeBatch(db);
+      
+      // 1. Deletar capítulo
+      batch.delete(doc(db, 'capitulos', id));
+      
+      // 2. Aulas associadas (definir capituloId como vazio / SET NULL)
+      const aulasSnap = await getDocs(query(collection(db, 'aulas'), where('capituloId', '==', id)));
+      for (const aulaDoc of aulasSnap.docs) {
+        batch.update(doc(db, 'aulas', aulaDoc.id), { capituloId: "" });
+      }
+      
+      // 3. Sequências Didáticas contendo este capítulo
+      const sdsSnap = await getDocs(collection(db, 'sequencias_didaticas'));
+      for (const sdDoc of sdsSnap.docs) {
+        const sdData = sdDoc.data();
+        if (Array.isArray(sdData.capitulos)) {
+          const originalLength = sdData.capitulos.length;
+          const updatedCapitulos = sdData.capitulos.filter((c: any) => c.capituloId !== id);
+          if (updatedCapitulos.length !== originalLength) {
+            batch.update(doc(db, 'sequencias_didaticas', sdDoc.id), { capitulos: updatedCapitulos });
+          }
+        }
+      }
+      
+      await batch.commit();
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
-      alert('Erro ao deletar capítulo: ' + (err as Error).message);
+      alert('Erro ao deletar capítulo e atualizar vínculos: ' + (err as Error).message);
     }
   };
 
