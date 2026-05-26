@@ -635,27 +635,34 @@ tr:hover td {
   position: relative;
 }
 .nota-col-label .nt-tip {
-  display: none;
-  position: fixed;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 160ms ease, transform 160ms ease;
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-4px);
   background: var(--dark);
   color: #fff;
   font-size: 11px;
   padding: 8px 12px;
   border-radius: var(--radius-md);
   white-space: pre-wrap;
-  max-width: 220px;
+  max-width: 260px;
   min-width: 120px;
-  line-height: 1.5;
+  line-height: 1.4;
   box-shadow: var(--shadow-lg);
   z-index: 9999;
   pointer-events: none;
   text-transform: none;
   letter-spacing: 0;
   font-weight: 400;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 .nota-col-label:hover .nt-tip {
-  display: block;
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .desc-tooltip {

@@ -77,6 +77,34 @@ const NotasPage: React.FC<NotasPageProps> = ({
     return 10;
   };
 
+  const badgeColor = (t: string) => {
+    if (t === 'prova') return { bg: '#fee2e2', text: '#991b1b' };
+    if (t === 'trabalho') return { bg: '#eff6ff', text: '#1e40af' };
+    if (t === 'pluraal') return { bg: '#f3e8ff', text: '#6b21a8' };
+    return { bg: '#f0fdf4', text: '#166534' };
+  };
+
+  const getNotaCellColors = (valorStr: string, celulaOculta: boolean) => {
+    if (celulaOculta || !valorStr || valorStr === '-1') {
+      return { bg: '#fff', border: '#cbd5e1', text: 'var(--text-main)' };
+    }
+
+    const valor = Number(valorStr.replace(',', '.'));
+    if (Number.isNaN(valor)) {
+      return { bg: '#fff', border: '#cbd5e1', text: 'var(--text-main)' };
+    }
+
+    if (valor <= 1.5) {
+      return { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' };
+    }
+
+    if (valor <= 2.4) {
+      return { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' };
+    }
+
+    return { bg: '#dcfce7', border: '#86efac', text: '#166534' };
+  };
+
   // Salvar nota no Firestore com ID determinístico
   const salvarNota = async (alunoId: string, atividadeId: string, valorStr: string) => {
     if (!turmaId || !materiaId || !bimestreId) return;
@@ -294,14 +322,17 @@ const NotasPage: React.FC<NotasPageProps> = ({
             <thead>
               <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--text-muted)', fontWeight: 800 }}>
                 <th style={{ padding: '10px', textAlign: 'left', minWidth: '200px' }}>Aluno</th>
-                {atividadesFiltradas.map(at => (
-                  <th key={at.id} style={{ padding: '10px', textAlign: 'center', width: '120px' }}>
-                    <div style={{ color: 'var(--text-main)', fontWeight: 700 }}>{at.nome}</div>
-                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                      {at.tipo.toUpperCase()} (máx. {obterNotaMaxima(at.tipo)})
-                    </span>
-                  </th>
-                ))}
+                {atividadesFiltradas.map(at => {
+                  const colors = badgeColor(at.tipo);
+                  return (
+                    <th key={at.id} style={{ padding: '10px', textAlign: 'center', width: '120px' }}>
+                      <div className="nota-col-label" style={{ display: 'inline-block', padding: '6px 10px', borderRadius: '10px', background: colors.bg, color: colors.text, minWidth: '110px' }}>
+                        <div style={{ fontWeight: 700, color: colors.text, fontSize: '13px' }}>{at.nome}</div>
+                        {at.descricao && <div className="nt-tip">{at.descricao}</div>}
+                      </div>
+                    </th>
+                  );
+                })}
                 <th style={{ padding: '10px', textAlign: 'center', width: '120px', background: '#fafafa' }}>
                   Média Bimestral
                 </th>
@@ -325,6 +356,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                       const displayVal = celulaOculta ? '***' : (notaVal === '-1' ? '' : notaVal);
                       const cellKey = `${aluno.id}_${at.id}`;
                       const isSaving = !!savingCells[cellKey];
+                      const notaColors = getNotaCellColors(displayVal, celulaOculta);
 
                       return (
                         <td key={at.id} style={{ padding: '6px', textAlign: 'center' }}>
@@ -342,7 +374,6 @@ const NotasPage: React.FC<NotasPageProps> = ({
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
-                                  // Foca no input da mesma atividade (coluna) para o próximo aluno (linha de baixo)
                                   const proximoInput = document.getElementById(`input-nota-${alunoIdx + 1}-${atIdx}`);
                                   if (proximoInput) {
                                     (proximoInput as HTMLInputElement).focus();
@@ -357,13 +388,14 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                 width: '100%', 
                                 textAlign: 'center', 
                                 padding: '6px', 
-                                border: '1px solid var(--border)', 
+                                border: `1px solid ${notaColors.border}`,
                                 borderRadius: '8px', 
                                 fontSize: '13px', 
                                 fontWeight: 700,
-                                background: celulaOculta ? '#f8fafc' : (isSaving ? '#f1f5f9' : '#fff'),
-                                color: celulaOculta ? '#94a3b8' : (isSaving ? '#94a3b8' : 'var(--text-main)'),
-                                cursor: celulaOculta ? 'not-allowed' : 'text'
+                                background: notaColors.bg,
+                                color: notaColors.text,
+                                cursor: celulaOculta ? 'not-allowed' : 'text',
+                                transition: 'background 160ms ease, border-color 160ms ease'
                               }}
                             />
                             {isSaving && (
