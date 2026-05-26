@@ -21,22 +21,22 @@ const RankingPage: React.FC<RankingPageProps> = ({
 
   // Calcular média global de um aluno (média de suas médias bimestrais de todas as matérias/bimestres)
   const obterMediaGlobalAluno = (alunoId: string, alunoTurmaId: string) => {
-    const t = turmas.find(x => x.id === alunoTurmaId);
+    const t = turmas.find(x => String(x.id) === String(alunoTurmaId));
     if (!t) return null;
 
-    const ativsDaTurma = atividades.filter(at => at.turmaId === alunoTurmaId);
+    const ativsDaTurma = atividades.filter(at => String(at.turmaId) === String(alunoTurmaId));
     if (ativsDaTurma.length === 0) return null;
 
     // Identificar todas as matérias e bimestres que possuem atividades na turma
-    const materiaIds = Array.from(new Set(ativsDaTurma.map(at => at.materiaId)));
-    const bimestreIds = Array.from(new Set(ativsDaTurma.map(at => at.bimestreId)));
+    const materiaIds = Array.from(new Set(ativsDaTurma.map(at => String(at.materiaId))));
+    const bimestreIds = Array.from(new Set(ativsDaTurma.map(at => String(at.bimestreId))));
 
     let somaMediasBimestrais = 0;
     let qtdMediasBimestrais = 0;
 
     materiaIds.forEach(matId => {
       bimestreIds.forEach(bimId => {
-        const ativs = ativsDaTurma.filter(at => at.materiaId === matId && at.bimestreId === bimId);
+        const ativs = ativsDaTurma.filter(at => String(at.materiaId) === matId && String(at.bimestreId) === bimId);
         if (ativs.length === 0) return;
 
         // Calcular média desta matéria/bimestre
@@ -46,7 +46,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
         if (trabalhos.length > 0) {
           let soma = 0;
           trabalhos.forEach(at => {
-            const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+            const reg = notas.find(n => String(n.alunoId) === String(alunoId) && String(n.atividadeId) === String(at.id));
             if (reg && reg.nota !== undefined && reg.nota >= 0) {
               soma += reg.nota;
             }
@@ -60,7 +60,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
         if (pluraals.length > 0) {
           let soma = 0;
           pluraals.forEach(at => {
-            const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+            const reg = notas.find(n => String(n.alunoId) === String(alunoId) && String(n.atividadeId) === String(at.id));
             if (reg && reg.nota !== undefined && reg.nota >= 0) {
               soma += reg.nota;
             }
@@ -74,7 +74,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
         if (qualitativas.length > 0) {
           let soma = 0;
           qualitativas.forEach(at => {
-            const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+            const reg = notas.find(n => String(n.alunoId) === String(alunoId) && String(n.atividadeId) === String(at.id));
             if (reg && reg.nota !== undefined && reg.nota >= 0) {
               soma += reg.nota;
             }
@@ -85,7 +85,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
         // Se tem ao menos uma nota lançada
         let temAlgumaNota = false;
         ativs.forEach(at => {
-          const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+          const reg = notas.find(n => String(n.alunoId) === String(alunoId) && String(n.atividadeId) === String(at.id));
           if (reg && reg.nota !== undefined && reg.nota >= 0) {
             temAlgumaNota = true;
           }
@@ -110,7 +110,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
       baseAlunos = baseAlunos.filter(a => String(a.turmaId) === turmaId);
     } else if (filtroSerie) {
       // Filtrar turmas que correspondem à série
-      const turmasDaSerie = turmas.filter(t => t.serie.toLowerCase() === filtroSerie.toLowerCase());
+      const turmasDaSerie = turmas.filter(t => (t.serie || '').toLowerCase() === filtroSerie.toLowerCase());
       const idsTurmas = turmasDaSerie.map(t => t.id);
       baseAlunos = baseAlunos.filter(a => idsTurmas.includes(String(a.turmaId)));
     } else {
