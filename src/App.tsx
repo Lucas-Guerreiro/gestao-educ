@@ -1,0 +1,441 @@
+import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot, doc } from 'firebase/firestore';
+import { db } from './firebase';
+import { 
+  Escola, Turma, Aluno, Materia, Professor, 
+  Bimestre, Atividade, Capitulo, Aula, 
+  SequenciaDidatica, Nota, AdminConfig, ExerciciosIA 
+} from '@/types';
+
+// Layout & Modals
+import Sidebar from './components/layout/Sidebar';
+import Topbar from './components/layout/Topbar';
+import LoginScreen from './components/modals/LoginScreen';
+import SenhaModal from './components/modals/SenhaModal';
+import BackupModal from './components/modals/BackupModal';
+import AulaDetalheModal from './components/modals/AulaDetalheModal';
+import IaModal from './components/modals/IaModal';
+import SdModal from './components/modals/SdModal';
+import AlunoModal from './components/modals/AlunoModal';
+import ImportModal from './components/modals/ImportModal';
+
+// Pages
+import EscolaPage from './components/pages/EscolaPage';
+import AlunosPage from './components/pages/AlunosPage';
+import MateriasPage from './components/pages/MateriasPage';
+import ProfsPage from './components/pages/ProfsPage';
+import BimestresPage from './components/pages/BimestresPage';
+import AtividadesPage from './components/pages/AtividadesPage';
+import CapitulosPage from './components/pages/CapitulosPage';
+import AulasPage from './components/pages/AulasPage';
+import GradePage from './components/pages/GradePage';
+import SdPage from './components/pages/SdPage';
+import NotasPage from './components/pages/NotasPage';
+import ConceitosPage from './components/pages/ConceitosPage';
+import BoletimPage from './components/pages/BoletimPage';
+import RankingPage from './components/pages/RankingPage';
+import RelatorioPage from './components/pages/RelatorioPage';
+
+const App: React.FC = () => {
+  // Authentication states
+  const [autenticado, setAutenticado] = useState(false);
+  const [adminConfig, setAdminConfig] = useState<AdminConfig>({ senha: 'admin123' });
+
+  // Navigation state
+  const [currentSec, setCurrentSec] = useState('escola');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'ok' | 'saving' | 'err'>('ok');
+
+  // Database Collections States
+  const [escolas, setEscolas] = useState<Escola[]>([]);
+  const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [materias, setMaterias] = useState<Materia[]>([]);
+  const [professores, setProfessores] = useState<Professor[]>([]);
+  const [bimestres, setBimestres] = useState<Bimestre[]>([]);
+  const [atividades, setAtividades] = useState<Atividade[]>([]);
+  const [capitulos, setCapitulos] = useState<Capitulo[]>([]);
+  const [aulas, setAulas] = useState<Aula[]>([]);
+  const [sequencias, setSequencias] = useState<SequenciaDidatica[]>([]);
+  const [notas, setNotas] = useState<Nota[]>([]);
+
+  // Simulated AI Exercises list to back IaModal and SdModal
+  const simulatedExerciciosIA: ExerciciosIA[] = [
+    { id: 'ex-1', nome: 'Questão de Interpretação textual', desc: 'Identificar a tese principal do autor e classificar os argumentos apresentados no texto base.' },
+    { id: 'ex-2', nome: 'Equações Lineares Aplicadas', desc: 'Resolver problemas práticos do dia a dia utilizando equações de primeiro grau com duas variáveis.' },
+    { id: 'ex-3', nome: 'Análise de Gráficos de Funções', desc: 'Identificar raízes, domínio, imagem e crescimento de funções afins a partir de representações gráficas.' },
+    { id: 'ex-4', nome: 'Análise Histórica do Período', desc: 'Diferenciar os aspectos econômicos, sociais e políticos da Revolução Industrial nas fases inicial e secundária.' },
+    { id: 'ex-5', nome: 'Reações Químicas no Cotidiano', desc: 'Balanceamento de equações químicas simples e identificação de processos endotérmicos e exotérmicos.' },
+    { id: 'ex-6', nome: 'Genética Mendeliana Prática', desc: 'Calcular a probabilidade de transmissão de características hereditárias usando cruzamentos de primeira lei.' },
+    { id: 'ex-7', nome: 'Dinâmica Newtoniana e Forças', desc: 'Calcular aceleração, força resultante e coeficiente de atrito em blocos sob planos inclinados.' },
+    { id: 'ex-8', nome: 'Geopolítica e Globalização', desc: 'Explicar o papel dos blocos econômicos na divisão internacional do trabalho no século XXI.' },
+  ];
+
+  // Modals Visibility States
+  const [isSenhaModalOpen, setIsSenhaModalOpen] = useState(false);
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
+  const [isIaModalOpen, setIsIaModalOpen] = useState(false);
+  const [isAlunoModalOpen, setIsAlunoModalOpen] = useState(false);
+  const [alunoModalId, setAlunoModalId] = useState<string | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isSdModalOpen, setIsSdModalOpen] = useState(false);
+  const [sdModalId, setSdModalId] = useState<string | null>(null);
+  const [isAulaDetalheOpen, setIsAulaDetalheOpen] = useState(false);
+  const [aulaDetalhe, setAulaDetalhe] = useState<Aula | null>(null);
+
+  // Read authentication on mount
+  useEffect(() => {
+    const isAuth = sessionStorage.getItem('es_autenticado');
+    if (isAuth === 'true') {
+      setAutenticado(true);
+    }
+  }, []);
+
+  // Set up Firebase Realtime Snapshot Listeners
+  useEffect(() => {
+    const unsubAdmin = onSnapshot(doc(db, 'config', 'admin'), (docSnap) => {
+      if (docSnap.exists()) {
+        setAdminConfig(docSnap.data() as AdminConfig);
+      }
+    }, () => setSyncStatus('err'));
+
+    const unsubEscolas = onSnapshot(collection(db, 'escolas'), (snapshot) => {
+      const items: Escola[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Escola));
+      setEscolas(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubTurmas = onSnapshot(collection(db, 'turmas'), (snapshot) => {
+      const items: Turma[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Turma));
+      setTurmas(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubAlunos = onSnapshot(collection(db, 'alunos'), (snapshot) => {
+      const items: Aluno[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Aluno));
+      setAlunos(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubMaterias = onSnapshot(collection(db, 'materias'), (snapshot) => {
+      const items: Materia[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Materia));
+      setMaterias(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubProfessores = onSnapshot(collection(db, 'professores'), (snapshot) => {
+      const items: Professor[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Professor));
+      setProfessores(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubBimestres = onSnapshot(collection(db, 'bimestres'), (snapshot) => {
+      const items: Bimestre[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Bimestre));
+      setBimestres(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubAtividades = onSnapshot(collection(db, 'atividades'), (snapshot) => {
+      const items: Atividade[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Atividade));
+      setAtividades(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubCapitulos = onSnapshot(collection(db, 'capitulos'), (snapshot) => {
+      const items: Capitulo[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Capitulo));
+      setCapitulos(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubAulas = onSnapshot(collection(db, 'aulas'), (snapshot) => {
+      const items: Aula[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Aula));
+      setAulas(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubSequencias = onSnapshot(collection(db, 'sequencias_didaticas'), (snapshot) => {
+      const items: SequenciaDidatica[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as SequenciaDidatica));
+      setSequencias(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    const unsubNotas = onSnapshot(collection(db, 'notas'), (snapshot) => {
+      const items: Nota[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as any as Nota));
+      setNotas(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
+    return () => {
+      unsubAdmin();
+      unsubEscolas();
+      unsubTurmas();
+      unsubAlunos();
+      unsubMaterias();
+      unsubProfessores();
+      unsubBimestres();
+      unsubAtividades();
+      unsubCapitulos();
+      unsubAulas();
+      unsubSequencias();
+      unsubNotas();
+    };
+  }, []);
+
+  const realizarLogout = () => {
+    setAutenticado(false);
+    sessionStorage.removeItem('es_autenticado');
+  };
+
+  const renderActiveSection = () => {
+    switch (currentSec) {
+      case 'escola':
+        return <EscolaPage escolas={escolas} turmas={turmas} setSyncStatus={setSyncStatus} />;
+      case 'alunos':
+        return (
+          <AlunosPage 
+            alunos={alunos} 
+            turmas={turmas} 
+            escolas={escolas} 
+            abrirAlunoModal={(id) => { setAlunoModalId(id); setIsAlunoModalOpen(true); }}
+            abrirImportModal={() => setIsImportModalOpen(true)}
+            setSyncStatus={setSyncStatus}
+          />
+        );
+      case 'materias':
+        return <MateriasPage materias={materias} escolas={escolas} setSyncStatus={setSyncStatus} />;
+      case 'profs':
+        return <ProfsPage professores={professores} materias={materias} escolas={escolas} setSyncStatus={setSyncStatus} />;
+      case 'bim':
+        return <BimestresPage bimestres={bimestres} setSyncStatus={setSyncStatus} />;
+      case 'ativ':
+        return (
+          <AtividadesPage 
+            atividades={atividades} 
+            turmas={turmas} 
+            materias={materias} 
+            bimestres={bimestres} 
+            escolas={escolas}
+            setSyncStatus={setSyncStatus}
+          />
+        );
+      case 'capitulos':
+        return (
+          <CapitulosPage 
+            capitulos={capitulos} 
+            turmas={turmas} 
+            materias={materias} 
+            escolas={escolas}
+            setSyncStatus={setSyncStatus}
+          />
+        );
+      case 'aulas':
+        return (
+          <AulasPage 
+            aulas={aulas} 
+            turmas={turmas} 
+            materias={materias} 
+            capitulos={capitulos} 
+            escolas={escolas}
+            setSyncStatus={setSyncStatus}
+          />
+        );
+      case 'visao-aulas':
+        return (
+          <GradePage 
+            aulas={aulas} 
+            turmas={turmas} 
+            materias={materias} 
+            abrirAulaDetalheModal={(a) => { setAulaDetalhe(a); setIsAulaDetalheOpen(true); }}
+          />
+        );
+      case 'sd':
+        return (
+          <SdPage 
+            sequencias={sequencias} 
+            professores={professores} 
+            turmas={turmas} 
+            materias={materias} 
+            aulas={aulas}
+            abrirSdModal={(id) => { setSdModalId(id); setIsSdModalOpen(true); }}
+            setSyncStatus={setSyncStatus}
+          />
+        );
+      case 'lan':
+        return (
+          <NotasPage 
+            alunos={alunos} 
+            turmas={turmas} 
+            materias={materias} 
+            bimestres={bimestres} 
+            atividades={atividades} 
+            notas={notas}
+            escolas={escolas}
+            setSyncStatus={setSyncStatus}
+          />
+        );
+      case 'conceito':
+        return (
+          <ConceitosPage 
+            alunos={alunos} 
+            turmas={turmas} 
+            materias={materias} 
+            bimestres={bimestres} 
+            atividades={atividades} 
+            notas={notas}
+            escolas={escolas}
+          />
+        );
+      case 'visao':
+        return (
+          <BoletimPage 
+            alunos={alunos} 
+            turmas={turmas} 
+            materias={materias} 
+            bimestres={bimestres} 
+            atividades={atividades} 
+            notas={notas}
+            escolas={escolas}
+          />
+        );
+      case 'ranking':
+        return (
+          <RankingPage 
+            alunos={alunos} 
+            turmas={turmas} 
+            atividades={atividades} 
+            notas={notas}
+            escolas={escolas}
+          />
+        );
+      case 'rel':
+        return (
+          <RelatorioPage 
+            alunos={alunos} 
+            turmas={turmas} 
+            notas={notas} 
+            escolas={escolas}
+          />
+        );
+      default:
+        return <EscolaPage escolas={escolas} turmas={turmas} setSyncStatus={setSyncStatus} />;
+    }
+  };
+
+  // If not authenticated, render Login Lock Screen
+  if (!autenticado) {
+    return <LoginScreen adminConfig={adminConfig} setAutenticado={setAutenticado} />;
+  }
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', width: '100%' }}>
+      {/* Sidebar Navigation */}
+      <Sidebar 
+        currentSec={currentSec} 
+        setCurrentSec={setCurrentSec} 
+        syncStatus={syncStatus}
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
+        abrirIAModal={() => setIsIaModalOpen(true)}
+      />
+
+      {/* Main Workspace Column */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowX: 'hidden' }}>
+        <Topbar 
+          currentSec={currentSec} 
+          abrirSenhaModal={() => setIsSenhaModalOpen(true)}
+          abrirBackupModal={() => setIsBackupModalOpen(true)}
+          realizarLogout={realizarLogout}
+        />
+
+        <div style={{ flex: 1, padding: '12px' }}>
+          {renderActiveSection()}
+        </div>
+      </div>
+
+      {/* MODALS RENDER OVERLAYS */}
+      
+      {isSenhaModalOpen && (
+        <SenhaModal 
+          adminConfig={adminConfig} 
+          setAdminConfig={setAdminConfig}
+          fecharModal={() => setIsSenhaModalOpen(false)} 
+          setSyncStatus={setSyncStatus}
+        />
+      )}
+
+      {isBackupModalOpen && (
+        <BackupModal 
+          fecharModal={() => setIsBackupModalOpen(false)} 
+          setSyncStatus={setSyncStatus}
+        />
+      )}
+
+      {isAulaDetalheOpen && aulaDetalhe && (
+        <AulaDetalheModal 
+          aula={aulaDetalhe}
+          turmas={turmas}
+          materias={materias}
+          capitulos={capitulos}
+          sequencias={sequencias}
+          exerciciosIA={simulatedExerciciosIA}
+          fecharModal={() => { setAulaDetalhe(null); setIsAulaDetalheOpen(false); }}
+        />
+      )}
+
+      {isIaModalOpen && (
+        <IaModal 
+          turmas={turmas}
+          materias={materias}
+          exerciciosIA={simulatedExerciciosIA}
+          fecharModal={() => setIsIaModalOpen(false)}
+          setSyncStatus={setSyncStatus}
+        />
+      )}
+
+      {isSdModalOpen && (
+        <SdModal 
+          sdId={sdModalId}
+          sds={sequencias}
+          professores={professores}
+          turmas={turmas}
+          materias={materias}
+          capitulos={capitulos}
+          exerciciosIA={simulatedExerciciosIA}
+          fecharModal={() => { setSdModalId(null); setIsSdModalOpen(false); }}
+          setSyncStatus={setSyncStatus}
+        />
+      )}
+
+      {isAlunoModalOpen && (
+        <AlunoModal 
+          alunoId={alunoModalId}
+          alunos={alunos}
+          turmas={turmas}
+          fecharModal={() => { setAlunoModalId(null); setIsAlunoModalOpen(false); }}
+          setSyncStatus={setSyncStatus}
+        />
+      )}
+
+      {isImportModalOpen && (
+        <ImportModal 
+          turmas={turmas}
+          fecharModal={() => setIsImportModalOpen(false)}
+          setSyncStatus={setSyncStatus}
+        />
+      )}
+    </div>
+  );
+};
+
+export default App;
