@@ -27,6 +27,10 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   const [bimestreId, setBimestreId] = useState('');
   const [peso, setPeso] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
+  
+  // Filters state
+  const [filtroTurma, setFiltroTurma] = useState('');
+  const [filtroBimestre, setFiltroBimestre] = useState('');
 
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,14 +207,43 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
       {/* Lista */}
       <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)' }}>
         <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>
-          <i className="ti ti-list" style={{ color: 'var(--primary)' }}></i> Planejamento de Atividades
+          <i className="ti ti-list" style={{ color: 'var(--primary)' }}></i> Planejamento
+        </div>
+
+        {/* Filtros de Lista */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '1.25rem', background: '#f8fafc', padding: '10px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+          <div className="f" style={{ flex: 1, minWidth: '120px' }}>
+            <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Turma</label>
+            <select value={filtroTurma} onChange={(e) => setFiltroTurma(e.target.value)} style={{ height: '34px', fontSize: '12px' }}>
+              <option value="">— Todas as Turmas —</option>
+              {turmas.map(t => {
+                const esc = escolas.find(e => e.id === t.escolaId);
+                return <option key={t.id} value={t.id}>{t.nome} ({esc ? esc.nome : 'Escola'})</option>;
+              })}
+            </select>
+          </div>
+          <div className="f" style={{ flex: 1, minWidth: '120px' }}>
+            <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Bimestre</label>
+            <select value={filtroBimestre} onChange={(e) => setFiltroBimestre(e.target.value)} style={{ height: '34px', fontSize: '12px' }}>
+              <option value="">— Todos os Bimestres —</option>
+              {bimestres.map(b => <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>)}
+            </select>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '500px', overflowY: 'auto' }}>
-          {atividades.length === 0 ? (
-            <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12px' }}>Nenhuma atividade cadastrada.</div>
-          ) : (
-            atividades.map(ativ => {
+          {(() => {
+            const atividadesFiltradas = atividades.filter(a => {
+              const atendeTurma = filtroTurma ? a.turmaId === filtroTurma : true;
+              const atendeBimestre = filtroBimestre ? a.bimestreId === filtroBimestre : true;
+              return atendeTurma && atendeBimestre;
+            });
+
+            if (atividadesFiltradas.length === 0) {
+              return <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12px' }}>Nenhuma atividade correspondente aos filtros.</div>;
+            }
+
+            return atividadesFiltradas.map(ativ => {
               const tur = turmas.find(t => t.id === ativ.turmaId);
               const mat = materias.find(m => m.id === ativ.materiaId);
               const bim = bimestres.find(b => b.id === ativ.bimestreId);
@@ -221,7 +254,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                   key={ativ.id} 
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px' }}
                 >
-                  <div>
+                  <div style={{ flex: 1, paddingRight: '8px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{ativ.nome}</span>
                     <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>
@@ -254,8 +287,8 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                   </div>
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
       </div>
 

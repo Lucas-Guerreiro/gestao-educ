@@ -5,6 +5,9 @@ interface TopbarProps {
   abrirSenhaModal: () => void;
   abrirBackupModal: () => void;
   realizarLogout: () => void;
+  selectedAno: number;
+  anosDisponiveis: number[];
+  onAnoChange: (ano: number) => void;
 }
 
 const Topbar: React.FC<TopbarProps> = ({
@@ -12,6 +15,9 @@ const Topbar: React.FC<TopbarProps> = ({
   abrirSenhaModal,
   abrirBackupModal,
   realizarLogout,
+  selectedAno,
+  anosDisponiveis,
+  onAnoChange,
 }) => {
   const sectionMeta: Record<string, { label: string; icon: string }> = {
     'escola': { label: 'Escola & Turmas', icon: 'ti-building' },
@@ -38,6 +44,29 @@ const Topbar: React.FC<TopbarProps> = ({
       <div className="topbar-title" id="topbar-title">
         <i className={`ti ${meta.icon}`}></i> {meta.label}
       </div>
+
+      {/* Seletor Global de Ano Letivo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '10px', marginLeft: 'auto', marginRight: '16px' }}>
+        <i className="ti ti-calendar" style={{ color: 'var(--primary)', fontWeight: 'bold' }}></i>
+        <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ano Letivo:</span>
+        <select 
+          value={selectedAno} 
+          onChange={(e) => onAnoChange(Number(e.target.value))}
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            fontSize: '12.5px', 
+            fontWeight: 800, 
+            color: 'var(--text-main)', 
+            cursor: 'pointer',
+            paddingRight: '2px',
+            outline: 'none'
+          }}
+        >
+          {anosDisponiveis.map(a => <option key={a} value={a}>{a}</option>)}
+        </select>
+      </div>
+
       <div className="tb-btns">
         <button 
           className="tb-btn" 

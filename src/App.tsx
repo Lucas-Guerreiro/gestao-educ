@@ -59,6 +59,44 @@ const App: React.FC = () => {
   const [sequencias, setSequencias] = useState<SequenciaDidatica[]>([]);
   const [notas, setNotas] = useState<Nota[]>([]);
 
+  // Active School Year State
+  const [selectedAno, setSelectedAno] = useState<number>(() => {
+    const saved = localStorage.getItem('es_ano_ativo');
+    return saved ? Number(saved) : new Date().getFullYear();
+  });
+
+  const handleAnoChange = (ano: number) => {
+    setSelectedAno(ano);
+    localStorage.setItem('es_ano_ativo', String(ano));
+  };
+
+  // Derive unique school years from bimestres letivos
+  const anosDisponiveis = Array.from(new Set(bimestres.map(b => b.ano).filter(Boolean)));
+  if (!anosDisponiveis.includes(new Date().getFullYear())) {
+    anosDisponiveis.push(new Date().getFullYear());
+  }
+  anosDisponiveis.sort((a, b) => b - a);
+
+  // Active year filters
+  const bimestresAtivos = bimestres.filter(b => {
+    const bAno = b.ano || new Date().getFullYear();
+    return bAno === selectedAno;
+  });
+
+  const atividadesAtivas = atividades.filter(a => bimestresAtivos.some(b => b.id === a.bimestreId));
+
+  const aulasAtivas = aulas.filter(a => {
+    if (!a.data) return false;
+    try {
+      const year = a.data.split('-')[0];
+      return Number(year) === selectedAno;
+    } catch {
+      return true;
+    }
+  });
+
+  const notasAtivas = notas.filter(n => atividadesAtivas.some(a => a.id === n.atividadeId));
+
   // Simulated AI Exercises list to back IaModal and SdModal
   const simulatedExerciciosIA: ExerciciosIA[] = [
     { id: 'ex-1', nome: 'Questão de Interpretação textual', desc: 'Identificar a tese principal do autor e classificar os argumentos apresentados no texto base.' },
@@ -221,10 +259,10 @@ const App: React.FC = () => {
       case 'ativ':
         return (
           <AtividadesPage 
-            atividades={atividades} 
+            atividades={atividadesAtivas} 
             turmas={turmas} 
             materias={materias} 
-            bimestres={bimestres} 
+            bimestres={bimestresAtivos} 
             escolas={escolas}
             setSyncStatus={setSyncStatus}
           />
@@ -242,7 +280,7 @@ const App: React.FC = () => {
       case 'aulas':
         return (
           <AulasPage 
-            aulas={aulas} 
+            aulas={aulasAtivas} 
             turmas={turmas} 
             materias={materias} 
             capitulos={capitulos} 
@@ -253,7 +291,7 @@ const App: React.FC = () => {
       case 'visao-aulas':
         return (
           <GradePage 
-            aulas={aulas} 
+            aulas={aulasAtivas} 
             turmas={turmas} 
             materias={materias} 
             abrirAulaDetalheModal={(a) => { setAulaDetalhe(a); setIsAulaDetalheOpen(true); }}
@@ -266,7 +304,7 @@ const App: React.FC = () => {
             professores={professores} 
             turmas={turmas} 
             materias={materias} 
-            aulas={aulas}
+            aulas={aulasAtivas}
             abrirSdModal={(id) => { setSdModalId(id); setIsSdModalOpen(true); }}
             setSyncStatus={setSyncStatus}
           />
@@ -277,9 +315,9 @@ const App: React.FC = () => {
             alunos={alunos} 
             turmas={turmas} 
             materias={materias} 
-            bimestres={bimestres} 
-            atividades={atividades} 
-            notas={notas}
+            bimestres={bimestresAtivos} 
+            atividades={atividadesAtivas} 
+            notas={notasAtivas}
             escolas={escolas}
             setSyncStatus={setSyncStatus}
           />
@@ -290,9 +328,9 @@ const App: React.FC = () => {
             alunos={alunos} 
             turmas={turmas} 
             materias={materias} 
-            bimestres={bimestres} 
-            atividades={atividades} 
-            notas={notas}
+            bimestres={bimestresAtivos} 
+            atividades={atividadesAtivas} 
+            notas={notasAtivas}
             escolas={escolas}
           />
         );
@@ -302,9 +340,9 @@ const App: React.FC = () => {
             alunos={alunos} 
             turmas={turmas} 
             materias={materias} 
-            bimestres={bimestres} 
-            atividades={atividades} 
-            notas={notas}
+            bimestres={bimestresAtivos} 
+            atividades={atividadesAtivas} 
+            notas={notasAtivas}
             escolas={escolas}
           />
         );
@@ -313,8 +351,8 @@ const App: React.FC = () => {
           <RankingPage 
             alunos={alunos} 
             turmas={turmas} 
-            atividades={atividades} 
-            notas={notas}
+            atividades={atividadesAtivas} 
+            notas={notasAtivas}
             escolas={escolas}
           />
         );
@@ -323,7 +361,7 @@ const App: React.FC = () => {
           <RelatorioPage 
             alunos={alunos} 
             turmas={turmas} 
-            notas={notas} 
+            notas={notasAtivas} 
             escolas={escolas}
           />
         );
@@ -356,6 +394,9 @@ const App: React.FC = () => {
           abrirSenhaModal={() => setIsSenhaModalOpen(true)}
           abrirBackupModal={() => setIsBackupModalOpen(true)}
           realizarLogout={realizarLogout}
+          selectedAno={selectedAno}
+          anosDisponiveis={anosDisponiveis}
+          onAnoChange={handleAnoChange}
         />
 
         <div style={{ flex: 1, padding: '12px' }}>
