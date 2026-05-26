@@ -140,6 +140,7 @@ const App: React.FC = () => {
     const unsubEscolas = onSnapshot(collection(db, 'escolas'), (snapshot) => {
       const items: Escola[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Escola));
+      items.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
       setEscolas(items);
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
@@ -147,6 +148,7 @@ const App: React.FC = () => {
     const unsubTurmas = onSnapshot(collection(db, 'turmas'), (snapshot) => {
       const items: Turma[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Turma));
+      items.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
       setTurmas(items);
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
@@ -154,6 +156,7 @@ const App: React.FC = () => {
     const unsubAlunos = onSnapshot(collection(db, 'alunos'), (snapshot) => {
       const items: Aluno[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Aluno));
+      items.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
       setAlunos(items);
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
@@ -161,6 +164,7 @@ const App: React.FC = () => {
     const unsubMaterias = onSnapshot(collection(db, 'materias'), (snapshot) => {
       const items: Materia[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Materia));
+      items.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
       setMaterias(items);
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
@@ -168,6 +172,7 @@ const App: React.FC = () => {
     const unsubProfessores = onSnapshot(collection(db, 'professores'), (snapshot) => {
       const items: Professor[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Professor));
+      items.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
       setProfessores(items);
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
@@ -175,6 +180,7 @@ const App: React.FC = () => {
     const unsubBimestres = onSnapshot(collection(db, 'bimestres'), (snapshot) => {
       const items: Bimestre[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Bimestre));
+      items.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
       setBimestres(items);
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
@@ -182,6 +188,7 @@ const App: React.FC = () => {
     const unsubAtividades = onSnapshot(collection(db, 'atividades'), (snapshot) => {
       const items: Atividade[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Atividade));
+      items.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
       setAtividades(items);
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
@@ -189,6 +196,7 @@ const App: React.FC = () => {
     const unsubCapitulos = onSnapshot(collection(db, 'capitulos'), (snapshot) => {
       const items: Capitulo[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Capitulo));
+      items.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
       setCapitulos(items);
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
