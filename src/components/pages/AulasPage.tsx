@@ -253,7 +253,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
           {aulas.length === 0 ? (
             <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12px' }}>Nenhuma aula agendada.</div>
           ) : (
-            [...aulas].sort((a,b) => b.data.localeCompare(a.data)).map(aula => {
+            [...aulas].sort((a,b) => (b.data || '').localeCompare(a.data || '')).map(aula => {
               const tur = turmas.find(t => t.id === aula.turmaId);
               const mat = materias.find(m => m.id === aula.materiaId);
               const cap = capitulos.find(c => c.id === aula.capituloId);
