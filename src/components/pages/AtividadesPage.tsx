@@ -26,6 +26,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   const [materiaId, setMateriaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
   const [peso, setPeso] = useState(1);
+  const [descricao, setDescricao] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // Filters state
@@ -48,6 +49,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
         materiaId,
         bimestreId,
         peso: Number(peso),
+        descricao: descricao.trim(),
       };
 
       if (editingId) {
@@ -63,6 +65,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
       setMateriaId('');
       setBimestreId('');
       setPeso(1);
+      setDescricao('');
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
@@ -78,6 +81,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
     setMateriaId(ativ.materiaId);
     setBimestreId(ativ.bimestreId);
     setPeso(ativ.peso);
+    setDescricao(ativ.descricao || '');
   };
 
   const duplicar = (ativ: Atividade) => {
@@ -87,6 +91,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
     setMateriaId(ativ.materiaId);
     setBimestreId(ativ.bimestreId);
     setPeso(ativ.peso);
+    setDescricao(ativ.descricao || '');
     setTurmaId('');
     alert(`Atividade "${ativ.nome}" copiada para o formulário! Agora selecione a nova Turma Vinculada e clique em Cadastrar.`);
   };
@@ -180,20 +185,30 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
             </div>
           </div>
 
-          <div className="f" style={{ maxWidth: '140px' }}>
-            <label>Peso Computacional *</label>
-            <input 
-              type="number"
-              min="0.1"
-              step="0.1"
-              value={peso} 
-              onChange={(e) => setPeso(parseFloat(e.target.value) || 1)} 
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div className="f">
+              <label>Peso Computacional *</label>
+              <input 
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={peso} 
+                onChange={(e) => setPeso(parseFloat(e.target.value) || 1)} 
+              />
+            </div>
+            <div className="f">
+              <label>Descrição da Atividade</label>
+              <input 
+                value={descricao} 
+                onChange={(e) => setDescricao(e.target.value)} 
+                placeholder="Ex: Prova Mensal Cap 1 e 2, Trabalho BNCC..." 
+              />
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
             {editingId && (
-              <button type="button" className="btn" onClick={() => { setEditingId(null); setNome(''); setTipo('prova'); setTurmaId(''); setMateriaId(''); setBimestreId(''); setPeso(1); }}>
+              <button type="button" className="btn" onClick={() => { setEditingId(null); setNome(''); setTipo('prova'); setTurmaId(''); setMateriaId(''); setBimestreId(''); setPeso(1); setDescricao(''); }}>
                 Cancelar
               </button>
             )}
@@ -256,6 +271,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                 >
                   <div style={{ flex: 1, paddingRight: '8px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{ativ.nome}</span>
+                    {ativ.descricao && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>📝 {ativ.descricao}</div>}
                     <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>
                         {ativ.tipo.toUpperCase()}

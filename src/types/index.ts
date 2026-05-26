@@ -93,6 +93,7 @@ export interface Atividade {
   /** @fk Chave Estrangeira -> Bimestre.id | @cardinality N:1 | @cascade ON DELETE RESTRICT */
   bimestreId: string;
   peso: number;
+  descricao?: string;
 }
 
 /**
