@@ -23,6 +23,24 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
   const [turmaId, setTurmaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
 
+  // 1. Filtrar os bimestres que possuem atividades para a turma selecionada
+  const bimestresDaTurma = React.useMemo(() => {
+    if (!turmaId) return [];
+    const bimIdsComAtividade = Array.from(
+      new Set(
+        atividades
+          .filter(a => a.turmaId === turmaId)
+          .map(a => a.bimestreId)
+      )
+    );
+    return bimestres.filter(b => bimIdsComAtividade.includes(b.id));
+  }, [turmaId, atividades, bimestres]);
+
+  const handleTurmaChange = (id: string) => {
+    setTurmaId(id);
+    setBimestreId('');
+  };
+
   // Filtrar turmas/alunos ativos
   const turmaSelecionada = turmas.find(t => t.id === turmaId);
   const escolaId = turmaSelecionada?.escolaId || '';
@@ -132,7 +150,7 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div className="f">
             <label>Selecione a Turma *</label>
-            <select value={turmaId} onChange={(e) => setTurmaId(e.target.value)}>
+            <select value={turmaId} onChange={(e) => handleTurmaChange(e.target.value)}>
               <option value="">— selecione —</option>
               {turmas.map(t => {
                 const esc = escolas.find(e => e.id === t.escolaId);
@@ -141,10 +159,15 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
             </select>
           </div>
           <div className="f">
-            <label>Selecione o Bimestre *</label>
-            <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)}>
+            <label>
+              Selecione o Bimestre *
+              {turmaId && bimestresDaTurma.length === 0 && (
+                <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhuma atividade nesta turma</span>
+              )}
+            </label>
+            <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)} disabled={!turmaId}>
               <option value="">— selecione —</option>
-              {bimestres.map(b => <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>)}
+              {bimestresDaTurma.map(b => <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>)}
             </select>
           </div>
         </div>

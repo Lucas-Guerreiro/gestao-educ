@@ -40,6 +40,25 @@ const AulasPage: React.FC<AulasPageProps> = ({
     "8º Horário (14:40 - 15:30)"
   ];
 
+  // Filtrar as matérias da mesma escola da turma selecionada no formulário
+  const materiasDaTurmaEscola = React.useMemo(() => {
+    if (!turmaId) return [];
+    const turmaSelected = turmas.find(t => t.id === turmaId);
+    if (!turmaSelected) return [];
+    return materias.filter(m => m.escolaId === turmaSelected.escolaId);
+  }, [turmaId, turmas, materias]);
+
+  const handleTurmaChange = (id: string) => {
+    setTurmaId(id);
+    setMateriaId('');
+    setCapituloId('');
+  };
+
+  const handleMateriaChange = (id: string) => {
+    setMateriaId(id);
+    setCapituloId('');
+  };
+
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data || !horario || !turmaId || !materiaId || !tipo) {
@@ -147,7 +166,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div className="f">
               <label>Turma Vinculada *</label>
-              <select value={turmaId} onChange={(e) => { setTurmaId(e.target.value); setCapituloId(''); }}>
+              <select value={turmaId} onChange={(e) => handleTurmaChange(e.target.value)}>
                 <option value="">— selecione —</option>
                 {turmas.map(t => {
                   const esc = escolas.find(e => e.id === t.escolaId);
@@ -156,10 +175,15 @@ const AulasPage: React.FC<AulasPageProps> = ({
               </select>
             </div>
             <div className="f">
-              <label>Matéria Vinculada *</label>
-              <select value={materiaId} onChange={(e) => { setMateriaId(e.target.value); setCapituloId(''); }}>
+              <label>
+                Matéria Vinculada *
+                {turmaId && materiasDaTurmaEscola.length === 0 && (
+                  <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhuma matéria nesta escola</span>
+                )}
+              </label>
+              <select value={materiaId} onChange={(e) => handleMateriaChange(e.target.value)} disabled={!turmaId}>
                 <option value="">— selecione —</option>
-                {materias.map(m => {
+                {materiasDaTurmaEscola.map(m => {
                   const esc = escolas.find(e => e.id === m.escolaId);
                   return <option key={m.id} value={m.id}>{m.nome} ({esc ? esc.nome : 'Escola'})</option>;
                 })}
@@ -180,7 +204,12 @@ const AulasPage: React.FC<AulasPageProps> = ({
               </select>
             </div>
             <div className="f">
-              <label>Capítulo Mapeado</label>
+              <label>
+                Capítulo Mapeado
+                {turmaId && materiaId && capitulosFiltrados.length === 0 && (
+                  <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhum capítulo cadastrado</span>
+                )}
+              </label>
               <select value={capituloId} onChange={(e) => setCapituloId(e.target.value)} disabled={!turmaId || !materiaId}>
                 <option value="">— sem capítulo associado —</option>
                 {capitulosFiltrados.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}

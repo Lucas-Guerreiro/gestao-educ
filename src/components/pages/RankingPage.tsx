@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Aluno, Turma, Atividade, Nota, Escola } from '@/types';
 
 interface RankingPageProps {
@@ -133,7 +133,9 @@ const RankingPage: React.FC<RankingPageProps> = ({
       .sort((a, b) => (b.mediaGlobal || 0) - (a.mediaGlobal || 0));
   };
 
-  const alunosRankeados = obterAlunosRankeados();
+  const alunosRankeados = useMemo(() => obterAlunosRankeados(), [
+    alunos, turmas, atividades, notas, turmaId, filtroSerie
+  ]);
 
   // Listar todas as séries exclusivas para filtro
   const seriesDisponiveis = Array.from(new Set(turmas.map(t => t.serie)));
@@ -150,6 +152,17 @@ const RankingPage: React.FC<RankingPageProps> = ({
   return (
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
+      {/* Cabeçalho com indicador de tempo real */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
+          🏆 Ranking de Alunos
+        </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '20px', padding: '4px 12px', fontSize: '11.5px', color: '#15803d', fontWeight: 700 }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }}></span>
+          Atualização em tempo real
+        </div>
+      </div>
+
       {/* Filtros de Ranking */}
       <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.25rem', border: '1px solid var(--border)' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

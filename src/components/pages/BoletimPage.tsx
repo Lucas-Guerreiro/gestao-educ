@@ -126,7 +126,12 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
             </select>
           </div>
           <div className="f">
-            <label>Selecione o Aluno *</label>
+            <label>
+              Selecione o Aluno *
+              {selectedTurmaId && alunosDaTurma.length === 0 && (
+                <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhum aluno ativo nesta turma</span>
+              )}
+            </label>
             <select value={selectedAlunoId} onChange={(e) => setSelectedAlunoId(e.target.value)} disabled={!selectedTurmaId}>
               <option value="">— selecione o aluno —</option>
               {alunosDaTurma.map(a => <option key={a.id} value={a.id}>{a.nome}</option>)}

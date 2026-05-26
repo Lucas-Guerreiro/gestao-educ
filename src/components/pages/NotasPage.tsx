@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola } from '@/types';
@@ -27,6 +27,34 @@ const NotasPage: React.FC<NotasPageProps> = ({
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
+
+  // Handlers com reset em cascata
+  const handleTurmaChange = (id: string) => {
+    setTurmaId(id);
+    setMateriaId('');
+    setBimestreId('');
+  };
+
+  const handleMateriaChange = (id: string) => {
+    setMateriaId(id);
+    setBimestreId('');
+  };
+
+  // Matérias que têm atividades na turma selecionada
+  const materiasDaTurma = useMemo(() => {
+    if (!turmaId) return materias;
+    const ids = new Set(atividades.filter(at => at.turmaId === turmaId).map(at => at.materiaId));
+    return materias.filter(m => ids.has(m.id));
+  }, [turmaId, atividades, materias]);
+
+  // Bimestres que têm atividades na turma + matéria selecionadas
+  const bimestresDaTurmaMateria = useMemo(() => {
+    if (!turmaId || !materiaId) return bimestres;
+    const ids = new Set(
+      atividades.filter(at => at.turmaId === turmaId && at.materiaId === materiaId).map(at => at.bimestreId)
+    );
+    return bimestres.filter(b => ids.has(b.id));
+  }, [turmaId, materiaId, atividades, bimestres]);
 
   const [savingCells, setSavingCells] = useState<Record<string, boolean>>({});
 
@@ -224,7 +252,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
           <div className="f">
             <label>Selecione a Turma *</label>
-            <select value={turmaId} onChange={(e) => setTurmaId(e.target.value)}>
+            <select value={turmaId} onChange={(e) => handleTurmaChange(e.target.value)}>
               <option value="">— selecione —</option>
               {turmas.map(t => {
                 const esc = escolas.find(e => e.id === t.escolaId);
@@ -233,20 +261,31 @@ const NotasPage: React.FC<NotasPageProps> = ({
             </select>
           </div>
           <div className="f">
-            <label>Selecione a Matéria *</label>
-            <select value={materiaId} onChange={(e) => setMateriaId(e.target.value)}>
+            <label>
+              Selecione a Matéria *
+              {turmaId && materiasDaTurma.length === 0 && (
+                <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhuma atividade cadastrada para esta turma</span>
+              )}
+            </label>
+            <select value={materiaId} onChange={(e) => handleMateriaChange(e.target.value)} disabled={!turmaId}>
               <option value="">— selecione —</option>
-              {materias.map(m => {
-                const esc = escolas.find(e => e.id === m.escolaId);
-                return <option key={m.id} value={m.id}>{m.nome} ({esc ? esc.nome : 'Escola'})</option>;
-              })}
+              {materiasDaTurma.map(m => (
+                <option key={m.id} value={m.id}>{m.nome}</option>
+              ))}
             </select>
           </div>
           <div className="f">
-            <label>Selecione o Bimestre *</label>
-            <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)}>
+            <label>
+              Selecione o Bimestre *
+              {materiaId && bimestresDaTurmaMateria.length === 0 && (
+                <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhuma atividade nesta matéria</span>
+              )}
+            </label>
+            <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)} disabled={!materiaId}>
               <option value="">— selecione —</option>
-              {bimestres.map(b => <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>)}
+              {bimestresDaTurmaMateria.map(b => (
+                <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>
+              ))}
             </select>
           </div>
         </div>

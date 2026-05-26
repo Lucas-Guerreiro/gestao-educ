@@ -24,6 +24,19 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
   const [materiaId, setMateriaId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // Filtrar as matérias da mesma escola da turma selecionada no formulário
+  const materiasDaTurmaEscola = React.useMemo(() => {
+    if (!turmaId) return [];
+    const turmaSelected = turmas.find(t => t.id === turmaId);
+    if (!turmaSelected) return [];
+    return materias.filter(m => m.escolaId === turmaSelected.escolaId);
+  }, [turmaId, turmas, materias]);
+
+  const handleTurmaChange = (id: string) => {
+    setTurmaId(id);
+    setMateriaId('');
+  };
+
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome.trim() || !turmaId || !materiaId) {
@@ -124,7 +137,7 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div className="f">
               <label>Turma Vinculada *</label>
-              <select value={turmaId} onChange={(e) => setTurmaId(e.target.value)}>
+              <select value={turmaId} onChange={(e) => handleTurmaChange(e.target.value)}>
                 <option value="">— selecione —</option>
                 {turmas.map(t => {
                   const esc = escolas.find(e => e.id === t.escolaId);
@@ -133,10 +146,15 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
               </select>
             </div>
             <div className="f">
-              <label>Matéria Vinculada *</label>
-              <select value={materiaId} onChange={(e) => setMateriaId(e.target.value)}>
+              <label>
+                Matéria Vinculada *
+                {turmaId && materiasDaTurmaEscola.length === 0 && (
+                  <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhuma matéria nesta escola</span>
+                )}
+              </label>
+              <select value={materiaId} onChange={(e) => setMateriaId(e.target.value)} disabled={!turmaId}>
                 <option value="">— selecione —</option>
-                {materias.map(m => {
+                {materiasDaTurmaEscola.map(m => {
                   const esc = escolas.find(e => e.id === m.escolaId);
                   return <option key={m.id} value={m.id}>{m.nome} ({esc ? esc.nome : 'Escola'})</option>;
                 })}
