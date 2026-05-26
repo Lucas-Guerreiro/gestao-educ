@@ -91,6 +91,16 @@ const NotasPage: React.FC<NotasPageProps> = ({
     at => at.turmaId === turmaId && at.materiaId === materiaId && at.bimestreId === bimestreId
   );
 
+  // Filtrar as atividades com base em qualquer um dos filtros selecionados
+  const atividadesFiltradasParaLista = useMemo(() => {
+    return atividades.filter(at => {
+      const matchTurma = turmaId ? at.turmaId === turmaId : true;
+      const matchMateria = materiaId ? at.materiaId === materiaId : true;
+      const matchBimestre = bimestreId ? at.bimestreId === bimestreId : true;
+      return matchTurma && matchMateria && matchBimestre;
+    });
+  }, [atividades, turmaId, materiaId, bimestreId]);
+
   // Obter nota do aluno para a atividade específica
   const obterNotaValor = (alunoId: string, atividadeId: string): string => {
     const registro = notas.find(n => n.alunoId === alunoId && n.atividadeId === atividadeId);
@@ -293,8 +303,122 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
       {/* Planilha de Notas */}
       {!turmaId || !materiaId || !bimestreId ? (
-        <div className="card-box" style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-muted)', fontStyle: 'italic', background: '#fff', borderRadius: '16px', border: '1px solid var(--border)' }}>
-          ⚠️ Selecione a Turma, Matéria e o Bimestre acima para carregar a planilha de lançamento de notas.
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          
+          <div className="card-box" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#1e40af', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i className="ti ti-info-circle"></i>
+              Selecione os Filtros ou Escolha uma Atividade Abaixo
+            </div>
+            <div style={{ fontSize: '12.5px', color: '#1e40af', opacity: 0.9 }}>
+              Preencha a Turma, Matéria e o Bimestre nos selects acima para carregar a planilha completa de notas, ou clique em <b>"Lançar Notas"</b> em qualquer atividade listada abaixo para carregar seus dados automaticamente.
+            </div>
+          </div>
+
+          <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i className="ti ti-clipboard-list" style={{ color: 'var(--primary)' }}></i>
+              Atividades Cadastradas ({atividadesFiltradasParaLista.length})
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '550px', overflowY: 'auto', paddingRight: '4px' }}>
+              {atividadesFiltradasParaLista.length === 0 ? (
+                <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12.5px', textAlign: 'center', padding: '30px 10px' }}>
+                  Nenhuma atividade corresponde aos filtros atuais.
+                </div>
+              ) : (
+                atividadesFiltradasParaLista.map(ativ => {
+                  const tur = turmas.find(t => t.id === ativ.turmaId);
+                  const mat = materias.find(m => m.id === ativ.materiaId);
+                  const bim = bimestres.find(b => b.id === ativ.bimestreId);
+                  const colors = badgeColor(ativ.tipo);
+                  
+                  const totalAlunos = alunos.filter(a => String(a.turmaId) === ativ.turmaId && a.ativo !== false).length;
+                  const notasLancadas = notas.filter(n => n.atividadeId === ativ.id && n.nota !== undefined && n.nota >= 0).length;
+                  const progressoPorcentagem = totalAlunos > 0 ? Math.round((notasLancadas / totalAlunos) * 100) : 0;
+
+                  return (
+                    <div 
+                      key={ativ.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        padding: '12px 16px', 
+                        background: '#f8fafc', 
+                        border: '1px solid var(--border)', 
+                        borderRadius: '12px',
+                        cursor: 'default'
+                      }}
+                      className="table-row-hover"
+                    >
+                      <div style={{ flex: 1, paddingRight: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)' }}>{ativ.nome}</span>
+                          {ativ.descricao && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>— {ativ.descricao}</span>}
+                        </div>
+                        
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '2.5px 7px', borderRadius: '6px', fontWeight: 800 }}>
+                            {ativ.tipo.toUpperCase()}
+                          </span>
+                          <span style={{ fontSize: '9.5px', background: '#e2e8f0', color: '#475569', padding: '2.5px 7px', borderRadius: '6px', fontWeight: 600 }}>
+                            🏫 {tur ? tur.nome : '—'}
+                          </span>
+                          <span style={{ fontSize: '9.5px', background: '#e2e8f0', color: '#475569', padding: '2.5px 7px', borderRadius: '6px', fontWeight: 600 }}>
+                            📖 {mat ? mat.nome : '—'}
+                          </span>
+                          <span style={{ fontSize: '9.5px', background: '#eff6ff', color: '#1e40af', padding: '2.5px 7px', borderRadius: '6px', fontWeight: 700 }}>
+                            📅 {bim ? `${bim.nome}${bim.ano ? ` (${bim.ano})` : ''}` : '—'}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-users" style={{ color: 'var(--primary)' }}></i>
+                            <span>Alunos: <b>{totalAlunos}</b></span>
+                          </div>
+                          <span>•</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <i className="ti ti-discount-check" style={{ color: progressoPorcentagem === 100 ? '#22c55e' : '#eab308' }}></i>
+                            <span>Lançamentos: <b>{notasLancadas}/{totalAlunos} ({progressoPorcentagem}%)</b></span>
+                          </div>
+                          {totalAlunos > 0 && (
+                            <div style={{ width: '80px', height: '5px', background: '#e2e8f0', borderRadius: '10px', overflow: 'hidden', marginLeft: '4px' }}>
+                              <div style={{ width: `${progressoPorcentagem}%`, height: '100%', background: progressoPorcentagem === 100 ? '#22c55e' : 'var(--primary)' }}></div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ flexShrink: 0 }}>
+                        <button 
+                          className="btn pri" 
+                          style={{ 
+                            padding: '8px 16px', 
+                            fontSize: '12.5px', 
+                            fontWeight: 700, 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '6px',
+                            boxShadow: 'var(--shadow-sm)',
+                            borderRadius: '8px'
+                          }} 
+                          onClick={() => {
+                            setTurmaId(ativ.turmaId);
+                            setMateriaId(ativ.materiaId);
+                            setBimestreId(ativ.bimestreId);
+                          }}
+                        >
+                          <i className="ti ti-table"></i> Lançar Notas
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       ) : atividadesFiltradas.length === 0 ? (
         <div className="card-box" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', fontStyle: 'italic', background: '#fff', borderRadius: '16px', border: '1px solid var(--border)' }}>
@@ -314,6 +438,30 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
           {/* Controles de Visibilidade das Notas */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button 
+              type="button" 
+              className="btn" 
+              onClick={() => {
+                setTurmaId('');
+                setMateriaId('');
+                setBimestreId('');
+              }}
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '6px', 
+                fontSize: '12.5px', 
+                fontWeight: 600,
+                borderColor: '#cbd5e1',
+                color: 'var(--text-main)',
+                background: '#fff',
+                padding: '6px 12px',
+                borderRadius: '8px'
+              }}
+            >
+              <i className="ti ti-arrow-left"></i>
+              Voltar para Atividades
+            </button>
             <button 
               type="button" 
               className="btn" 
