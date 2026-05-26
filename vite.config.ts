@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-  base: '/gestao-educ/',
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {

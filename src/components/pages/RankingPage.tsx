@@ -137,16 +137,73 @@ const RankingPage: React.FC<RankingPageProps> = ({
     alunos, turmas, atividades, notas, turmaId, filtroSerie
   ]);
 
+  // Calcular as colocações (rankings) tratando empates
+  const alunosComColocacao = useMemo(() => {
+    let colocacaoAtual = 1;
+    return alunosRankeados.map((aluno, idx, arr) => {
+      if (idx > 0) {
+        const alunoAnterior = arr[idx - 1];
+        if ((aluno.mediaGlobal || 0).toFixed(1) !== (alunoAnterior.mediaGlobal || 0).toFixed(1)) {
+          colocacaoAtual = idx + 1;
+        }
+      }
+      return {
+        ...aluno,
+        posicaoRank: colocacaoAtual
+      };
+    });
+  }, [alunosRankeados]);
+
   // Listar todas as séries exclusivas para filtro
   const seriesDisponiveis = Array.from(new Set(turmas.map(t => t.serie)));
 
-  // Obter top 3 do ranking
-  const podium = alunosRankeados.slice(0, 3);
+  // Obter top 3 do ranking com colocação
+  const podium = alunosComColocacao.slice(0, 3);
 
-  const medalha = (posicao: number) => {
-    if (posicao === 0) return { emoji: '🥇', cor: '#fbbf24', text: '1º Lugar' };
-    if (posicao === 1) return { emoji: '🥈', cor: '#94a3b8', text: '2º Lugar' };
-    return { emoji: '🥉', cor: '#b45309', text: '3º Lugar' };
+  const obterEstiloPodium = (posicao: number) => {
+    if (posicao === 1) {
+      return {
+        emoji: '🥇',
+        corBorda: '#f59e0b',
+        bg: '#fffbeb',
+        corTexto: '#b45309',
+        height: '170px',
+        width: '170px',
+        fontSizeEmoji: '42px',
+        borderWidth: '3px',
+        shadow: '0 10px 15px -3px rgba(245, 158, 11, 0.15)',
+        text: '1º Lugar',
+        anim: 'bounce 2s infinite'
+      };
+    }
+    if (posicao === 2) {
+      return {
+        emoji: '🥈',
+        corBorda: '#cbd5e1',
+        bg: '#f8fafc',
+        corTexto: '#475569',
+        height: '140px',
+        width: '150px',
+        fontSizeEmoji: '32px',
+        borderWidth: '2px',
+        shadow: 'none',
+        text: '2º Lugar',
+        anim: 'none'
+      };
+    }
+    return {
+      emoji: '🥉',
+      corBorda: '#d7ccc8',
+      bg: '#fafaf9',
+      corTexto: '#78716c',
+      height: '120px',
+      width: '150px',
+      fontSizeEmoji: '32px',
+      borderWidth: '2px',
+      shadow: 'none',
+      text: '3º Lugar',
+      anim: 'none'
+    };
   };
 
   return (
@@ -203,7 +260,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
         <div className="card-box" style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-muted)', fontStyle: 'italic', background: '#fff', borderRadius: '16px', border: '1px solid var(--border)' }}>
           ⚠️ Selecione uma Turma ou Série acima para carregar o ranking classificatório de alunos.
         </div>
-      ) : alunosRankeados.length === 0 ? (
+      ) : alunosComColocacao.length === 0 ? (
         <div className="card-box" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', fontStyle: 'italic', background: '#fff', borderRadius: '16px', border: '1px solid var(--border)' }}>
           Nenhum dado de notas cadastrado para gerar o ranking deste segmento.
         </div>
@@ -212,43 +269,36 @@ const RankingPage: React.FC<RankingPageProps> = ({
           
           {/* Podium de Vencedores */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '16px', padding: '20px 0', flexWrap: 'wrap' }}>
-            
-            {/* 2º Lugar */}
-            {podium[1] && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '4px' }}>🥈</div>
-                <div style={{ background: '#f8fafc', border: '2px solid #cbd5e1', borderRadius: '16px 16px 0 0', padding: '16px', width: '150px', height: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 800 }}>{medalha(1).text}</div>
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.2 }}>{podium[1].nome.split(' ')[0]}</div>
-                  <div style={{ fontSize: '15px', fontWeight: 900, color: '#475569' }}>{(podium[1].mediaGlobal || 0).toFixed(1)}</div>
+            {podium.map(aluno => {
+              const estilo = obterEstiloPodium(aluno.posicaoRank);
+              return (
+                <div key={aluno.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ fontSize: estilo.fontSizeEmoji, marginBottom: '4px', animation: estilo.anim }}>{estilo.emoji}</div>
+                  <div style={{ 
+                    background: estilo.bg, 
+                    border: `${estilo.borderWidth} solid ${estilo.corBorda}`, 
+                    borderRadius: '16px 16px 0 0', 
+                    padding: '16px', 
+                    width: estilo.width, 
+                    height: estilo.height, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    textAlign: 'center',
+                    boxShadow: estilo.shadow
+                  }}>
+                    <div style={{ fontSize: '11px', color: estilo.corTexto, fontWeight: 800 }}>{estilo.text}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.2 }}>
+                      {aluno.posicaoRank === 1 ? aluno.nome : aluno.nome.split(' ')[0]}
+                    </div>
+                    <div style={{ fontSize: '15px', fontWeight: 900, color: estilo.corTexto }}>
+                      {(aluno.mediaGlobal || 0).toFixed(1)}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* 1º Lugar (Destaque) */}
-            {podium[0] && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ fontSize: '42px', marginBottom: '4px', animation: 'bounce 2s infinite' }}>🥇</div>
-                <div style={{ background: '#fffbeb', border: '3px solid #f59e0b', borderRadius: '16px 16px 0 0', padding: '18px', width: '170px', height: '170px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', boxShadow: '0 10px 15px -3px rgba(245, 158, 11, 0.15)' }}>
-                  <div style={{ fontSize: '11px', color: '#b45309', fontWeight: 800 }}>{medalha(0).text}</div>
-                  <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text-main)', lineHeight: 1.2 }}>{podium[0].nome}</div>
-                  <div style={{ fontSize: '18px', fontWeight: 900, color: '#b45309' }}>{(podium[0].mediaGlobal || 0).toFixed(1)}</div>
-                </div>
-              </div>
-            )}
-
-            {/* 3º Lugar */}
-            {podium[2] && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '4px' }}>🥉</div>
-                <div style={{ background: '#fafaf9', border: '2px solid #d7ccc8', borderRadius: '16px 16px 0 0', padding: '16px', width: '150px', height: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#78716c', fontWeight: 800 }}>{medalha(2).text}</div>
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.2 }}>{podium[2].nome.split(' ')[0]}</div>
-                  <div style={{ fontSize: '15px', fontWeight: 900, color: '#78716c' }}>{(podium[2].mediaGlobal || 0).toFixed(1)}</div>
-                </div>
-              </div>
-            )}
-
+              );
+            })}
           </div>
 
           {/* Lista Completa dos Demais Alunos */}
@@ -258,9 +308,9 @@ const RankingPage: React.FC<RankingPageProps> = ({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {alunosRankeados.map((aluno, index) => {
-                const tur = turmas.find(t => t.id === String(aluno.turmaId));
-                const posEmoji = index < 3 ? medalha(index).emoji : `${index + 1}º`;
+              {alunosComColocacao.map((aluno) => {
+                const tur = turmas.find(t => String(t.id) === String(aluno.turmaId));
+                const posEmoji = aluno.posicaoRank === 1 ? '🥇' : aluno.posicaoRank === 2 ? '🥈' : aluno.posicaoRank === 3 ? '🥉' : `${aluno.posicaoRank}º`;
                 
                 return (
                   <div 
@@ -270,10 +320,10 @@ const RankingPage: React.FC<RankingPageProps> = ({
                       alignItems: 'center', 
                       justifyContent: 'space-between', 
                       padding: '12px 16px', 
-                      background: index === 0 ? '#fffbeb' : index === 1 ? '#f8fafc' : index === 2 ? '#fafaf9' : '#fff', 
+                      background: aluno.posicaoRank === 1 ? '#fffbeb' : aluno.posicaoRank === 2 ? '#f8fafc' : aluno.posicaoRank === 3 ? '#fafaf9' : '#fff', 
                       border: '1px solid var(--border)', 
                       borderRadius: '12px',
-                      borderColor: index === 0 ? '#fde68a' : 'var(--border)'
+                      borderColor: aluno.posicaoRank === 1 ? '#fde68a' : 'var(--border)'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -285,7 +335,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Turma: {tur ? tur.nome : '—'}</div>
                       </div>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: 900, color: index === 0 ? '#b45309' : 'var(--primary)' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 900, color: aluno.posicaoRank === 1 ? '#b45309' : 'var(--primary)' }}>
                       {(aluno.mediaGlobal || 0).toFixed(1)}
                     </div>
                   </div>
