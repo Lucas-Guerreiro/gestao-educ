@@ -109,11 +109,13 @@ const BackupModal: React.FC<BackupModalProps> = ({ fecharModal, setSyncStatus })
         if (backupData[col] && backupData[col].length > 0) {
           const batch = writeBatch(db);
           backupData[col].forEach((item: any) => {
-            const docId = item.id;
+            if (!item || typeof item !== 'object') return;
+            
+            const docId = item.id !== undefined && item.id !== null ? String(item.id).trim() : '';
             const payload = { ...item };
             delete payload.id; // remove o campo ID redundante
             
-            const docRef = doc(db, col, docId);
+            const docRef = docId ? doc(db, col, docId) : doc(collection(db, col));
             batch.set(docRef, payload);
           });
           await batch.commit();
