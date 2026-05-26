@@ -104,11 +104,11 @@ const SdPage: React.FC<SdPageProps> = ({
                     </div>
 
                     <div style={{ display: 'flex', gap: '4px' }}>
-                      <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => abrirSdModal(sd.id)}>
-                        <i className="ti ti-pencil"></i>
+                      <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => abrirSdModal(sd.id)}>
+                        <i className="ti ti-pencil"></i> Editar
                       </button>
-                      <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626' }} onClick={() => deletarSd(sd.id)}>
-                        <i className="ti ti-trash"></i>
+                      <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => deletarSd(sd.id)}>
+                        <i className="ti ti-trash"></i> Excluir
                       </button>
                     </div>
                   </div>

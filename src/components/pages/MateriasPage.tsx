@@ -172,11 +172,11 @@ const MateriasPage: React.FC<MateriasPageProps> = ({ materias, escolas, setSyncS
                     <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600 }}>🏛️ {esc ? esc.nome : 'Escola Não Encontrada'}</div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => editar(mat)}>
-                      <i className="ti ti-pencil"></i>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => editar(mat)}>
+                      <i className="ti ti-pencil"></i> Editar
                     </button>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626' }} onClick={() => deletar(mat.id)}>
-                      <i className="ti ti-trash"></i>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => deletar(mat.id)}>
+                      <i className="ti ti-trash"></i> Excluir
                     </button>
                   </div>
                 </div>

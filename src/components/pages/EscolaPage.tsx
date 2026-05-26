@@ -289,12 +289,12 @@ const EscolaPage: React.FC<EscolaPageProps> = ({ escolas, turmas, setSyncStatus 
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px' }}
               >
                 <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{esc.nome}</span>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => editarEscola(esc)}>
-                    <i className="ti ti-pencil"></i>
+                 <div style={{ display: 'flex', gap: '6px' }}>
+                  <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => editarEscola(esc)}>
+                    <i className="ti ti-pencil"></i> Editar
                   </button>
-                  <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626' }} onClick={() => deletarEscola(esc.id)}>
-                    <i className="ti ti-trash"></i>
+                  <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => deletarEscola(esc.id)}>
+                    <i className="ti ti-trash"></i> Excluir
                   </button>
                 </div>
               </div>
@@ -355,11 +355,11 @@ const EscolaPage: React.FC<EscolaPageProps> = ({ escolas, turmas, setSyncStatus 
                     <div style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 600 }}>🏛️ {esc ? esc.nome : 'Escola Excluída'}</div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => editarTurma(tur)}>
-                      <i className="ti ti-pencil"></i>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => editarTurma(tur)}>
+                      <i className="ti ti-pencil"></i> Editar
                     </button>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626' }} onClick={() => deletarTurma(tur.id)}>
-                      <i className="ti ti-trash"></i>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => deletarTurma(tur.id)}>
+                      <i className="ti ti-trash"></i> Excluir
                     </button>
                   </div>
                 </div>

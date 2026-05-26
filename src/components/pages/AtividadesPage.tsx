@@ -76,6 +76,17 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
     setPeso(ativ.peso);
   };
 
+  const duplicar = (ativ: Atividade) => {
+    setEditingId(null);
+    setNome(ativ.nome);
+    setTipo(ativ.tipo);
+    setMateriaId(ativ.materiaId);
+    setBimestreId(ativ.bimestreId);
+    setPeso(ativ.peso);
+    setTurmaId('');
+    alert(`Atividade "${ativ.nome}" copiada para o formulário! Agora selecione a nova Turma Vinculada e clique em Cadastrar.`);
+  };
+
   const deletar = async (id: string) => {
     if (!confirm('Deseja realmente deletar esta atividade? Todas as notas associadas serão perdidas permanentemente.')) return;
     setSyncStatus('saving');
@@ -230,12 +241,15 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                       </span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => editar(ativ)}>
-                      <i className="ti ti-pencil"></i>
+                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#bae6fd', color: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => duplicar(ativ)}>
+                      <i className="ti ti-copy"></i> Duplicar
                     </button>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626' }} onClick={() => deletar(ativ.id)}>
-                      <i className="ti ti-trash"></i>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => editar(ativ)}>
+                      <i className="ti ti-pencil"></i> Editar
+                    </button>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => deletar(ativ.id)}>
+                      <i className="ti ti-trash"></i> Excluir
                     </button>
                   </div>
                 </div>

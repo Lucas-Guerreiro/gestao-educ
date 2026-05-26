@@ -263,11 +263,11 @@ const AulasPage: React.FC<AulasPageProps> = ({
                     >
                       {aula.realizada ? '✅ Ministrada' : '⏳ Pendente'}
                     </button>
-                    <button className="btn" style={{ padding: '6px 8px', fontSize: '11px' }} onClick={() => editar(aula)}>
-                      <i className="ti ti-pencil"></i>
+                    <button className="btn" style={{ padding: '6px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => editar(aula)}>
+                      <i className="ti ti-pencil"></i> Editar
                     </button>
-                    <button className="btn" style={{ padding: '6px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626' }} onClick={() => deletar(aula.id)}>
-                      <i className="ti ti-trash"></i>
+                    <button className="btn" style={{ padding: '6px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => deletar(aula.id)}>
+                      <i className="ti ti-trash"></i> Excluir
                     </button>
                   </div>
                 </div>

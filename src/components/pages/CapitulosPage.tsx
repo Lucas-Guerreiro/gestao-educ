@@ -199,11 +199,11 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => editar(cap)}>
-                      <i className="ti ti-pencil"></i>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => editar(cap)}>
+                      <i className="ti ti-pencil"></i> Editar
                     </button>
-                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626' }} onClick={() => deletar(cap.id)}>
-                      <i className="ti ti-trash"></i>
+                    <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#fca5a5', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => deletar(cap.id)}>
+                      <i className="ti ti-trash"></i> Excluir
                     </button>
                   </div>
                 </div>
