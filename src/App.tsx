@@ -392,7 +392,6 @@ const App: React.FC = () => {
         syncStatus={syncStatus}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
-        abrirIAModal={() => setIsIaModalOpen(true)}
       />
 
       {/* Main Workspace Column */}
@@ -405,6 +404,8 @@ const App: React.FC = () => {
           selectedAno={selectedAno}
           anosDisponiveis={anosDisponiveis}
           onAnoChange={handleAnoChange}
+          collapsed={sidebarCollapsed}
+          setCollapsed={setSidebarCollapsed}
         />
 
         <div style={{ flex: 1, padding: '12px' }}>

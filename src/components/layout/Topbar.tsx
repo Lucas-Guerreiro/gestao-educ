@@ -8,6 +8,8 @@ interface TopbarProps {
   selectedAno: number;
   anosDisponiveis: number[];
   onAnoChange: (ano: number) => void;
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
 const Topbar: React.FC<TopbarProps> = ({
@@ -18,9 +20,11 @@ const Topbar: React.FC<TopbarProps> = ({
   selectedAno,
   anosDisponiveis,
   onAnoChange,
+  collapsed,
+  setCollapsed,
 }) => {
   const sectionMeta: Record<string, { label: string; icon: string }> = {
-    'escola': { label: 'Escola & Turmas', icon: 'ti-building' },
+    'escola': { label: 'Escola Turma', icon: 'ti-building' },
     'alunos': { label: 'Alunos', icon: 'ti-users' },
     'materias': { label: 'Matérias', icon: 'ti-book' },
     'profs': { label: 'Professores', icon: 'ti-user-check' },
@@ -41,6 +45,30 @@ const Topbar: React.FC<TopbarProps> = ({
 
   return (
     <div className="topbar">
+      <button 
+        className="tb-btn tb-menu-toggle" 
+        id="btn-toggle-menu-topbar" 
+        style={{ 
+          background: 'var(--bg-card)', 
+          border: '1px solid var(--border)', 
+          borderRadius: '8px', 
+          width: '36px', 
+          height: '36px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          cursor: 'pointer', 
+          marginRight: '12px', 
+          color: 'var(--text-main)', 
+          boxShadow: 'var(--shadow-sm)',
+          transition: 'all 0.2s ease'
+        }}
+        onClick={() => setCollapsed(!collapsed)}
+        title={collapsed ? "Expandir menu" : "Recolher menu"}
+      >
+        <i className="ti ti-menu-2" style={{ fontSize: '18px' }}></i>
+      </button>
+
       <div className="topbar-title" id="topbar-title">
         <i className={`ti ${meta.icon}`}></i> {meta.label}
       </div>
