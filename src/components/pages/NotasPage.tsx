@@ -30,6 +30,31 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
   const [savingCells, setSavingCells] = useState<Record<string, boolean>>({});
 
+  // Estados de revelação/ocultação de notas de Provas, Trabalho e PLURAAL
+  const [visibilidadePermanente, setVisibilidadePermanente] = useState<boolean>(() => {
+    return localStorage.getItem('es_notas_reveladas_permanente') === 'true';
+  });
+
+  const [notasOcultas, setNotasOcultas] = useState<boolean>(() => {
+    const permanente = localStorage.getItem('es_notas_reveladas_permanente') === 'true';
+    return !permanente; // Se for permanente, as notas não começam ocultas. Senão, começam ocultas.
+  });
+
+  const alternarVisibilidadeTemporaria = () => {
+    setNotasOcultas(prev => !prev);
+  };
+
+  const alternarVisibilidadePermanente = () => {
+    const novoValor = !visibilidadePermanente;
+    setVisibilidadePermanente(novoValor);
+    localStorage.setItem('es_notas_reveladas_permanente', String(novoValor));
+    if (novoValor) {
+      setNotasOcultas(false); // Se ativou permanente, revela as notas
+    } else {
+      setNotasOcultas(true); // Se desativou permanente, volta a ocultar por padrão
+    }
+  };
+
   // Filtrar alunos ativos da turma selecionada
   const alunosFiltrados = alunos.filter(a => String(a.turmaId) === turmaId && a.ativo !== false);
 
@@ -106,10 +131,10 @@ const NotasPage: React.FC<NotasPageProps> = ({
   const calcularMediaAluno = (alunoId: string) => {
     if (atividadesFiltradas.length === 0) return '—';
 
-    // 1. Trabalho (máx. 6)
+    // 1. Trabalho (máx. 6) - Só soma se não estiver oculto
     const trabalhos = atividadesFiltradas.filter(at => at.tipo === 'trabalho');
     let notaTrabalho = 0;
-    if (trabalhos.length > 0) {
+    if (trabalhos.length > 0 && !notasOcultas) {
       let soma = 0;
       trabalhos.forEach(at => {
         const notaStr = obterNotaValor(alunoId, at.id);
@@ -120,10 +145,10 @@ const NotasPage: React.FC<NotasPageProps> = ({
       notaTrabalho = soma / trabalhos.length;
     }
 
-    // 2. PLURAAL (máx. 1)
+    // 2. PLURAAL (máx. 1) - Só soma se não estiver oculto
     const pluraals = atividadesFiltradas.filter(at => at.tipo === 'pluraal');
     let notaPluraal = 0;
-    if (pluraals.length > 0) {
+    if (pluraals.length > 0 && !notasOcultas) {
       let soma = 0;
       pluraals.forEach(at => {
         const notaStr = obterNotaValor(alunoId, at.id);
@@ -134,7 +159,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
       notaPluraal = soma / pluraals.length;
     }
 
-    // 3. Qualitativa (máx. 3)
+    // 3. Qualitativa (máx. 3) - Qualitativa nunca oculta
     const qualitativas = atividadesFiltradas.filter(at => at.tipo === 'qualitativa');
     let notaQualitativa = 0;
     if (qualitativas.length > 0) {
@@ -214,9 +239,55 @@ const NotasPage: React.FC<NotasPageProps> = ({
         </div>
       ) : (
         <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', overflowX: 'auto' }}>
+          
           <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '11.5px', color: '#1e40af', lineHeight: 1.5 }}>
             <i className="ti ti-info-circle"></i>
-            <b>Dica de Lançamento:</b> Digite a nota na célula correspondente e pressione <b>Enter</b> ou clique fora (Tab) para salvar instantaneamente no banco de dados. As notas possuem limite máximo de acordo com o tipo: Trabalho (até 6), PLURAAL (até 1) e Qualitativa (até 3).
+            <b>Dica de Lançamento:</b> Digite a nota na célula correspondente e pressione <b>Enter</b> para descer automaticamente para o próximo aluno, ou clique fora (Tab) para salvar. As notas de Trabalho (máx. 6) e PLURAAL (máx. 1) iniciam ocultas.
+          </div>
+
+          {/* Controles de Visibilidade das Notas */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button 
+              type="button" 
+              className="btn" 
+              onClick={alternarVisibilidadeTemporaria}
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '6px', 
+                fontSize: '12.5px', 
+                fontWeight: 600,
+                borderColor: notasOcultas ? 'var(--primary)' : '#cbd5e1',
+                color: notasOcultas ? 'var(--primary)' : 'var(--text-main)',
+                background: notasOcultas ? '#eff6ff' : '#fff',
+                padding: '6px 12px',
+                borderRadius: '8px'
+              }}
+            >
+              <i className={notasOcultas ? "ti ti-eye" : "ti ti-eye-off"}></i>
+              {notasOcultas ? '👁️ Revelar Notas (Trabalho/PLURAAL)' : '🙈 Ocultar Notas (Trabalho/PLURAAL)'}
+            </button>
+
+            <button 
+              type="button" 
+              className="btn" 
+              onClick={alternarVisibilidadePermanente}
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '6px', 
+                fontSize: '12.5px', 
+                fontWeight: 600,
+                borderColor: visibilidadePermanente ? '#22c55e' : '#cbd5e1',
+                color: visibilidadePermanente ? '#15803d' : '#64748b',
+                background: visibilidadePermanente ? '#f0fdf4' : '#f8fafc',
+                padding: '6px 12px',
+                borderRadius: '8px'
+              }}
+            >
+              <i className={visibilidadePermanente ? "ti ti-lock-open" : "ti ti-lock"}></i>
+              {visibilidadePermanente ? '🔓 Visibilidade Permanente: ATIVADA' : '🔒 Tornar Visibilidade Permanente'}
+            </button>
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
@@ -237,7 +308,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
               </tr>
             </thead>
             <tbody>
-              {alunosFiltrados.map(aluno => {
+              {alunosFiltrados.map((aluno, alunoIdx) => {
                 const media = calcularMediaAluno(aluno.id);
                 const mediaNum = media !== '—' ? Number(media) : null;
                 const isFail = mediaNum !== null && mediaNum < 6.0;
@@ -246,9 +317,12 @@ const NotasPage: React.FC<NotasPageProps> = ({
                   <tr key={aluno.id} style={{ borderBottom: '1px solid var(--border)' }} className="table-row-hover">
                     <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-main)' }}>{aluno.nome}</td>
                     
-                    {atividadesFiltradas.map(at => {
+                    {atividadesFiltradas.map((at, atIdx) => {
+                      const eOcultavel = at.tipo === 'prova' || at.tipo === 'trabalho' || at.tipo === 'pluraal';
+                      const celulaOculta = eOcultavel && notasOcultas;
+
                       const notaVal = obterNotaValor(aluno.id, at.id);
-                      const displayVal = notaVal === '-1' ? '' : notaVal;
+                      const displayVal = celulaOculta ? '***' : (notaVal === '-1' ? '' : notaVal);
                       const cellKey = `${aluno.id}_${at.id}`;
                       const isSaving = !!savingCells[cellKey];
 
@@ -256,14 +330,29 @@ const NotasPage: React.FC<NotasPageProps> = ({
                         <td key={at.id} style={{ padding: '6px', textAlign: 'center' }}>
                           <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
                             <input 
+                              key={celulaOculta ? 'oculto' : 'visivel'}
+                              id={`input-nota-${alunoIdx}-${atIdx}`}
                               defaultValue={displayVal}
-                              onBlur={(e) => salvarNota(aluno.id, at.id, e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  (e.target as HTMLInputElement).blur();
+                              disabled={celulaOculta}
+                              onBlur={(e) => {
+                                if (!celulaOculta) {
+                                  salvarNota(aluno.id, at.id, e.target.value);
                                 }
                               }}
-                              placeholder={`0-${obterNotaMaxima(at.tipo)}`}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  // Foca no input da mesma atividade (coluna) para o próximo aluno (linha de baixo)
+                                  const proximoInput = document.getElementById(`input-nota-${alunoIdx + 1}-${atIdx}`);
+                                  if (proximoInput) {
+                                    (proximoInput as HTMLInputElement).focus();
+                                    (proximoInput as HTMLInputElement).select();
+                                  } else {
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }
+                              }}
+                              placeholder={celulaOculta ? 'Oculto' : `0-${obterNotaMaxima(at.tipo)}`}
                               style={{ 
                                 width: '100%', 
                                 textAlign: 'center', 
@@ -272,8 +361,9 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                 borderRadius: '8px', 
                                 fontSize: '13px', 
                                 fontWeight: 700,
-                                background: isSaving ? '#f1f5f9' : '#fff',
-                                color: isSaving ? '#94a3b8' : 'var(--text-main)'
+                                background: celulaOculta ? '#f8fafc' : (isSaving ? '#f1f5f9' : '#fff'),
+                                color: celulaOculta ? '#94a3b8' : (isSaving ? '#94a3b8' : 'var(--text-main)'),
+                                cursor: celulaOculta ? 'not-allowed' : 'text'
                               }}
                             />
                             {isSaving && (
