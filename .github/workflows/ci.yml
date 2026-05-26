@@ -1,0 +1,31 @@
+name: CI - Build e Verificação
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: 🔨 Build da Aplicação
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: 📦 Instalar dependências
+        run: npm ci
+
+      - name: 🏗️ Compilar aplicação
+        run: npm run build
+
+      - name: ✅ Build concluído com sucesso
+        run: echo "Build finalizado! Todos os arquivos foram gerados corretamente."
