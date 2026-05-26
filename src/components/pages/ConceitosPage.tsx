@@ -27,7 +27,7 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
   const turmaSelecionada = turmas.find(t => t.id === turmaId);
   const escolaId = turmaSelecionada?.escolaId || '';
 
-  const alunosFiltrados = alunos.filter(a => a.turmaId === turmaId && a.ativo !== false);
+  const alunosFiltrados = alunos.filter(a => String(a.turmaId) === turmaId && a.ativo !== false);
   const materiasFiltradas = materias.filter(m => m.escolaId === escolaId);
 
   // Calcular média ponderada para aluno + matéria no bimestre selecionado

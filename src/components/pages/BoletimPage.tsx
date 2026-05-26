@@ -24,7 +24,7 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
   const [selectedAlunoId, setSelectedAlunoId] = useState('');
 
   // Filtrar alunos da turma
-  const alunosDaTurma = alunos.filter(a => a.turmaId === selectedTurmaId && a.ativo !== false);
+  const alunosDaTurma = alunos.filter(a => String(a.turmaId) === selectedTurmaId && a.ativo !== false);
 
   // Aluno e turma ativos
   const aluno = alunos.find(a => a.id === selectedAlunoId);

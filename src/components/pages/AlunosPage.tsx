@@ -38,7 +38,7 @@ const AlunosPage: React.FC<AlunosPageProps> = ({
   // Filtrar
   const alunosFiltrados = alunos.filter(a => {
     const atendeBusca = a.nome.toLowerCase().includes(busca.toLowerCase());
-    const atendeTurma = filtroTurma ? a.turmaId === filtroTurma : true;
+    const atendeTurma = filtroTurma ? String(a.turmaId) === filtroTurma : true;
     return atendeBusca && atendeTurma;
   });
 
@@ -109,7 +109,7 @@ const AlunosPage: React.FC<AlunosPageProps> = ({
               </tr>
             ) : (
               alunosFiltrados.map(a => {
-                const tur = turmas.find(t => t.id === a.turmaId);
+                const tur = turmas.find(t => t.id === String(a.turmaId));
                 const esc = tur ? escolas.find(e => e.id === tur.escolaId) : null;
                 const statusAtivo = a.ativo !== false;
 

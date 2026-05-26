@@ -49,12 +49,12 @@ const RankingPage: React.FC<RankingPageProps> = ({
     let baseAlunos = alunos.filter(a => a.ativo !== false);
 
     if (turmaId) {
-      baseAlunos = baseAlunos.filter(a => a.turmaId === turmaId);
+      baseAlunos = baseAlunos.filter(a => String(a.turmaId) === turmaId);
     } else if (filtroSerie) {
       // Filtrar turmas que correspondem à série
       const turmasDaSerie = turmas.filter(t => t.serie.toLowerCase() === filtroSerie.toLowerCase());
       const idsTurmas = turmasDaSerie.map(t => t.id);
-      baseAlunos = baseAlunos.filter(a => idsTurmas.includes(a.turmaId));
+      baseAlunos = baseAlunos.filter(a => idsTurmas.includes(String(a.turmaId)));
     } else {
       // Se nada selecionado, retorna vazio para não misturar escolas distintas sem critério
       return [];
@@ -188,7 +188,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {alunosRankeados.map((aluno, index) => {
-                const tur = turmas.find(t => t.id === aluno.turmaId);
+                const tur = turmas.find(t => t.id === String(aluno.turmaId));
                 const posEmoji = index < 3 ? medalha(index).emoji : `${index + 1}º`;
                 
                 return (

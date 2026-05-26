@@ -31,7 +31,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
   const [savingCells, setSavingCells] = useState<Record<string, boolean>>({});
 
   // Filtrar alunos ativos da turma selecionada
-  const alunosFiltrados = alunos.filter(a => a.turmaId === turmaId && a.ativo !== false);
+  const alunosFiltrados = alunos.filter(a => String(a.turmaId) === turmaId && a.ativo !== false);
 
   // Filtrar atividades da turma, matéria e bimestre
   const atividadesFiltradas = atividades.filter(

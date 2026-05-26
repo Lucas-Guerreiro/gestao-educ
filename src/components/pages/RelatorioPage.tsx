@@ -184,8 +184,8 @@ const RelatorioPage: React.FC<RelatorioPageProps> = ({
               </div>
             ) : (
               turmas.map(t => {
-                const qtdAlunos = alunos.filter(a => a.turmaId === t.id && a.ativo !== false).length;
-                const maxAlunos = Math.max(...turmas.map(x => alunos.filter(a => a.turmaId === x.id && a.ativo !== false).length), 1);
+                const qtdAlunos = alunos.filter(a => String(a.turmaId) === t.id && a.ativo !== false).length;
+                const maxAlunos = Math.max(...turmas.map(x => alunos.filter(a => String(a.turmaId) === x.id && a.ativo !== false).length), 1);
                 const pctDensidade = Math.round((qtdAlunos / maxAlunos) * 100);
 
                 return (
