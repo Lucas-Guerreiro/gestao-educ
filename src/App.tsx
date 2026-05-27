@@ -338,6 +338,7 @@ const App: React.FC = () => {
             atividades={atividadesAtivas} 
             notas={notasAtivas}
             escolas={escolas}
+            apontamentos={apontamentosAtivos}
             setSyncStatus={setSyncStatus}
           />
         );
@@ -351,6 +352,7 @@ const App: React.FC = () => {
             atividades={atividadesAtivas} 
             notas={notasAtivas}
             escolas={escolas}
+            apontamentos={apontamentosAtivos}
           />
         );
       case 'visao':
@@ -363,6 +365,7 @@ const App: React.FC = () => {
             atividades={atividadesAtivas} 
             notas={notasAtivas}
             escolas={escolas}
+            apontamentos={apontamentosAtivos}
           />
         );
       case 'ranking':
@@ -373,6 +376,7 @@ const App: React.FC = () => {
             atividades={atividadesAtivas} 
             notas={notasAtivas}
             escolas={escolas}
+            apontamentos={apontamentosAtivos}
           />
         );
       case 'rel':

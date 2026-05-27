@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento } from '@/types';
 
 interface BoletimPageProps {
   alunos: Aluno[];
@@ -9,6 +9,7 @@ interface BoletimPageProps {
   atividades: Atividade[];
   notas: Nota[];
   escolas: Escola[];
+  apontamentos: Apontamento[];
 }
 
 const BoletimPage: React.FC<BoletimPageProps> = ({
@@ -19,6 +20,7 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
   atividades,
   notas,
   escolas,
+  apontamentos,
 }) => {
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
   const [selectedAlunoId, setSelectedAlunoId] = useState('');
@@ -97,7 +99,27 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
 
     if (!temAlgumaNota) return null;
 
-    return notaTrabalho + notaPluraal + notaQualitativa;
+    // 4. Pontos extras de apontamentos (Material, Tarefa, Comportamento) no bimestre e matéria ativos
+    const registrosAp = apontamentos.filter(
+      ap => ap.alunoId === selectedAlunoId && 
+            ap.materiaId === materiaId && 
+            ap.bimestreId === bimestreId
+    );
+    let pontosAtitudinais = 0;
+    registrosAp.forEach(ap => {
+      if (ap.tarefa === 'sim') pontosAtitudinais += 0.1;
+      else if (ap.tarefa === 'parcial') pontosAtitudinais += 0.05;
+
+      if (ap.material === 'sim') pontosAtitudinais += 0.1;
+      else if (ap.material === 'parcial') pontosAtitudinais += 0.05;
+
+      if (ap.comportamento === 'excelente') pontosAtitudinais += 0.2;
+      else if (ap.comportamento === 'bom') pontosAtitudinais += 0.1;
+      else if (ap.comportamento === 'regular') pontosAtitudinais += 0.05;
+    });
+    const pontosExtras = Math.min(pontosAtitudinais, 1.0);
+
+    return Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
   };
 
   const dispararImpressao = () => {

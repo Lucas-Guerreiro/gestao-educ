@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Aluno, Turma, Atividade, Nota, Escola } from '@/types';
+import { Aluno, Turma, Atividade, Nota, Escola, Apontamento } from '@/types';
 
 interface RankingPageProps {
   alunos: Aluno[];
@@ -7,6 +7,7 @@ interface RankingPageProps {
   atividades: Atividade[];
   notas: Nota[];
   escolas: Escola[];
+  apontamentos: Apontamento[];
 }
 
 const RankingPage: React.FC<RankingPageProps> = ({
@@ -15,6 +16,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
   atividades,
   notas,
   escolas,
+  apontamentos,
 }) => {
   const [turmaId, setTurmaId] = useState('');
   const [filtroSerie, setFiltroSerie] = useState('');
@@ -92,7 +94,29 @@ const RankingPage: React.FC<RankingPageProps> = ({
         });
 
         if (temAlgumaNota) {
-          somaMediasBimestrais += (notaTrabalho + notaPluraal + notaQualitativa);
+          // 4. Pontos extras de apontamentos (Material, Tarefa, Comportamento) no bimestre e matéria ativos
+          const registrosAp = apontamentos.filter(
+            ap => String(ap.alunoId) === String(alunoId) && 
+                  String(ap.materiaId) === matId && 
+                  String(ap.bimestreId) === bimId
+          );
+          let pontosAtitudinais = 0;
+          registrosAp.forEach(ap => {
+            if (ap.tarefa === 'sim') pontosAtitudinais += 0.1;
+            else if (ap.tarefa === 'parcial') pontosAtitudinais += 0.05;
+
+            if (ap.material === 'sim') pontosAtitudinais += 0.1;
+            else if (ap.material === 'parcial') pontosAtitudinais += 0.05;
+
+            if (ap.comportamento === 'excelente') pontosAtitudinais += 0.2;
+            else if (ap.comportamento === 'bom') pontosAtitudinais += 0.1;
+            else if (ap.comportamento === 'regular') pontosAtitudinais += 0.05;
+          });
+          const pontosExtras = Math.min(pontosAtitudinais, 1.0);
+
+          const mediaBimestralFinal = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
+
+          somaMediasBimestrais += mediaBimestralFinal;
           qtdMediasBimestrais++;
         }
       });

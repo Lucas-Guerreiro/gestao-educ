@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento } from '@/types';
 
 interface NotasPageProps {
   alunos: Aluno[];
@@ -11,6 +11,7 @@ interface NotasPageProps {
   atividades: Atividade[];
   notas: Nota[];
   escolas: Escola[];
+  apontamentos: Apontamento[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
 }
 
@@ -22,6 +23,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
   atividades,
   notas,
   escolas,
+  apontamentos,
   setSyncStatus,
 }) => {
   const [turmaId, setTurmaId] = useState('');
@@ -250,7 +252,27 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
     if (!temAlgumaNota) return '—';
 
-    const media = notaTrabalho + notaPluraal + notaQualitativa;
+    // 4. Pontos extras de apontamentos (Material, Tarefa, Comportamento) no bimestre e matéria ativos
+    const registrosAp = apontamentos.filter(
+      ap => ap.alunoId === alunoId && 
+            ap.materiaId === materiaId && 
+            ap.bimestreId === bimestreId
+    );
+    let pontosAtitudinais = 0;
+    registrosAp.forEach(ap => {
+      if (ap.tarefa === 'sim') pontosAtitudinais += 0.1;
+      else if (ap.tarefa === 'parcial') pontosAtitudinais += 0.05;
+
+      if (ap.material === 'sim') pontosAtitudinais += 0.1;
+      else if (ap.material === 'parcial') pontosAtitudinais += 0.05;
+
+      if (ap.comportamento === 'excelente') pontosAtitudinais += 0.2;
+      else if (ap.comportamento === 'bom') pontosAtitudinais += 0.1;
+      else if (ap.comportamento === 'regular') pontosAtitudinais += 0.05;
+    });
+    const pontosExtras = Math.min(pontosAtitudinais, 1.0);
+
+    const media = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
     return media.toFixed(1);
   };
 
