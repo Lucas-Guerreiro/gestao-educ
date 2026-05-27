@@ -39,6 +39,7 @@ const Topbar: React.FC<TopbarProps> = ({
     'visao': { label: 'Visão do Aluno', icon: 'ti-eye' },
     'ranking': { label: 'Ranking', icon: 'ti-trophy' },
     'rel': { label: 'Relatório', icon: 'ti-chart-bar' },
+    'apontamentos': { label: 'Apontamento de Alunos', icon: 'ti-checklist' },
   };
 
   const meta = sectionMeta[currentSec] || { label: 'Painel Geral', icon: 'ti-school' };

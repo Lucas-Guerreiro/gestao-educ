@@ -202,3 +202,25 @@ export interface ExerciciosIA {
   nome: string;
   desc: string;
 }
+
+/**
+ * @entity Apontamento
+ * @description Registro diário de acompanhamento de alunos (tarefa, material, comportamento).
+ */
+export interface Apontamento {
+  /** @pk Chave Primária Única (determinística: alunoId_materiaId_data) */
+  id: string;
+  /** @fk Chave Estrangeira -> Aluno.id | @cascade ON DELETE CASCADE */
+  alunoId: string;
+  /** @fk Chave Estrangeira -> Turma.id | @cascade ON DELETE CASCADE */
+  turmaId: string;
+  /** @fk Chave Estrangeira -> Materia.id | @cascade ON DELETE CASCADE */
+  materiaId: string;
+  /** @fk Chave Estrangeira -> Bimestre.id | @cascade ON DELETE CASCADE */
+  bimestreId: string;
+  data: string; // YYYY-MM-DD
+  tarefa: 'sim' | 'nao' | 'parcial' | '';
+  material: 'sim' | 'nao' | 'parcial' | '';
+  comportamento: 'excelente' | 'bom' | 'regular' | 'indisciplinado' | '';
+  observacao: string;
+}

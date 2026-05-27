@@ -4,7 +4,7 @@ import { db } from './firebase';
 import { 
   Escola, Turma, Aluno, Materia, Professor, 
   Bimestre, Atividade, Capitulo, Aula, 
-  SequenciaDidatica, Nota, AdminConfig, ExerciciosIA 
+  SequenciaDidatica, Nota, AdminConfig, ExerciciosIA, Apontamento 
 } from '@/types';
 
 // Layout & Modals
@@ -35,6 +35,7 @@ import ConceitosPage from './components/pages/ConceitosPage';
 import BoletimPage from './components/pages/BoletimPage';
 import RankingPage from './components/pages/RankingPage';
 import RelatorioPage from './components/pages/RelatorioPage';
+import ApontamentosPage from './components/pages/ApontamentosPage';
 
 const App: React.FC = () => {
   // Authentication states
@@ -58,6 +59,7 @@ const App: React.FC = () => {
   const [aulas, setAulas] = useState<Aula[]>([]);
   const [sequencias, setSequencias] = useState<SequenciaDidatica[]>([]);
   const [notas, setNotas] = useState<Nota[]>([]);
+  const [apontamentos, setApontamentos] = useState<Apontamento[]>([]);
 
   // Active School Year State
   const [selectedAno, setSelectedAno] = useState<number>(() => {
@@ -96,6 +98,7 @@ const App: React.FC = () => {
   });
 
   const notasAtivas = notas.filter(n => atividadesAtivas.some(a => a.id === n.atividadeId));
+  const apontamentosAtivos = apontamentos.filter(ap => bimestresAtivos.some(b => b.id === ap.bimestreId));
 
   // Simulated AI Exercises list to back IaModal and SdModal
   const simulatedExerciciosIA: ExerciciosIA[] = [
@@ -222,6 +225,13 @@ const App: React.FC = () => {
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
 
+    const unsubApontamentos = onSnapshot(collection(db, 'apontamentos'), (snapshot) => {
+      const items: Apontamento[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as any as Apontamento));
+      setApontamentos(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
     return () => {
       unsubAdmin();
       unsubEscolas();
@@ -235,6 +245,7 @@ const App: React.FC = () => {
       unsubAulas();
       unsubSequencias();
       unsubNotas();
+      unsubApontamentos();
     };
   }, []);
 
@@ -371,6 +382,18 @@ const App: React.FC = () => {
             turmas={turmas} 
             notas={notasAtivas} 
             escolas={escolas}
+          />
+        );
+      case 'apontamentos':
+        return (
+          <ApontamentosPage 
+            alunos={alunos} 
+            turmas={turmas} 
+            materias={materias} 
+            bimestres={bimestresAtivos} 
+            escolas={escolas} 
+            apontamentos={apontamentosAtivos} 
+            setSyncStatus={setSyncStatus}
           />
         );
       default:
