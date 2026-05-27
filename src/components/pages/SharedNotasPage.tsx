@@ -4,8 +4,8 @@ import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola } from '@/types';
 
 interface SharedNotasPageProps {
+  sharedMap: Record<string, string>;
   sharedAtividadeId: string;
-  turmasPermitidas: string[];
   alunos: Aluno[];
   turmas: Turma[];
   materias: Materia[];
@@ -17,8 +17,8 @@ interface SharedNotasPageProps {
 }
 
 const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
+  sharedMap,
   sharedAtividadeId,
-  turmasPermitidas,
   alunos,
   turmas,
   materias,
@@ -31,10 +31,15 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
   const [savingCells, setSavingCells] = useState<Record<string, boolean>>({});
 
+  // Obter o ID da atividade correspondente à turma selecionada
+  const currentAtividadeId = useMemo(() => {
+    return selectedTurmaId ? (sharedMap[selectedTurmaId] || sharedAtividadeId) : sharedAtividadeId;
+  }, [selectedTurmaId, sharedMap, sharedAtividadeId]);
+
   // Detalhes da atividade compartilhada
   const atividade = useMemo(() => {
-    return atividades.find(a => a.id === sharedAtividadeId) || null;
-  }, [atividades, sharedAtividadeId]);
+    return atividades.find(a => a.id === currentAtividadeId) || null;
+  }, [atividades, currentAtividadeId]);
 
   // Escola da atividade
   const escola = useMemo(() => {
@@ -58,9 +63,10 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
 
   // Filtrar turmas que o professor pode escolher (devem estar no link e pertencerem à mesma escola da atividade original)
   const turmasDisponiveis = useMemo(() => {
+    const turmasPermitidas = Object.keys(sharedMap);
     if (!escola) return [];
     return turmas.filter(t => t.escolaId === escola.id && turmasPermitidas.includes(t.id));
-  }, [turmas, escola, turmasPermitidas]);
+  }, [turmas, escola, sharedMap]);
 
   // Filtrar alunos ativos da turma selecionada
   const alunosFiltrados = useMemo(() => {
@@ -69,7 +75,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
 
   // Obter nota do aluno para a atividade específica
   const obterNotaValor = (alunoId: string): string => {
-    const registro = notas.find(n => n.alunoId === alunoId && n.atividadeId === sharedAtividadeId);
+    const registro = notas.find(n => n.alunoId === alunoId && n.atividadeId === currentAtividadeId);
     if (!registro || registro.nota === undefined) return '';
     return registro.nota === -1 ? '' : String(registro.nota);
   };
@@ -121,7 +127,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
       return;
     }
 
-    const docId = `${alunoId}_${sharedAtividadeId}`;
+    const docId = `${alunoId}_${currentAtividadeId}`;
     const cellKey = alunoId;
 
     setSavingCells(prev => ({ ...prev, [cellKey]: true }));
@@ -132,7 +138,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
       if (valor === null) {
         await setDoc(docRef, {
           alunoId,
-          atividadeId: sharedAtividadeId,
+          atividadeId: currentAtividadeId,
           turmaId: selectedTurmaId,
           materiaId: atividade.materiaId,
           bimestreId: atividade.bimestreId,
@@ -141,7 +147,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
       } else {
         await setDoc(docRef, {
           alunoId,
-          atividadeId: sharedAtividadeId,
+          atividadeId: currentAtividadeId,
           turmaId: selectedTurmaId,
           materiaId: atividade.materiaId,
           bimestreId: atividade.bimestreId,

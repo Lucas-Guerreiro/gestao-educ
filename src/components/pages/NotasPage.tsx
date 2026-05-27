@@ -33,28 +33,61 @@ const NotasPage: React.FC<NotasPageProps> = ({
   // Estados para Compartilhamento Interdisciplinar
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareAtividade, setShareAtividade] = useState<Atividade | null>(null);
-  const [selectedTurmas, setSelectedTurmas] = useState<string[]>([]);
+  const [selectedTurmasMap, setSelectedTurmasMap] = useState<Record<string, string>>({});
   const [copiadoFeedback, setCopiadoFeedback] = useState(false);
+
+  const obterAtividadeCorrespondenteSugerida = (turmaDestinoId: string, ativOrigem: Atividade): string => {
+    const ativsDestino = atividades.filter(
+      a => a.turmaId === turmaDestinoId && 
+           a.materiaId === ativOrigem.materiaId && 
+           a.bimestreId === ativOrigem.bimestreId
+    );
+    const correspondente = ativsDestino.find(
+      a => a.nome.toLowerCase() === ativOrigem.nome.toLowerCase()
+    ) || ativsDestino[0];
+    
+    return correspondente ? correspondente.id : '';
+  };
 
   const abrirModalCompartilhar = (ativ: Atividade) => {
     setShareAtividade(ativ);
-    setSelectedTurmas([ativ.turmaId]); // a turma original já vem pré-selecionada
+    const inicial: Record<string, string> = { [ativ.turmaId]: ativ.id };
+    setSelectedTurmasMap(inicial);
     setIsShareModalOpen(true);
     setCopiadoFeedback(false);
   };
 
   const toggleTurmaSelecionada = (tId: string) => {
     if (shareAtividade && tId === shareAtividade.turmaId) return; // Não permite desmarcar a turma original
-    setSelectedTurmas(prev => 
-      prev.includes(tId) ? prev.filter(id => id !== tId) : [...prev, tId]
-    );
+    
+    setSelectedTurmasMap(prev => {
+      const novo = { ...prev };
+      if (novo[tId]) {
+        delete novo[tId];
+      } else if (shareAtividade) {
+        novo[tId] = obterAtividadeCorrespondenteSugerida(tId, shareAtividade);
+      }
+      return novo;
+    });
+  };
+
+  const alterarAtividadeDaTurma = (tId: string, aId: string) => {
+    setSelectedTurmasMap(prev => ({
+      ...prev,
+      [tId]: aId
+    }));
   };
 
   const obterLinkCompartilhado = () => {
     if (!shareAtividade) return '';
     const base = window.location.origin + window.location.pathname;
-    const turmasStr = selectedTurmas.join(',');
-    return `${base}?compartilhado=true&atividadeId=${shareAtividade.id}&turmas=${turmasStr}`;
+    
+    const mapEntries = Object.entries(selectedTurmasMap)
+      .filter(([_, aId]) => !!aId)
+      .map(([tId, aId]) => `${tId}:${aId}`)
+      .join(',');
+      
+    return `${base}?compartilhado=true&map=${mapEntries}`;
   };
 
   const copiarLink = () => {
@@ -834,46 +867,99 @@ const NotasPage: React.FC<NotasPageProps> = ({
                   Selecione as turmas da mesma escola que participarão do projeto interdisciplinar. Os outros professores acessarão o link e escolherão a turma correspondente.
                 </span>
 
-                <div style={{ border: '1px solid var(--border)', borderRadius: '12px', maxHeight: '180px', overflowY: 'auto', padding: '6px' }}>
+                <div style={{ border: '1px solid var(--border)', borderRadius: '12px', maxHeight: '250px', overflowY: 'auto', padding: '6px' }}>
                   {turmasElegiveisCompartilhamento.map(t => {
                     const isOriginal = t.id === shareAtividade.turmaId;
-                    const isSelected = selectedTurmas.includes(t.id);
-                    
+                    const isSelected = !!selectedTurmasMap[t.id];
+                    const atividadeSelecionadaId = selectedTurmasMap[t.id] || '';
+
+                    // Filtrar atividades correspondentes para esta turma (mesma matéria e bimestre)
+                    const atividadesDaTurma = atividades.filter(
+                      a => a.turmaId === t.id && 
+                           a.materiaId === shareAtividade.materiaId && 
+                           a.bimestreId === shareAtividade.bimestreId
+                    );
+
                     return (
                       <div 
                         key={t.id} 
-                        onClick={() => toggleTurmaSelecionada(t.id)}
                         style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
+                          justifyContent: 'space-between',
                           gap: '10px', 
-                          padding: '10px 12px', 
+                          padding: '8px 12px', 
                           borderRadius: '8px', 
-                          cursor: isOriginal ? 'not-allowed' : 'pointer',
                           background: isSelected ? '#eff6ff' : 'transparent',
                           transition: 'background 150ms ease',
-                          marginBottom: '4px',
-                          userSelect: 'none'
+                          marginBottom: '6px',
+                          border: isSelected ? '1px solid #bfdbfe' : '1px solid transparent'
                         }}
-                        className={isOriginal ? '' : 'table-row-hover'}
                       >
-                        <input 
-                          type="checkbox" 
-                          checked={isSelected}
-                          disabled={isOriginal}
-                          onChange={() => {}} // Tratado no onClick da linha
-                          style={{ cursor: isOriginal ? 'not-allowed' : 'pointer' }}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <span style={{ fontSize: '13px', fontWeight: 700, color: isOriginal ? 'var(--text-muted)' : 'var(--text-main)' }}>
-                            {t.nome}
-                          </span>
-                          {isOriginal && (
-                            <span style={{ fontSize: '9.5px', background: '#e2e8f0', color: '#64748b', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, marginLeft: '8px' }}>
-                              Turma Padrão
+                        <div 
+                          onClick={() => toggleTurmaSelecionada(t.id)}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '10px', 
+                            cursor: isOriginal ? 'not-allowed' : 'pointer',
+                            userSelect: 'none',
+                            flex: 1
+                          }}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected}
+                            disabled={isOriginal}
+                            onChange={() => {}} // Tratado no onClick da div
+                            style={{ cursor: isOriginal ? 'not-allowed' : 'pointer' }}
+                          />
+                          <div>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: isOriginal ? 'var(--text-muted)' : 'var(--text-main)' }}>
+                              {t.nome}
                             </span>
-                          )}
+                            {isOriginal && (
+                              <span style={{ fontSize: '9.5px', background: '#e2e8f0', color: '#64748b', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, marginLeft: '8px' }}>
+                                Turma Padrão
+                              </span>
+                            )}
+                          </div>
                         </div>
+
+                        {/* Dropdown de Seleção da Atividade da Turma */}
+                        {isSelected && (
+                          <div style={{ flexShrink: 0, minWidth: '190px' }} onClick={(e) => e.stopPropagation()}>
+                            {isOriginal ? (
+                              <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                📌 {shareAtividade.nome}
+                              </span>
+                            ) : atividadesDaTurma.length === 0 ? (
+                              <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 600 }}>
+                                ⚠️ Nenhuma atividade criada
+                              </span>
+                            ) : (
+                              <select
+                                value={atividadeSelecionadaId}
+                                onChange={(e) => alterarAtividadeDaTurma(t.id, e.target.value)}
+                                style={{ 
+                                  padding: '4px 8px', 
+                                  borderRadius: '6px', 
+                                  border: '1px solid #cbd5e1', 
+                                  fontSize: '11.5px', 
+                                  width: '100%',
+                                  fontWeight: 600,
+                                  background: '#fff'
+                                }}
+                              >
+                                {atividadesDaTurma.map(a => (
+                                  <option key={a.id} value={a.id}>
+                                    {a.nome}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

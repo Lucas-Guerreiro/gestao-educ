@@ -409,14 +409,38 @@ const App: React.FC = () => {
   // Verificar se é acesso compartilhado de notas para professores convidados (bypass de login)
   const queryParams = new URLSearchParams(window.location.search);
   const isCompartilhado = queryParams.get('compartilhado') === 'true';
+  const sharedMapStr = queryParams.get('map') || '';
   const sharedAtividadeId = queryParams.get('atividadeId') || '';
   const sharedTurmas = queryParams.get('turmas') ? queryParams.get('turmas')!.split(',') : [];
 
-  if (isCompartilhado && sharedAtividadeId) {
+  const sharedMap: Record<string, string> = {};
+  if (sharedMapStr) {
+    sharedMapStr.split(',').forEach(entry => {
+      const [tId, aId] = entry.split(':');
+      if (tId && aId) {
+        sharedMap[tId] = aId;
+      }
+    });
+  } else if (sharedAtividadeId) {
+    // Manter retrocompatibilidade se passarem o formato antigo
+    if (sharedTurmas.length > 0) {
+      sharedTurmas.forEach(tId => {
+        sharedMap[tId] = sharedAtividadeId;
+      });
+    } else {
+      const ativ = atividades.find(a => a.id === sharedAtividadeId);
+      if (ativ) {
+        sharedMap[ativ.turmaId] = sharedAtividadeId;
+      }
+    }
+  }
+
+  if (isCompartilhado && Object.keys(sharedMap).length > 0) {
+    const fallbackAtividadeId = Object.values(sharedMap)[0] || sharedAtividadeId;
     return (
       <SharedNotasPage
-        sharedAtividadeId={sharedAtividadeId}
-        turmasPermitidas={sharedTurmas}
+        sharedMap={sharedMap}
+        sharedAtividadeId={fallbackAtividadeId}
         alunos={alunos}
         turmas={turmas}
         materias={materias}
