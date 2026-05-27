@@ -30,68 +30,33 @@ const NotasPage: React.FC<NotasPageProps> = ({
   const [materiaId, setMateriaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
 
-  // Estados para Compartilhamento Interdisciplinar
+  // Estados para Compartilhamento Interdisciplinar Geral
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [shareAtividade, setShareAtividade] = useState<Atividade | null>(null);
-  const [selectedTurmasMap, setSelectedTurmasMap] = useState<Record<string, string>>({});
+  const [selectedAtivs, setSelectedAtivs] = useState<string[]>([]);
   const [copiadoFeedback, setCopiadoFeedback] = useState(false);
 
-  const obterAtividadeCorrespondenteSugerida = (turmaDestinoId: string, ativOrigem: Atividade): string => {
-    const ativsDestino = atividades.filter(
-      a => a.turmaId === turmaDestinoId && 
-           a.materiaId === ativOrigem.materiaId && 
-           a.bimestreId === ativOrigem.bimestreId
+  const toggleAtividadeSelecao = (ativId: string) => {
+    setSelectedAtivs(prev => 
+      prev.includes(ativId) ? prev.filter(id => id !== ativId) : [...prev, ativId]
     );
-    const correspondente = ativsDestino.find(
-      a => a.nome.toLowerCase() === ativOrigem.nome.toLowerCase()
-    ) || ativsDestino[0];
-    
-    return correspondente ? correspondente.id : '';
   };
 
-  const abrirModalCompartilhar = (ativ: Atividade) => {
-    setShareAtividade(ativ);
-    const inicial: Record<string, string> = { [ativ.turmaId]: ativ.id };
-    setSelectedTurmasMap(inicial);
-    setIsShareModalOpen(true);
-    setCopiadoFeedback(false);
-  };
-
-  const toggleTurmaSelecionada = (tId: string) => {
-    if (shareAtividade && tId === shareAtividade.turmaId) return; // Não permite desmarcar a turma original
-    
-    setSelectedTurmasMap(prev => {
-      const novo = { ...prev };
-      if (novo[tId]) {
-        delete novo[tId];
-      } else if (shareAtividade) {
-        novo[tId] = obterAtividadeCorrespondenteSugerida(tId, shareAtividade);
-      }
-      return novo;
-    });
-  };
-
-  const alterarAtividadeDaTurma = (tId: string, aId: string) => {
-    setSelectedTurmasMap(prev => ({
-      ...prev,
-      [tId]: aId
-    }));
-  };
-
-  const obterLinkCompartilhado = () => {
-    if (!shareAtividade) return '';
+  const obterLinkCompartilhadoGeral = () => {
     const base = window.location.origin + window.location.pathname;
     
-    const mapEntries = Object.entries(selectedTurmasMap)
-      .filter(([_, aId]) => !!aId)
-      .map(([tId, aId]) => `${tId}:${aId}`)
-      .join(',');
-      
+    const mapEntries = selectedAtivs.map(ativId => {
+      const ativ = atividades.find(a => a.id === ativId);
+      if (!ativ) return '';
+      return `${ativ.turmaId}:${ativ.id}`;
+    })
+    .filter(Boolean)
+    .join(',');
+    
     return `${base}?compartilhado=true&map=${mapEntries}`;
   };
 
   const copiarLink = () => {
-    const link = obterLinkCompartilhado();
+    const link = obterLinkCompartilhadoGeral();
     if (!link) return;
     navigator.clipboard.writeText(link)
       .then(() => {
@@ -100,15 +65,6 @@ const NotasPage: React.FC<NotasPageProps> = ({
       })
       .catch(err => console.error('Erro ao copiar link:', err));
   };
-
-  const turmasElegiveisCompartilhamento = useMemo(() => {
-    if (!shareAtividade) return [];
-    const turmaOriginal = turmas.find(t => t.id === shareAtividade.turmaId);
-    if (!turmaOriginal) return [];
-    
-    // Retorna apenas as turmas da mesma escola
-    return turmas.filter(t => t.escolaId === turmaOriginal.escolaId);
-  }, [shareAtividade, turmas]);
 
   // Handlers com reset em cascata
   const handleTurmaChange = (id: string) => {
@@ -506,14 +462,16 @@ const NotasPage: React.FC<NotasPageProps> = ({
                             gap: '6px',
                             boxShadow: 'var(--shadow-sm)',
                             borderRadius: '8px',
-                            background: '#fff',
-                            border: '1px solid #cbd5e1',
-                            color: 'var(--text-main)',
-                            cursor: 'pointer'
+                            background: selectedAtivs.includes(ativ.id) ? '#dcfce7' : '#fff',
+                            border: selectedAtivs.includes(ativ.id) ? '1px solid #86efac' : '1px solid #cbd5e1',
+                            color: selectedAtivs.includes(ativ.id) ? '#15803d' : 'var(--text-main)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
                           }} 
-                          onClick={() => abrirModalCompartilhar(ativ)}
+                          onClick={() => toggleAtividadeSelecao(ativ.id)}
                         >
-                          <i className="ti ti-link" style={{ color: 'var(--primary)', fontSize: '15px' }}></i> Compartilhar
+                          <i className={selectedAtivs.includes(ativ.id) ? "ti ti-checkbox" : "ti ti-link"} style={{ fontSize: '15px', color: selectedAtivs.includes(ativ.id) ? '#166534' : 'var(--primary)' }}></i> 
+                          {selectedAtivs.includes(ativ.id) ? '✓ Selecionada' : 'Compartilhar'}
                         </button>
                         
                         <button 
@@ -668,10 +626,10 @@ const NotasPage: React.FC<NotasPageProps> = ({
                             <span>{at.nome}</span>
                             <button 
                               type="button" 
-                              title="Compartilhar Link de Lançamento" 
-                              onClick={() => abrirModalCompartilhar(at)}
+                              title={selectedAtivs.includes(at.id) ? "Remover do Compartilhamento Geral" : "Selecionar para Compartilhamento Geral"}
+                              onClick={() => toggleAtividadeSelecao(at.id)}
                               style={{ 
-                                background: 'rgba(255,255,255,0.7)', 
+                                background: selectedAtivs.includes(at.id) ? '#dcfce7' : 'rgba(255,255,255,0.7)', 
                                 border: 'none', 
                                 borderRadius: '4px', 
                                 width: '18px', 
@@ -681,10 +639,11 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                 justifyContent: 'center', 
                                 cursor: 'pointer', 
                                 padding: 0,
-                                color: colors.text
+                                color: selectedAtivs.includes(at.id) ? '#166534' : colors.text,
+                                transition: 'all 0.15s ease'
                               }}
                             >
-                              <i className="ti ti-link" style={{ fontSize: '11px' }}></i>
+                              <i className={selectedAtivs.includes(at.id) ? "ti ti-checkbox" : "ti ti-link"} style={{ fontSize: '11px' }}></i>
                             </button>
                           </div>
                           {at.descricao && <div className="nt-tip">{at.descricao}</div>}
@@ -795,8 +754,78 @@ const NotasPage: React.FC<NotasPageProps> = ({
         </div>
       )}
 
-      {/* MODAL DE COMPARTILHAMENTO DE NOTAS INTERDISCIPLINAR */}
-      {isShareModalOpen && shareAtividade && (
+      {/* BARRA FLUTUANTE DE COMPARTILHAMENTO GERAL */}
+      {selectedAtivs.length > 0 && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            bottom: '24px', 
+            left: '50%', 
+            transform: 'translateX(-50%)', 
+            background: 'linear-gradient(135deg, #1e293b, #0f172a)', 
+            color: '#fff', 
+            borderRadius: '16px', 
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.3)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '20px', 
+            padding: '12px 24px', 
+            zIndex: 8000, 
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="ti ti-link" style={{ fontSize: '15px' }}></i>
+            </div>
+            <span style={{ fontSize: '13.5px', fontWeight: 600 }}>
+              <b>{selectedAtivs.length}</b> {selectedAtivs.length === 1 ? 'atividade selecionada' : 'atividades selecionadas'} para compartilhamento
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              type="button" 
+              className="btn pri" 
+              onClick={() => setIsShareModalOpen(true)}
+              style={{ 
+                padding: '6px 14px', 
+                fontSize: '12px', 
+                fontWeight: 700, 
+                borderRadius: '8px',
+                background: 'var(--primary)',
+                border: 'none',
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <i className="ti ti-link"></i> Gerar Link Geral
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setSelectedAtivs([])}
+              style={{ 
+                padding: '6px 12px', 
+                fontSize: '12px', 
+                fontWeight: 700, 
+                borderRadius: '8px',
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                color: '#cbd5e1',
+                cursor: 'pointer'
+              }}
+            >
+              Limpar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE COMPARTILHAMENTO DE NOTAS GERAL UNIFICADO */}
+      {isShareModalOpen && selectedAtivs.length > 0 && (
         <div 
           id="compartilhar-notas-modal" 
           style={{ 
@@ -816,7 +845,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
               background: '#fff', 
               borderRadius: '16px', 
               width: '100%', 
-              maxWidth: '520px', 
+              maxWidth: '560px', 
               boxShadow: 'var(--shadow-lg)', 
               overflow: 'hidden', 
               border: '1px solid var(--border)',
@@ -827,7 +856,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
             <div style={{ background: 'linear-gradient(135deg, var(--primary), #3b82f6)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <i className="ti ti-link" style={{ fontSize: '20px', color: '#fff' }}></i>
-                <div style={{ color: '#fff', fontSize: '14.5px', fontWeight: 800 }}>Compartilhar Lançamento Interdisciplinar</div>
+                <div style={{ color: '#fff', fontSize: '14.5px', fontWeight: 800 }}>Link de Lançamento Geral Compartilhado</div>
               </div>
               <button 
                 onClick={() => setIsShareModalOpen(false)} 
@@ -840,126 +869,70 @@ const NotasPage: React.FC<NotasPageProps> = ({
             {/* Conteúdo */}
             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
-              {/* Box Informativo da Atividade */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Atividade Selecionada
-                </div>
-                <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {shareAtividade.nome}
-                  <span style={{ fontSize: '9px', background: badgeColor(shareAtividade.tipo).bg, color: badgeColor(shareAtividade.tipo).text, padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>
-                    {shareAtividade.tipo.toUpperCase()}
-                  </span>
-                </div>
-                {shareAtividade.descricao && (
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {shareAtividade.descricao}
-                  </div>
-                )}
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                Você reuniu <b>{selectedAtivs.length} atividade(s)</b> de diferentes turmas para compartilhamento de notas unificado. Os professores que acessarem o link poderão alternar entre as turmas e preencher as notas das atividades correspondentes.
               </div>
 
-              {/* Seleção de Turmas */}
+              {/* Lista de Atividades Selecionadas */}
               <div>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>
-                  Selecione as Turmas Participantes *
+                  Atividades Incluídas no Link ({selectedAtivs.length})
                 </label>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '10px', lineHeight: 1.4 }}>
-                  Selecione as turmas da mesma escola que participarão do projeto interdisciplinar. Os outros professores acessarão o link e escolherão a turma correspondente.
-                </span>
 
-                <div style={{ border: '1px solid var(--border)', borderRadius: '12px', maxHeight: '250px', overflowY: 'auto', padding: '6px' }}>
-                  {turmasElegiveisCompartilhamento.map(t => {
-                    const isOriginal = t.id === shareAtividade.turmaId;
-                    const isSelected = !!selectedTurmasMap[t.id];
-                    const atividadeSelecionadaId = selectedTurmasMap[t.id] || '';
-
-                    // Filtrar atividades correspondentes para esta turma (mesma matéria e bimestre)
-                    const atividadesDaTurma = atividades.filter(
-                      a => a.turmaId === t.id && 
-                           a.materiaId === shareAtividade.materiaId && 
-                           a.bimestreId === shareAtividade.bimestreId
-                    );
+                <div style={{ border: '1px solid var(--border)', borderRadius: '12px', maxHeight: '180px', overflowY: 'auto', padding: '6px', background: '#f8fafc' }}>
+                  {selectedAtivs.map(ativId => {
+                    const ativ = atividades.find(a => a.id === ativId);
+                    if (!ativ) return null;
+                    const tur = turmas.find(t => t.id === ativ.turmaId);
+                    const mat = materias.find(m => m.id === ativ.materiaId);
+                    const colors = badgeColor(ativ.tipo);
 
                     return (
                       <div 
-                        key={t.id} 
+                        key={ativ.id} 
                         style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
-                          justifyContent: 'space-between',
-                          gap: '10px', 
-                          padding: '8px 12px', 
+                          justifyContent: 'space-between', 
+                          padding: '10px 12px', 
                           borderRadius: '8px', 
-                          background: isSelected ? '#eff6ff' : 'transparent',
-                          transition: 'background 150ms ease',
-                          marginBottom: '6px',
-                          border: isSelected ? '1px solid #bfdbfe' : '1px solid transparent'
+                          background: '#fff', 
+                          border: '1px solid var(--border)',
+                          marginBottom: '6px'
                         }}
                       >
-                        <div 
-                          onClick={() => toggleTurmaSelecionada(t.id)}
-                          style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '10px', 
-                            cursor: isOriginal ? 'not-allowed' : 'pointer',
-                            userSelect: 'none',
-                            flex: 1
-                          }}
-                        >
-                          <input 
-                            type="checkbox" 
-                            checked={isSelected}
-                            disabled={isOriginal}
-                            onChange={() => {}} // Tratado no onClick da div
-                            style={{ cursor: isOriginal ? 'not-allowed' : 'pointer' }}
-                          />
-                          <div>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: isOriginal ? 'var(--text-muted)' : 'var(--text-main)' }}>
-                              {t.nome}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
+                            {ativ.nome}
+                          </span>
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>
+                              {ativ.tipo.toUpperCase()}
                             </span>
-                            {isOriginal && (
-                              <span style={{ fontSize: '9.5px', background: '#e2e8f0', color: '#64748b', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, marginLeft: '8px' }}>
-                                Turma Padrão
-                              </span>
-                            )}
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                              🏫 {tur ? tur.nome : '—'}
+                            </span>
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                              📖 {mat ? mat.nome : '—'}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Dropdown de Seleção da Atividade da Turma */}
-                        {isSelected && (
-                          <div style={{ flexShrink: 0, minWidth: '190px' }} onClick={(e) => e.stopPropagation()}>
-                            {isOriginal ? (
-                              <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                                📌 {shareAtividade.nome}
-                              </span>
-                            ) : atividadesDaTurma.length === 0 ? (
-                              <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 600 }}>
-                                ⚠️ Nenhuma atividade criada
-                              </span>
-                            ) : (
-                              <select
-                                value={atividadeSelecionadaId}
-                                onChange={(e) => alterarAtividadeDaTurma(t.id, e.target.value)}
-                                style={{ 
-                                  padding: '4px 8px', 
-                                  borderRadius: '6px', 
-                                  border: '1px solid #cbd5e1', 
-                                  fontSize: '11.5px', 
-                                  width: '100%',
-                                  fontWeight: 600,
-                                  background: '#fff'
-                                }}
-                              >
-                                {atividadesDaTurma.map(a => (
-                                  <option key={a.id} value={a.id}>
-                                    {a.nome}
-                                  </option>
-                                ))}
-                              </select>
-                            )}
-                          </div>
-                        )}
+                        <button 
+                          type="button" 
+                          title="Remover do Link" 
+                          onClick={() => toggleAtividadeSelecao(ativ.id)}
+                          style={{ 
+                            border: 'none', 
+                            background: 'none', 
+                            color: '#ef4444', 
+                            cursor: 'pointer', 
+                            fontSize: '14px', 
+                            padding: '4px 8px' 
+                          }}
+                        >
+                          ✕
+                        </button>
                       </div>
                     );
                   })}
@@ -969,13 +942,13 @@ const NotasPage: React.FC<NotasPageProps> = ({
               {/* Caixa de Texto do Link */}
               <div style={{ marginTop: '4px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px', display: 'block' }}>
-                  Link Compartilhado para Professores
+                  Link Compartilhado Unificado
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input 
                     type="text" 
                     readOnly 
-                    value={obterLinkCompartilhado()} 
+                    value={obterLinkCompartilhadoGeral()} 
                     style={{ 
                       flex: 1, 
                       padding: '10px 12px', 
@@ -1015,12 +988,26 @@ const NotasPage: React.FC<NotasPageProps> = ({
                 </div>
                 <div style={{ fontSize: '11px', color: '#16a34a', marginTop: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <i className="ti ti-lock-open"></i> 
-                  Este link ignora a tela de login administrativo tradicional e exibe apenas o lançamento desta atividade.
+                  Este link unificado ignora o login tradicional e dá acesso direto apenas ao lançamento das atividades selecionadas acima.
                 </div>
               </div>
 
               {/* Fechar */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '4px', alignItems: 'center' }}>
+                <button 
+                  type="button" 
+                  onClick={() => { setSelectedAtivs([]); setIsShareModalOpen(false); }}
+                  style={{ 
+                    border: 'none', 
+                    background: 'none', 
+                    color: '#ef4444', 
+                    cursor: 'pointer', 
+                    fontSize: '12px', 
+                    fontWeight: 700 
+                  }}
+                >
+                  Limpar Seleção
+                </button>
                 <button 
                   type="button" 
                   className="btn sec" 
