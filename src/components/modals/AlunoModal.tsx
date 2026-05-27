@@ -28,8 +28,8 @@ const AlunoModal: React.FC<AlunoModalProps> = ({
     if (alunoId) {
       const al = alunos.find(a => a.id === alunoId);
       if (al) {
-        setNome(al.nome);
-        setTurmaId(al.turmaId);
+        setNome(al.nome || '');
+        setTurmaId(al.turmaId || '');
         setNascimento(al.nascimento || '');
         setAtivo(al.ativo !== false);
         setObservacoes(al.observacoes || '');

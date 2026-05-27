@@ -104,8 +104,8 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
     window.print();
   };
 
-  const formatarData = (dStr?: string) => {
-    if (!dStr) return '—';
+  const formatarData = (dStr?: any) => {
+    if (!dStr || typeof dStr !== 'string') return '—';
     return dStr.split('-').reverse().join('/');
   };
 
@@ -238,11 +238,11 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
                         <td style={{ padding: '12px', fontWeight: 800, color: 'var(--text-main)' }}>{mat.nome}</td>
                         {mediasBimestrais.map((m, idx) => (
                           <td key={idx} style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>
-                            {m !== null ? m.toFixed(1) : '—'}
+                            {m !== null && !isNaN(m) ? m.toFixed(1) : '—'}
                           </td>
                         ))}
                         <td style={{ padding: '12px', textAlign: 'center', fontWeight: 800, background: '#fafafa' }}>
-                          {mediaFinal !== null ? mediaFinal.toFixed(1) : '—'}
+                          {mediaFinal !== null && !isNaN(mediaFinal) ? mediaFinal.toFixed(1) : '—'}
                         </td>
                         <td style={{ padding: '12px', textAlign: 'center', background: '#fafafa' }}>
                           {mediaFinal === null ? (

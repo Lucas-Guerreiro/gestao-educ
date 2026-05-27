@@ -48,13 +48,14 @@ const AlunosPage: React.FC<AlunosPageProps> = ({
 
   // Filtrar
   const alunosFiltrados = alunos.filter(a => {
-    const atendeBusca = a.nome.toLowerCase().includes(busca.toLowerCase());
+    const nomeAluno = a.nome || '';
+    const atendeBusca = nomeAluno.toLowerCase().includes(busca.toLowerCase());
     const atendeTurma = filtroTurma ? String(a.turmaId) === filtroTurma : true;
     return atendeBusca && atendeTurma;
   });
 
-  const formatarData = (dt?: string) => {
-    if (!dt) return '—';
+  const formatarData = (dt?: any) => {
+    if (!dt || typeof dt !== 'string') return '—';
     const partes = dt.split('-');
     if (partes.length !== 3) return dt;
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
