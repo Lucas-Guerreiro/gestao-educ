@@ -36,6 +36,7 @@ import BoletimPage from './components/pages/BoletimPage';
 import RankingPage from './components/pages/RankingPage';
 import RelatorioPage from './components/pages/RelatorioPage';
 import ApontamentosPage from './components/pages/ApontamentosPage';
+import SharedNotasPage from './components/pages/SharedNotasPage';
 
 const App: React.FC = () => {
   // Authentication states
@@ -404,6 +405,29 @@ const App: React.FC = () => {
         return <EscolaPage escolas={escolas} turmas={turmas} setSyncStatus={setSyncStatus} />;
     }
   };
+
+  // Verificar se é acesso compartilhado de notas para professores convidados (bypass de login)
+  const queryParams = new URLSearchParams(window.location.search);
+  const isCompartilhado = queryParams.get('compartilhado') === 'true';
+  const sharedAtividadeId = queryParams.get('atividadeId') || '';
+  const sharedTurmas = queryParams.get('turmas') ? queryParams.get('turmas')!.split(',') : [];
+
+  if (isCompartilhado && sharedAtividadeId) {
+    return (
+      <SharedNotasPage
+        sharedAtividadeId={sharedAtividadeId}
+        turmasPermitidas={sharedTurmas}
+        alunos={alunos}
+        turmas={turmas}
+        materias={materias}
+        bimestres={bimestres}
+        atividades={atividades}
+        escolas={escolas}
+        notas={notas}
+        setSyncStatus={setSyncStatus}
+      />
+    );
+  }
 
   // If not authenticated, render Login Lock Screen
   if (!autenticado) {
