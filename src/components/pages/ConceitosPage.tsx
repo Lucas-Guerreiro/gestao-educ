@@ -121,7 +121,7 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
       );
     }
 
-    if (media >= 6.0) {
+    if (media >= 7.0) {
       return (
         <span style={{ fontSize: '10px', background: '#dcfce7', color: '#166534', padding: '3px 8px', borderRadius: '6px', fontWeight: 800 }}>
           ✅ Aprovado ({media.toFixed(1)})

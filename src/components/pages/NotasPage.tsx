@@ -563,7 +563,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                 {alunosFiltrados.map((aluno, alunoIdx) => {
                   const media = calcularMediaAluno(aluno.id);
                   const mediaNum = media !== '—' ? Number(media) : null;
-                  const isFail = mediaNum !== null && mediaNum < 6.0;
+                  const isFail = mediaNum !== null && mediaNum < 7.0;
 
                   return (
                     <tr key={aluno.id} className="table-row-hover">

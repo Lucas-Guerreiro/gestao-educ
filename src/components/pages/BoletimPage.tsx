@@ -231,7 +231,7 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
                     });
 
                     const mediaFinal = bimestresComNota > 0 ? somaMedias / bimestresComNota : null;
-                    const aprovado = mediaFinal !== null && mediaFinal >= 6.0;
+                    const aprovado = mediaFinal !== null && mediaFinal >= 7.0;
 
                     return (
                       <tr key={mat.id} style={{ borderBottom: '1px solid var(--border)', transition: '0.15s' }}>

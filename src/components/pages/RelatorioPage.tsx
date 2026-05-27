@@ -38,7 +38,7 @@ const RelatorioPage: React.FC<RelatorioPageProps> = ({
     let recuperacao = 0;
 
     notasValidas.forEach(n => {
-      if (n.nota >= 6.0) aprovados++;
+      if (n.nota >= 7.0) aprovados++;
       else if (n.nota >= 5.0) regulares++;
       else recuperacao++;
     });
@@ -145,7 +145,7 @@ const RelatorioPage: React.FC<RelatorioPageProps> = ({
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <div style={{ width: '12px', height: '12px', background: '#10b981', borderRadius: '3px' }}></div>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Aprovados (Média ≥ 6.0)</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Aprovados (Média ≥ 7.0)</span>
                   </div>
                   <b>{dist.aprovados}% ({dist.aprovadosQtd} lançamentos)</b>
                 </div>
@@ -153,7 +153,7 @@ const RelatorioPage: React.FC<RelatorioPageProps> = ({
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <div style={{ width: '12px', height: '12px', background: '#f59e0b', borderRadius: '3px' }}></div>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Regulares (5.0 ≤ Média &lt; 6.0)</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Regulares (5.0 ≤ Média &lt; 7.0)</span>
                   </div>
                   <b>{dist.regulares}% ({dist.regularesQtd} lançamentos)</b>
                 </div>
