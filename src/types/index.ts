@@ -94,6 +94,8 @@ export interface Atividade {
   bimestreId: string;
   peso: number;
   descricao?: string;
+  dataLimite?: string; // YYYY-MM-DD
+  liberadoVencido?: boolean;
 }
 
 /**

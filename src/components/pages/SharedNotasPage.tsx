@@ -42,6 +42,14 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
     return atividades.find(a => a.id === currentAtividadeId) || null;
   }, [atividades, currentAtividadeId]);
 
+  // Verificar se o prazo limite da atividade expirou
+  const hojeStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const atividadeExpirada = useMemo(() => {
+    if (!atividade || !atividade.dataLimite) return false;
+    return hojeStr > atividade.dataLimite && !atividade.liberadoVencido;
+  }, [atividade, hojeStr]);
+
+
   // Escola da atividade
   const escola = useMemo(() => {
     if (!atividade) return null;
@@ -263,39 +271,48 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
           <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ background: edicaoBloqueada ? '#f8fafc' : '#eff6ff', border: edicaoBloqueada ? '1px solid var(--border)' : '1px solid #bfdbfe', borderRadius: '10px', padding: '10px 14px', fontSize: '11.5px', color: edicaoBloqueada ? 'var(--text-muted)' : '#1e40af', lineHeight: 1.5, flex: 1 }}>
-                <i className={edicaoBloqueada ? "ti ti-lock" : "ti ti-info-circle"}></i>
-                {edicaoBloqueada ? (
-                  <span> <b>Visualização Protegida:</b> A digitação de notas está temporariamente bloqueada. Clique em <b>"Habilitar Edição"</b> ao lado para preencher ou alterar notas.</span>
-                ) : (
-                  <span> <b>Lançamento Ativo:</b> As notas digitadas são salvas automaticamente na nuvem ao perder o foco (Tab) ou pressionar Enter (para pular de linha).</span>
-                )}
-              </div>
+              {atividadeExpirada ? (
+                <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '10px', padding: '10px 14px', fontSize: '11.5px', color: '#e11d48', lineHeight: 1.5, flex: 1 }}>
+                  <i className="ti ti-lock" style={{ marginRight: '6px' }}></i>
+                  <span>⚠️ <b>Lançamento Expirado:</b> O prazo para digitação destas notas terminou em <b>{atividade.dataLimite ? atividade.dataLimite.split('-').reverse().join('/') : '—'}</b>. O lançamento está temporariamente bloqueado.</span>
+                </div>
+              ) : (
+                <>
+                  <div style={{ background: edicaoBloqueada ? '#f8fafc' : '#eff6ff', border: edicaoBloqueada ? '1px solid var(--border)' : '1px solid #bfdbfe', borderRadius: '10px', padding: '10px 14px', fontSize: '11.5px', color: edicaoBloqueada ? 'var(--text-muted)' : '#1e40af', lineHeight: 1.5, flex: 1 }}>
+                    <i className={edicaoBloqueada ? "ti ti-lock" : "ti ti-info-circle"}></i>
+                    {edicaoBloqueada ? (
+                      <span> <b>Visualização Protegida:</b> A digitação de notas está temporariamente bloqueada. Clique em <b>"Habilitar Edição"</b> ao lado para preencher ou alterar notas.</span>
+                    ) : (
+                      <span> <b>Lançamento Ativo:</b> As notas digitadas são salvas automaticamente na nuvem ao perder o foco (Tab) ou pressionar Enter (para pular de linha).</span>
+                    )}
+                  </div>
 
-              <button
-                type="button"
-                onClick={() => setEdicaoBloqueada(prev => !prev)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontSize: '12.5px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  border: '1px solid',
-                  borderColor: edicaoBloqueada ? 'var(--primary)' : '#cbd5e1',
-                  background: edicaoBloqueada ? 'var(--primary)' : '#fff',
-                  color: edicaoBloqueada ? '#fff' : 'var(--text-main)',
-                  boxShadow: 'var(--shadow-sm)',
-                  transition: 'all 0.15s ease',
-                  userSelect: 'none'
-                }}
-              >
-                <i className={edicaoBloqueada ? "ti ti-lock-open" : "ti ti-lock"}></i>
-                {edicaoBloqueada ? 'Habilitar Edição' : 'Bloquear Edição'}
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => setEdicaoBloqueada(prev => !prev)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '8px 16px',
+                      borderRadius: '10px',
+                      fontSize: '12.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      border: '1px solid',
+                      borderColor: edicaoBloqueada ? 'var(--primary)' : '#cbd5e1',
+                      background: edicaoBloqueada ? 'var(--primary)' : '#fff',
+                      color: edicaoBloqueada ? '#fff' : 'var(--text-main)',
+                      boxShadow: 'var(--shadow-sm)',
+                      transition: 'all 0.15s ease',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <i className={edicaoBloqueada ? "ti ti-lock-open" : "ti ti-lock"}></i>
+                    {edicaoBloqueada ? 'Habilitar Edição' : 'Bloquear Edição'}
+                  </button>
+                </>
+              )}
             </div>
 
             <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 360px)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
@@ -327,8 +344,12 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                             <input 
                               id={`shared-input-nota-${idx}`}
                               defaultValue={notaVal}
-                              disabled={edicaoBloqueada}
-                              onBlur={(e) => salvarNota(aluno.id, e.target.value)}
+                              disabled={edicaoBloqueada || atividadeExpirada}
+                              onBlur={(e) => {
+                                if (!atividadeExpirada) {
+                                  salvarNota(aluno.id, e.target.value);
+                                }
+                              }}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
@@ -341,19 +362,19 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                                   }
                                 }
                               }}
-                              placeholder={edicaoBloqueada ? '—' : `0-${obterNotaMaxima(atividade.tipo)}`}
+                              placeholder={atividadeExpirada ? '🔒 Expirado' : (edicaoBloqueada ? '—' : `0-${obterNotaMaxima(atividade.tipo)}`)}
                               style={{ 
                                 width: '100%', 
                                 textAlign: 'center', 
                                 padding: '6px', 
-                                border: `1px solid ${edicaoBloqueada ? 'var(--border)' : notaColors.border}`,
+                                border: `1px solid ${atividadeExpirada ? '#fca5a5' : (edicaoBloqueada ? 'var(--border)' : notaColors.border)}`,
                                 borderRadius: '8px', 
                                 fontSize: '13px', 
                                 fontWeight: 700,
-                                background: edicaoBloqueada ? '#f1f5f9' : notaColors.bg,
-                                color: edicaoBloqueada ? '#94a3b8' : notaColors.text,
+                                background: atividadeExpirada ? '#fff1f2' : (edicaoBloqueada ? '#f1f5f9' : notaColors.bg),
+                                color: atividadeExpirada ? '#e11d48' : (edicaoBloqueada ? '#94a3b8' : notaColors.text),
                                 outline: 'none',
-                                cursor: edicaoBloqueada ? 'not-allowed' : 'text',
+                                cursor: (atividadeExpirada || edicaoBloqueada) ? 'not-allowed' : 'text',
                                 transition: 'background 160ms ease, border-color 160ms ease'
                               }}
                             />

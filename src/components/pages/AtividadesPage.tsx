@@ -27,6 +27,8 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   const [bimestreId, setBimestreId] = useState('');
   const [peso, setPeso] = useState(1);
   const [descricao, setDescricao] = useState('');
+  const [dataLimite, setDataLimite] = useState('');
+  const [liberadoVencido, setLiberadoVencido] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // Estados para Duplicação em Lote
@@ -68,6 +70,8 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
         bimestreId,
         peso: Number(peso),
         descricao: descricao.trim(),
+        dataLimite: dataLimite || '',
+        liberadoVencido: !!liberadoVencido,
       };
 
       if (editingId) {
@@ -84,6 +88,8 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
       setBimestreId('');
       setPeso(1);
       setDescricao('');
+      setDataLimite('');
+      setLiberadoVencido(false);
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
@@ -100,6 +106,8 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
     setBimestreId(ativ.bimestreId);
     setPeso(ativ.peso);
     setDescricao(ativ.descricao || '');
+    setDataLimite(ativ.dataLimite || '');
+    setLiberadoVencido(!!ativ.liberadoVencido);
   };
 
   const abrirDuplicarModal = (ativ: Atividade) => {
@@ -147,6 +155,8 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
           bimestreId: atividadeParaDuplicar.bimestreId,
           peso: Number(atividadeParaDuplicar.peso),
           descricao: (atividadeParaDuplicar.descricao || '').trim(),
+          dataLimite: atividadeParaDuplicar.dataLimite || '',
+          liberadoVencido: !!atividadeParaDuplicar.liberadoVencido,
         });
       });
 
@@ -277,9 +287,32 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
             </div>
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '10px', alignItems: 'center' }}>
+            <div className="f">
+              <label>Data Limite para Lançamento (Prazo)</label>
+              <input 
+                type="date"
+                value={dataLimite} 
+                onChange={(e) => setDataLimite(e.target.value)} 
+              />
+            </div>
+            <div className="f" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', marginTop: '20px' }}>
+              <input 
+                type="checkbox" 
+                id="liberado-vencido-checkbox"
+                checked={liberadoVencido} 
+                onChange={(e) => setLiberadoVencido(e.target.checked)}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
+              <label htmlFor="liberado-vencido-checkbox" style={{ fontSize: '11.5px', cursor: 'pointer', userSelect: 'none', fontWeight: 600, color: 'var(--text-main)' }}>
+                Permitir após prazo
+              </label>
+            </div>
+          </div>
+
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
             {editingId && (
-              <button type="button" className="btn" onClick={() => { setEditingId(null); setNome(''); setTipo('prova'); setTurmaId(''); setMateriaId(''); setBimestreId(''); setPeso(1); setDescricao(''); }}>
+              <button type="button" className="btn" onClick={() => { setEditingId(null); setNome(''); setTipo('prova'); setTurmaId(''); setMateriaId(''); setBimestreId(''); setPeso(1); setDescricao(''); setDataLimite(''); setLiberadoVencido(false); }}>
                 Cancelar
               </button>
             )}
@@ -359,6 +392,26 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                       <span style={{ fontSize: '9px', background: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
                         ⚖️ Peso: {ativ.peso}
                       </span>
+                      {ativ.dataLimite && (() => {
+                        const hoje = new Date().toISOString().split('T')[0];
+                        const estaExpirado = hoje > ativ.dataLimite && !ativ.liberadoVencido;
+                        return (
+                          <span style={{ 
+                            fontSize: '9px', 
+                            background: estaExpirado ? '#fee2e2' : '#f0fdf4', 
+                            color: estaExpirado ? '#dc2626' : '#16a34a', 
+                            padding: '2px 6px', 
+                            borderRadius: '4px', 
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px'
+                          }}>
+                            <i className={estaExpirado ? "ti ti-lock" : "ti ti-lock-open"}></i>
+                            Prazo: {ativ.dataLimite.split('-').reverse().join('/')} {estaExpirado && '(Expirado)'}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>

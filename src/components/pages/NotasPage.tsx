@@ -607,6 +607,9 @@ const NotasPage: React.FC<NotasPageProps> = ({
                   </th>
                   {atividadesFiltradas.map(at => {
                     const colors = badgeColor(at.tipo);
+                    const hojeStr = new Date().toISOString().split('T')[0];
+                    const atExpirada = !!(at.dataLimite && hojeStr > at.dataLimite && !at.liberadoVencido);
+
                     return (
                       <th 
                         key={at.id} 
@@ -621,8 +624,9 @@ const NotasPage: React.FC<NotasPageProps> = ({
                           boxShadow: 'inset 0 -2px 0 var(--border)'
                         }}
                       >
-                        <div className="nota-col-label" style={{ display: 'inline-block', padding: '6px 10px', borderRadius: '10px', background: colors.bg, color: colors.text, minWidth: '110px' }}>
+                        <div className="nota-col-label" style={{ display: 'inline-block', padding: '6px 10px', borderRadius: '10px', background: colors.bg, color: colors.text, minWidth: '110px', border: atExpirada ? '1.5px dashed #ef4444' : 'none' }}>
                           <div style={{ fontWeight: 700, color: colors.text, fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                            {atExpirada && at.dataLimite && <i className="ti ti-lock" style={{ color: '#ef4444', fontSize: '13px' }} title={`Prazo limite expirado em ${at.dataLimite.split('-').reverse().join('/')}`}></i>}
                             <span>{at.nome}</span>
                             <button 
                               type="button" 
@@ -678,6 +682,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
                       {atividadesFiltradas.map((at, atIdx) => {
                         const eOcultavel = at.tipo === 'prova' || at.tipo === 'trabalho' || at.tipo === 'pluraal';
                         const celulaOculta = eOcultavel && notasOcultas;
+                        const hojeStr = new Date().toISOString().split('T')[0];
+                        const atExpirada = !!(at.dataLimite && hojeStr > at.dataLimite && !at.liberadoVencido);
 
                         const notaVal = obterNotaValor(aluno.id, at.id);
                         const displayVal = celulaOculta ? '***' : (notaVal === '-1' ? '' : notaVal);
@@ -692,9 +698,9 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                 key={celulaOculta ? 'oculto' : 'visivel'}
                                 id={`input-nota-${alunoIdx}-${atIdx}`}
                                 defaultValue={displayVal}
-                                disabled={celulaOculta}
+                                disabled={celulaOculta || atExpirada}
                                 onBlur={(e) => {
-                                  if (!celulaOculta) {
+                                  if (!celulaOculta && !atExpirada) {
                                     salvarNota(aluno.id, at.id, e.target.value);
                                   }
                                 }}
@@ -710,18 +716,18 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                     }
                                   }
                                 }}
-                                placeholder={celulaOculta ? 'Oculto' : `0-${obterNotaMaxima(at.tipo)}`}
+                                placeholder={celulaOculta ? 'Oculto' : atExpirada ? '🔒 Expirado' : `0-${obterNotaMaxima(at.tipo)}`}
                                 style={{ 
                                   width: '100%', 
                                   textAlign: 'center', 
                                   padding: '6px', 
-                                  border: `1px solid ${notaColors.border}`,
+                                  border: `1px solid ${atExpirada ? 'var(--border)' : notaColors.border}`,
                                   borderRadius: '8px', 
                                   fontSize: '13px', 
                                   fontWeight: 700,
-                                  background: notaColors.bg,
-                                  color: notaColors.text,
-                                  cursor: celulaOculta ? 'not-allowed' : 'text',
+                                  background: atExpirada ? '#f1f5f9' : notaColors.bg,
+                                  color: atExpirada ? '#94a3b8' : notaColors.text,
+                                  cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'text',
                                   transition: 'background 160ms ease, border-color 160ms ease'
                                 }}
                               />
