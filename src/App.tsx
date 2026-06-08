@@ -367,6 +367,7 @@ const App: React.FC = () => {
             notas={notasAtivas}
             escolas={escolas}
             apontamentos={apontamentosAtivos}
+            setSyncStatus={setSyncStatus}
           />
         );
       case 'ranking':
