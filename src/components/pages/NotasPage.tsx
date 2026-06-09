@@ -106,6 +106,10 @@ const NotasPage: React.FC<NotasPageProps> = ({
     return !permanente; // Se for permanente, as notas não começam ocultas. Senão, começam ocultas.
   });
 
+  const [qualitativasColapsadas, setQualitativasColapsadas] = useState<boolean>(() => {
+    return localStorage.getItem('es_qualitativas_colapsadas') !== 'false';
+  });
+
   const alternarVisibilidadeTemporaria = () => {
     setNotasOcultas(prev => !prev);
   };
@@ -129,6 +133,38 @@ const NotasPage: React.FC<NotasPageProps> = ({
     at => at.turmaId === turmaId && at.materiaId === materiaId && at.bimestreId === bimestreId
   );
 
+  // Ordenar atividades da esquerda para a direita: Qualitativa (por nome), depois PLURAAL (por nome) e por fim Trabalho (por nome)
+  const atividadesOrdenadas = useMemo(() => {
+    return [...atividadesFiltradas].sort((a, b) => {
+      const getOrder = (tipo: string) => {
+        if (tipo === 'qualitativa') return 1;
+        if (tipo === 'pluraal') return 2;
+        if (tipo === 'trabalho') return 3;
+        return 4;
+      };
+      
+      const orderA = getOrder(a.tipo);
+      const orderB = getOrder(b.tipo);
+      
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      
+      return a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' });
+    });
+  }, [atividadesFiltradas]);
+
+  const qualitativas = useMemo(() => {
+    return atividadesFiltradas.filter(at => at.tipo === 'qualitativa');
+  }, [atividadesFiltradas]);
+
+  const atividadesExibidas = useMemo(() => {
+    if (qualitativasColapsadas) {
+      return atividadesOrdenadas.filter(at => at.tipo !== 'qualitativa');
+    }
+    return atividadesOrdenadas;
+  }, [atividadesOrdenadas, qualitativasColapsadas]);
+
   // Filtrar as atividades com base em qualquer um dos filtros selecionados
   const atividadesFiltradasParaLista = useMemo(() => {
     return atividades.filter(at => {
@@ -144,6 +180,23 @@ const NotasPage: React.FC<NotasPageProps> = ({
     const registro = notas.find(n => n.alunoId === alunoId && n.atividadeId === atividadeId);
     if (!registro || registro.nota === undefined) return '';
     return String(registro.nota);
+  };
+
+  const obterMediaQualitativa = (alunoId: string): string => {
+    if (qualitativas.length === 0) return '—';
+    
+    let soma = 0;
+    let temNota = false;
+    qualitativas.forEach(at => {
+      const notaStr = obterNotaValor(alunoId, at.id);
+      if (notaStr !== '' && Number(notaStr) >= 0) {
+        soma += Number(notaStr);
+        temNota = true;
+      }
+    });
+    
+    if (!temNota) return '—';
+    return (soma / qualitativas.length).toFixed(1);
   };
 
   const obterNotaMaxima = (tipo: string): number => {
@@ -586,6 +639,33 @@ const NotasPage: React.FC<NotasPageProps> = ({
               <i className={visibilidadePermanente ? "ti ti-lock-open" : "ti ti-lock"}></i>
               {visibilidadePermanente ? '🔓 Visibilidade Permanente: ATIVADA' : '🔒 Tornar Visibilidade Permanente'}
             </button>
+
+            <button 
+              type="button" 
+              className="btn" 
+              onClick={() => {
+                setQualitativasColapsadas(prev => {
+                  const novo = !prev;
+                  localStorage.setItem('es_qualitativas_colapsadas', String(novo));
+                  return novo;
+                });
+              }}
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '6px', 
+                fontSize: '12.5px', 
+                fontWeight: 600,
+                borderColor: qualitativasColapsadas ? '#166534' : '#cbd5e1',
+                color: qualitativasColapsadas ? '#166534' : 'var(--text-main)',
+                background: qualitativasColapsadas ? '#f0fdf4' : '#fff',
+                padding: '6px 12px',
+                borderRadius: '8px'
+              }}
+            >
+              <i className={qualitativasColapsadas ? "ti ti-layout-columns" : "ti ti-columns"}></i>
+              {qualitativasColapsadas ? '📂 Mostrar Notas Qualitativas' : '📁 Colapsar Notas Qualitativas'}
+            </button>
           </div>
 
           {/* Container de Rolagem da Tabela com Cabeçalho Congelado */}
@@ -605,7 +685,28 @@ const NotasPage: React.FC<NotasPageProps> = ({
                   }}>
                     Aluno
                   </th>
-                  {atividadesFiltradas.map(at => {
+                  {qualitativasColapsadas && qualitativas.length > 0 && (
+                    <th 
+                      style={{ 
+                        padding: '12px 10px', 
+                        textAlign: 'center', 
+                        width: '120px',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 10,
+                        background: '#fff',
+                        boxShadow: 'inset 0 -2px 0 var(--border)'
+                      }}
+                    >
+                      <div className="nota-col-label" style={{ display: 'inline-block', padding: '6px 10px', borderRadius: '10px', background: '#f0fdf4', color: '#166534', minWidth: '110px' }}>
+                        <div style={{ fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                          <span>Qualitativa</span>
+                        </div>
+                        <div style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>Média ({qualitativas.length})</div>
+                      </div>
+                    </th>
+                  )}
+                  {atividadesExibidas.map(at => {
                     const colors = badgeColor(at.tipo);
                     const hojeStr = new Date().toISOString().split('T')[0];
                     const atExpirada = !!(at.dataLimite && hojeStr > at.dataLimite && !at.liberadoVencido);
@@ -679,7 +780,37 @@ const NotasPage: React.FC<NotasPageProps> = ({
                     <tr key={aluno.id} className="table-row-hover">
                       <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-main)', borderBottom: '1px solid var(--border)' }}>{aluno.nome}</td>
                       
-                      {atividadesFiltradas.map((at, atIdx) => {
+                      {qualitativasColapsadas && qualitativas.length > 0 && (
+                        <td style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
+                          <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
+                            {(() => {
+                              const mediaQual = obterMediaQualitativa(aluno.id);
+                              const notaColors = getNotaCellColors(mediaQual, false);
+                              return (
+                                <input 
+                                  readOnly
+                                  value={mediaQual}
+                                  title="Média das notas qualitativas (leitura apenas)"
+                                  style={{ 
+                                    width: '100%', 
+                                    textAlign: 'center', 
+                                    padding: '6px', 
+                                    border: `1px solid ${notaColors.border}`,
+                                    borderRadius: '8px', 
+                                    fontSize: '13px', 
+                                    fontWeight: 700,
+                                    background: '#f8fafc',
+                                    color: notaColors.text,
+                                    cursor: 'not-allowed',
+                                  }}
+                                />
+                              );
+                            })()}
+                          </div>
+                        </td>
+                      )}
+
+                      {atividadesExibidas.map((at, atIdx) => {
                         const eOcultavel = at.tipo === 'prova' || at.tipo === 'trabalho' || at.tipo === 'pluraal';
                         const celulaOculta = eOcultavel && notasOcultas;
                         const hojeStr = new Date().toISOString().split('T')[0];
