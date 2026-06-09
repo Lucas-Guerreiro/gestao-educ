@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Escola, Apontamento, Professor } from '@/types';
@@ -12,6 +12,8 @@ interface ApontamentosPageProps {
   apontamentos: Apontamento[];
   professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
+  selectedBimestreId: string;
+  onBimestreChange: (id: string) => void;
 }
 
 const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
@@ -23,10 +25,20 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
   apontamentos,
   professores,
   setSyncStatus,
+  selectedBimestreId,
+  onBimestreChange,
 }) => {
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
+
+  // Sincronizar com o bimestre global
+  useEffect(() => {
+    if (selectedBimestreId) {
+      setBimestreId(selectedBimestreId);
+    }
+  }, [selectedBimestreId]);
+
   const [dataApontamento, setDataApontamento] = useState(() => {
     const hoje = new Date();
     const ano = hoje.getFullYear();
@@ -41,7 +53,6 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
   const handleTurmaChange = (id: string) => {
     setTurmaId(id);
     setMateriaId('');
-    setBimestreId('');
   };
 
   // Matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
@@ -200,7 +211,7 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
 
           <div className="f">
             <label>Selecione o Bimestre *</label>
-            <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)} disabled={!materiaId}>
+            <select value={selectedBimestreId} onChange={(e) => onBimestreChange(e.target.value)} disabled={!materiaId}>
               <option value="">— selecione —</option>
               {bimestres.map(b => (
                 <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>

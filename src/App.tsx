@@ -73,6 +73,16 @@ const App: React.FC = () => {
     localStorage.setItem('es_ano_ativo', String(ano));
   };
 
+  // Active Bimestre State
+  const [selectedBimestreId, setSelectedBimestreId] = useState<string>(() => {
+    return localStorage.getItem('es_bimestre_ativo') || '';
+  });
+
+  const handleBimestreChange = (bimestreId: string) => {
+    setSelectedBimestreId(bimestreId);
+    localStorage.setItem('es_bimestre_ativo', bimestreId);
+  };
+
   // Derive unique school years from bimestres letivos
   const anosDisponiveis = Array.from(new Set(bimestres.map(b => b.ano).filter(Boolean)));
   if (!anosDisponiveis.includes(new Date().getFullYear())) {
@@ -85,6 +95,21 @@ const App: React.FC = () => {
     const bAno = b.ano || new Date().getFullYear();
     return bAno === selectedAno;
   });
+
+  // Synchronize/Default selectedBimestreId when year changes or on load
+  useEffect(() => {
+    if (bimestresAtivos.length > 0) {
+      const exists = bimestresAtivos.some(b => b.id === selectedBimestreId);
+      if (!exists || !selectedBimestreId) {
+        const defaultId = bimestresAtivos[0].id;
+        setSelectedBimestreId(defaultId);
+        localStorage.setItem('es_bimestre_ativo', defaultId);
+      }
+    } else if (selectedBimestreId !== '') {
+      setSelectedBimestreId('');
+      localStorage.removeItem('es_bimestre_ativo');
+    }
+  }, [selectedAno, bimestresAtivos, selectedBimestreId]);
 
   const atividadesAtivas = atividades.filter(a => bimestresAtivos.some(b => b.id === a.bimestreId));
 
@@ -286,6 +311,7 @@ const App: React.FC = () => {
             escolas={escolas}
             professores={professores}
             setSyncStatus={setSyncStatus}
+            selectedBimestreId={selectedBimestreId}
           />
         );
       case 'capitulos':
@@ -345,6 +371,8 @@ const App: React.FC = () => {
             apontamentos={apontamentosAtivos}
             professores={professores}
             setSyncStatus={setSyncStatus}
+            selectedBimestreId={selectedBimestreId}
+            onBimestreChange={handleBimestreChange}
           />
         );
       case 'conceito':
@@ -359,6 +387,8 @@ const App: React.FC = () => {
             escolas={escolas}
             apontamentos={apontamentosAtivos}
             professores={professores}
+            selectedBimestreId={selectedBimestreId}
+            onBimestreChange={handleBimestreChange}
           />
         );
       case 'visao':
@@ -374,6 +404,8 @@ const App: React.FC = () => {
             apontamentos={apontamentosAtivos}
             professores={professores}
             setSyncStatus={setSyncStatus}
+            globalBimestreId={selectedBimestreId}
+            onBimestreChange={handleBimestreChange}
           />
         );
       case 'ranking':
@@ -407,6 +439,8 @@ const App: React.FC = () => {
             apontamentos={apontamentosAtivos} 
             professores={professores}
             setSyncStatus={setSyncStatus}
+            selectedBimestreId={selectedBimestreId}
+            onBimestreChange={handleBimestreChange}
           />
         );
       default:
@@ -487,6 +521,9 @@ const App: React.FC = () => {
           selectedAno={selectedAno}
           anosDisponiveis={anosDisponiveis}
           onAnoChange={handleAnoChange}
+          selectedBimestreId={selectedBimestreId}
+          bimestresAtivos={bimestresAtivos}
+          onBimestreChange={handleBimestreChange}
           collapsed={sidebarCollapsed}
           setCollapsed={setSidebarCollapsed}
         />

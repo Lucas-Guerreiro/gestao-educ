@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
@@ -14,6 +14,8 @@ interface NotasPageProps {
   apontamentos: Apontamento[];
   professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
+  selectedBimestreId: string;
+  onBimestreChange: (id: string) => void;
 }
 
 const NotasPage: React.FC<NotasPageProps> = ({
@@ -27,10 +29,19 @@ const NotasPage: React.FC<NotasPageProps> = ({
   apontamentos,
   professores,
   setSyncStatus,
+  selectedBimestreId,
+  onBimestreChange,
 }) => {
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
+
+  // Sincronizar com o bimestre global
+  useEffect(() => {
+    if (selectedBimestreId) {
+      setBimestreId(selectedBimestreId);
+    }
+  }, [selectedBimestreId]);
 
   // Estados para Compartilhamento Interdisciplinar Geral
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -72,12 +83,10 @@ const NotasPage: React.FC<NotasPageProps> = ({
   const handleTurmaChange = (id: string) => {
     setTurmaId(id);
     setMateriaId('');
-    setBimestreId('');
   };
 
   const handleMateriaChange = (id: string) => {
     setMateriaId(id);
-    setBimestreId('');
   };
 
   // Matérias que têm atividades na turma selecionada e que são lecionadas nela (com fallback para qualquer matéria com atividades)
@@ -420,7 +429,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                 <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhuma atividade nesta matéria</span>
               )}
             </label>
-            <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)} disabled={!materiaId}>
+            <select value={selectedBimestreId} onChange={(e) => onBimestreChange(e.target.value)} disabled={!materiaId}>
               <option value="">— selecione —</option>
               {bimestresDaTurmaMateria.map(b => (
                 <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>

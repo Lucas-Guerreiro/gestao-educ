@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Atividade, Turma, Materia, Bimestre, Escola, Professor } from '@/types';
@@ -11,6 +11,7 @@ interface AtividadesPageProps {
   escolas: Escola[];
   professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
+  selectedBimestreId: string;
 }
 
 const AtividadesPage: React.FC<AtividadesPageProps> = ({
@@ -21,6 +22,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   escolas,
   professores,
   setSyncStatus,
+  selectedBimestreId,
 }) => {
   const [nome, setNome] = useState('');
   const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal'>('prova');
@@ -41,6 +43,14 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   // Filters state
   const [filtroTurma, setFiltroTurma] = useState('');
   const [filtroBimestre, setFiltroBimestre] = useState('');
+
+  // Sincronizar com o bimestre global
+  useEffect(() => {
+    if (selectedBimestreId) {
+      setBimestreId(selectedBimestreId);
+      setFiltroBimestre(selectedBimestreId);
+    }
+  }, [selectedBimestreId]);
 
   // Filtrar as matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
   const materiasDaTurmaEscola = React.useMemo(() => {

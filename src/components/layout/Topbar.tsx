@@ -1,4 +1,5 @@
 import React from 'react';
+import { Bimestre } from '@/types';
 
 interface TopbarProps {
   currentSec: string;
@@ -8,6 +9,9 @@ interface TopbarProps {
   selectedAno: number;
   anosDisponiveis: number[];
   onAnoChange: (ano: number) => void;
+  selectedBimestreId: string;
+  bimestresAtivos: Bimestre[];
+  onBimestreChange: (id: string) => void;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
 }
@@ -20,6 +24,9 @@ const Topbar: React.FC<TopbarProps> = ({
   selectedAno,
   anosDisponiveis,
   onAnoChange,
+  selectedBimestreId,
+  bimestresAtivos,
+  onBimestreChange,
   collapsed,
   setCollapsed,
 }) => {
@@ -74,26 +81,51 @@ const Topbar: React.FC<TopbarProps> = ({
         <i className={`ti ${meta.icon}`}></i> {meta.label}
       </div>
 
-      {/* Seletor Global de Ano Letivo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '10px', marginLeft: 'auto', marginRight: '16px' }}>
-        <i className="ti ti-calendar" style={{ color: 'var(--primary)', fontWeight: 'bold' }}></i>
-        <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ano Letivo:</span>
-        <select 
-          value={selectedAno} 
-          onChange={(e) => onAnoChange(Number(e.target.value))}
-          style={{ 
-            background: 'transparent', 
-            border: 'none', 
-            fontSize: '12.5px', 
-            fontWeight: 800, 
-            color: 'var(--text-main)', 
-            cursor: 'pointer',
-            paddingRight: '2px',
-            outline: 'none'
-          }}
-        >
-          {anosDisponiveis.map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
+      {/* Seletores Globais (Ano Letivo e Bimestre) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', marginRight: '16px' }}>
+        {/* Seletor Global de Ano Letivo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '10px' }}>
+          <i className="ti ti-calendar" style={{ color: 'var(--primary)', fontWeight: 'bold' }}></i>
+          <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ano Letivo:</span>
+          <select 
+            value={selectedAno} 
+            onChange={(e) => onAnoChange(Number(e.target.value))}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              fontSize: '12.5px', 
+              fontWeight: 800, 
+              color: 'var(--text-main)', 
+              cursor: 'pointer',
+              paddingRight: '2px',
+              outline: 'none'
+            }}
+          >
+            {anosDisponiveis.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
+
+        {/* Seletor Global de Bimestre */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '10px' }}>
+          <i className="ti ti-calendar-event" style={{ color: 'var(--primary)', fontWeight: 'bold' }}></i>
+          <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bimestre:</span>
+          <select 
+            value={selectedBimestreId} 
+            onChange={(e) => onBimestreChange(e.target.value)}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              fontSize: '12.5px', 
+              fontWeight: 800, 
+              color: 'var(--text-main)', 
+              cursor: 'pointer',
+              paddingRight: '2px',
+              outline: 'none'
+            }}
+          >
+            {bimestresAtivos.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
+          </select>
+        </div>
       </div>
 
       <div className="tb-btns">

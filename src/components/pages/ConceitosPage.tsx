@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
 
 interface ConceitosPageProps {
@@ -11,6 +11,8 @@ interface ConceitosPageProps {
   escolas: Escola[];
   apontamentos: Apontamento[];
   professores: Professor[];
+  selectedBimestreId: string;
+  onBimestreChange: (id: string) => void;
 }
 
 const ConceitosPage: React.FC<ConceitosPageProps> = ({
@@ -23,9 +25,18 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
   escolas,
   apontamentos,
   professores,
+  selectedBimestreId,
+  onBimestreChange,
 }) => {
   const [turmaId, setTurmaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
+
+  // Sincronizar com o bimestre global
+  useEffect(() => {
+    if (selectedBimestreId) {
+      setBimestreId(selectedBimestreId);
+    }
+  }, [selectedBimestreId]);
 
   // 1. Filtrar os bimestres que possuem atividades para a turma selecionada
   const bimestresDaTurma = React.useMemo(() => {
@@ -42,7 +53,6 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
 
   const handleTurmaChange = (id: string) => {
     setTurmaId(id);
-    setBimestreId('');
   };
 
   // Filtrar turmas/alunos ativos
@@ -210,7 +220,7 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
                 <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhuma atividade nesta turma</span>
               )}
             </label>
-            <select value={bimestreId} onChange={(e) => setBimestreId(e.target.value)} disabled={!turmaId}>
+            <select value={selectedBimestreId} onChange={(e) => onBimestreChange(e.target.value)} disabled={!turmaId}>
               <option value="">— selecione —</option>
               {bimestresDaTurma.map(b => <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>)}
             </select>

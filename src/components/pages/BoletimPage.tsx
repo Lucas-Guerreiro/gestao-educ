@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
@@ -14,6 +14,8 @@ interface BoletimPageProps {
   apontamentos: Apontamento[];
   professores: Professor[];
   setSyncStatus?: (status: 'ok' | 'saving' | 'err') => void;
+  globalBimestreId: string;
+  onBimestreChange: (id: string) => void;
 }
 
 const BoletimPage: React.FC<BoletimPageProps> = ({
@@ -27,12 +29,21 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
   apontamentos,
   professores,
   setSyncStatus,
+  globalBimestreId,
+  onBimestreChange,
 }) => {
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
   const [selectedAlunoId, setSelectedAlunoId] = useState('');
 
   // Estados para a nova funcionalidade de consulta/edição de notas por bimestre e matérias
   const [selectedBimestreId, setSelectedBimestreId] = useState('');
+
+  // Sincronizar com o bimestre global
+  useEffect(() => {
+    if (globalBimestreId) {
+      setSelectedBimestreId(globalBimestreId);
+    }
+  }, [globalBimestreId]);
   const [selectedMateriaIds, setSelectedMateriaIds] = useState<string[]>([]);
   const [editingNotaId, setEditingNotaId] = useState<string | null>(null); // `${alunoId}_${atividadeId}`
   const [editNotaValue, setEditNotaValue] = useState('');
@@ -242,7 +253,6 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
             <select value={selectedTurmaId} onChange={(e) => { 
               setSelectedTurmaId(e.target.value); 
               setSelectedAlunoId(''); 
-              setSelectedBimestreId('');
               setSelectedMateriaIds([]);
               setEditingNotaId(null);
             }}>
@@ -262,7 +272,6 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
             </label>
             <select value={selectedAlunoId} onChange={(e) => {
               setSelectedAlunoId(e.target.value);
-              setSelectedBimestreId('');
               setSelectedMateriaIds([]);
               setEditingNotaId(null);
             }} disabled={!selectedTurmaId}>
@@ -299,8 +308,8 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
               <div className="f" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>Selecione o Bimestre *</label>
                 <select 
-                  value={selectedBimestreId} 
-                  onChange={(e) => { setSelectedBimestreId(e.target.value); setEditingNotaId(null); }}
+                  value={globalBimestreId} 
+                  onChange={(e) => { onBimestreChange(e.target.value); setEditingNotaId(null); }}
                   style={{ width: '100%', maxWidth: '300px' }}
                 >
                   <option value="">— selecione o bimestre —</option>
