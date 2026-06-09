@@ -273,7 +273,7 @@ const App: React.FC = () => {
       case 'materias':
         return <MateriasPage materias={materias} escolas={escolas} setSyncStatus={setSyncStatus} />;
       case 'profs':
-        return <ProfsPage professores={professores} materias={materias} escolas={escolas} setSyncStatus={setSyncStatus} />;
+        return <ProfsPage professores={professores} materias={materias} escolas={escolas} turmas={turmas} setSyncStatus={setSyncStatus} />;
       case 'bim':
         return <BimestresPage bimestres={bimestres} setSyncStatus={setSyncStatus} />;
       case 'ativ':
@@ -284,6 +284,7 @@ const App: React.FC = () => {
             materias={materias} 
             bimestres={bimestresAtivos} 
             escolas={escolas}
+            professores={professores}
             setSyncStatus={setSyncStatus}
           />
         );
@@ -294,6 +295,7 @@ const App: React.FC = () => {
             turmas={turmas} 
             materias={materias} 
             escolas={escolas}
+            professores={professores}
             setSyncStatus={setSyncStatus}
           />
         );
@@ -305,6 +307,7 @@ const App: React.FC = () => {
             materias={materias} 
             capitulos={capitulos} 
             escolas={escolas}
+            professores={professores}
             setSyncStatus={setSyncStatus}
           />
         );
@@ -340,6 +343,7 @@ const App: React.FC = () => {
             notas={notasAtivas}
             escolas={escolas}
             apontamentos={apontamentosAtivos}
+            professores={professores}
             setSyncStatus={setSyncStatus}
           />
         );
@@ -354,6 +358,7 @@ const App: React.FC = () => {
             notas={notasAtivas}
             escolas={escolas}
             apontamentos={apontamentosAtivos}
+            professores={professores}
           />
         );
       case 'visao':
@@ -367,6 +372,7 @@ const App: React.FC = () => {
             notas={notasAtivas}
             escolas={escolas}
             apontamentos={apontamentosAtivos}
+            professores={professores}
             setSyncStatus={setSyncStatus}
           />
         );
@@ -399,6 +405,7 @@ const App: React.FC = () => {
             bimestres={bimestresAtivos} 
             escolas={escolas} 
             apontamentos={apontamentosAtivos} 
+            professores={professores}
             setSyncStatus={setSyncStatus}
           />
         );

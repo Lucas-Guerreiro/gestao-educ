@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { SequenciaDidatica, Professor, Turma, Materia, Capitulo, ExerciciosIA, SdCapitulo } from '@/types';
@@ -131,6 +131,42 @@ const SdModal: React.FC<SdModalProps> = ({
       setRecursos([...recursos, rec]);
     }
   };
+
+  // Filtrar as matérias vinculadas à turma e professor selecionados (com fallback para as matérias da escola)
+  const materiasFiltradas = useMemo(() => {
+    if (!turmaId) return [];
+    const turmaSelected = turmas.find(t => t.id === turmaId);
+    if (!turmaSelected) return [];
+
+    const idsVinculados = new Set<string>();
+    
+    // Se houver professor selecionado, tentamos filtrar pelos seus vínculos específicos para esta turma
+    const profSelected = professores.find(p => p.id === professorId);
+    if (profSelected && profSelected.vinculos) {
+      profSelected.vinculos.forEach(v => {
+        if (v.turmaId === turmaId) {
+          v.materias.forEach(mid => idsVinculados.add(mid));
+        }
+      });
+    } else {
+      // Se não houver professor específico selecionado, buscamos os vínculos de qualquer professor para esta turma
+      professores.forEach(prof => {
+        if (prof.vinculos) {
+          prof.vinculos.forEach(v => {
+            if (v.turmaId === turmaId) {
+              v.materias.forEach(mid => idsVinculados.add(mid));
+            }
+          });
+        }
+      });
+    }
+
+    if (idsVinculados.size === 0) {
+      return materias.filter(m => m.escolaId === turmaSelected.escolaId);
+    }
+
+    return materias.filter(m => idsVinculados.has(m.id));
+  }, [turmaId, professorId, professores, materias, turmas]);
 
   // Filter chapters of selected Class/Subject
   const capitulosFiltrados = capitulos.filter(c => c.turmaId === turmaId && c.materiaId === materiaId);
@@ -273,7 +309,7 @@ const SdModal: React.FC<SdModalProps> = ({
                   <label>Matéria Vinculada *</label>
                   <select value={materiaId} onChange={(e) => { setMateriaId(e.target.value); setSelectedCaps([]); }}>
                     <option value="">— selecione —</option>
-                    {materias.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+                    {materiasFiltradas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
                   </select>
                 </div>
                 <div className="f">

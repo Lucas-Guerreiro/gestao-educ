@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Capitulo, Turma, Materia, Escola } from '@/types';
+import { Capitulo, Turma, Materia, Escola, Professor } from '@/types';
 
 interface CapitulosPageProps {
   capitulos: Capitulo[];
   turmas: Turma[];
   materias: Materia[];
   escolas: Escola[];
+  professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
 }
 
@@ -16,6 +17,7 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
   turmas,
   materias,
   escolas,
+  professores,
   setSyncStatus,
 }) => {
   const [nome, setNome] = useState('');
@@ -24,13 +26,29 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
   const [materiaId, setMateriaId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Filtrar as matérias da mesma escola da turma selecionada no formulário
+  // Filtrar as matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
   const materiasDaTurmaEscola = React.useMemo(() => {
     if (!turmaId) return [];
-    const turmaSelected = turmas.find(t => t.id === turmaId);
-    if (!turmaSelected) return [];
-    return materias.filter(m => m.escolaId === turmaSelected.escolaId);
-  }, [turmaId, turmas, materias]);
+    
+    const idsVinculados = new Set<string>();
+    professores.forEach(prof => {
+      if (prof.vinculos) {
+        prof.vinculos.forEach(v => {
+          if (v.turmaId === turmaId) {
+            v.materias.forEach(mid => idsVinculados.add(mid));
+          }
+        });
+      }
+    });
+
+    if (idsVinculados.size === 0) {
+      const turmaSelected = turmas.find(t => t.id === turmaId);
+      if (!turmaSelected) return [];
+      return materias.filter(m => m.escolaId === turmaSelected.escolaId);
+    }
+
+    return materias.filter(m => idsVinculados.has(m.id));
+  }, [turmaId, turmas, materias, professores]);
 
   const handleTurmaChange = (id: string) => {
     setTurmaId(id);

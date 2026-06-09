@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Aluno, Turma, Materia, Bimestre, Escola, Apontamento } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Escola, Apontamento, Professor } from '@/types';
 
 interface ApontamentosPageProps {
   alunos: Aluno[];
@@ -10,6 +10,7 @@ interface ApontamentosPageProps {
   bimestres: Bimestre[];
   escolas: Escola[];
   apontamentos: Apontamento[];
+  professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
 }
 
@@ -20,6 +21,7 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
   bimestres,
   escolas,
   apontamentos,
+  professores,
   setSyncStatus,
 }) => {
   const [turmaId, setTurmaId] = useState('');
@@ -42,13 +44,29 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
     setBimestreId('');
   };
 
-  // Matérias da mesma escola da turma vinculada
+  // Matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
   const materiasDaTurmaEscola = useMemo(() => {
     if (!turmaId) return [];
-    const turmaSelected = turmas.find(t => t.id === turmaId);
-    if (!turmaSelected) return [];
-    return materias.filter(m => m.escolaId === turmaSelected.escolaId);
-  }, [turmaId, turmas, materias]);
+    
+    const idsVinculados = new Set<string>();
+    professores.forEach(prof => {
+      if (prof.vinculos) {
+        prof.vinculos.forEach(v => {
+          if (v.turmaId === turmaId) {
+            v.materias.forEach(mid => idsVinculados.add(mid));
+          }
+        });
+      }
+    });
+
+    if (idsVinculados.size === 0) {
+      const turmaSelected = turmas.find(t => t.id === turmaId);
+      if (!turmaSelected) return [];
+      return materias.filter(m => m.escolaId === turmaSelected.escolaId);
+    }
+
+    return materias.filter(m => idsVinculados.has(m.id));
+  }, [turmaId, turmas, materias, professores]);
 
   // Filtrar alunos ativos da turma selecionada
   const alunosFiltrados = useMemo(() => {

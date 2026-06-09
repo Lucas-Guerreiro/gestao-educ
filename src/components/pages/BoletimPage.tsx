@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
 
 interface BoletimPageProps {
   alunos: Aluno[];
@@ -12,6 +12,7 @@ interface BoletimPageProps {
   notas: Nota[];
   escolas: Escola[];
   apontamentos: Apontamento[];
+  professores: Professor[];
   setSyncStatus?: (status: 'ok' | 'saving' | 'err') => void;
 }
 
@@ -24,6 +25,7 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
   notas,
   escolas,
   apontamentos,
+  professores,
   setSyncStatus,
 }) => {
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
@@ -109,7 +111,28 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
   const aluno = alunos.find(a => a.id === selectedAlunoId);
   const turma = turmas.find(t => t.id === selectedTurmaId);
   const escola = turma ? escolas.find(e => e.id === turma.escolaId) : null;
-  const materiasEscola = escola ? materias.filter(m => m.escolaId === escola.id) : [];
+  
+  // Filtrar disciplinas vinculadas à turma por qualquer professor, com fallback para todas da escola
+  const materiasEscola = React.useMemo(() => {
+    if (!selectedTurmaId) return [];
+    
+    const idsVinculados = new Set<string>();
+    professores.forEach(prof => {
+      if (prof.vinculos) {
+        prof.vinculos.forEach(v => {
+          if (v.turmaId === selectedTurmaId) {
+            v.materias.forEach(mid => idsVinculados.add(mid));
+          }
+        });
+      }
+    });
+
+    if (idsVinculados.size === 0) {
+      return escola ? materias.filter(m => m.escolaId === escola.id) : [];
+    }
+
+    return materias.filter(m => idsVinculados.has(m.id));
+  }, [selectedTurmaId, escola, materias, professores]);
 
   // Obter ano letivo a partir de bimestres
   const anosBimestres = Array.from(new Set(bimestres.map(b => b.ano).filter(Boolean)));

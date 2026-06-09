@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
 
 interface ConceitosPageProps {
   alunos: Aluno[];
@@ -10,6 +10,7 @@ interface ConceitosPageProps {
   notas: Nota[];
   escolas: Escola[];
   apontamentos: Apontamento[];
+  professores: Professor[];
 }
 
 const ConceitosPage: React.FC<ConceitosPageProps> = ({
@@ -21,6 +22,7 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
   notas,
   escolas,
   apontamentos,
+  professores,
 }) => {
   const [turmaId, setTurmaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
@@ -48,7 +50,28 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
   const escolaId = turmaSelecionada?.escolaId || '';
 
   const alunosFiltrados = alunos.filter(a => String(a.turmaId) === turmaId && a.ativo !== false);
-  const materiasFiltradas = materias.filter(m => m.escolaId === escolaId);
+  
+  // Filtrar disciplinas vinculadas à turma por qualquer professor, com fallback para todas da escola
+  const materiasFiltradas = React.useMemo(() => {
+    if (!turmaId) return [];
+    
+    const idsVinculados = new Set<string>();
+    professores.forEach(prof => {
+      if (prof.vinculos) {
+        prof.vinculos.forEach(v => {
+          if (v.turmaId === turmaId) {
+            v.materias.forEach(mid => idsVinculados.add(mid));
+          }
+        });
+      }
+    });
+
+    if (idsVinculados.size === 0) {
+      return materias.filter(m => m.escolaId === escolaId);
+    }
+
+    return materias.filter(m => idsVinculados.has(m.id));
+  }, [turmaId, escolaId, materias, professores]);
 
   // Calcular média para aluno + matéria no bimestre selecionado de acordo com as três categorias
   const obterMedia = (alunoId: string, materiaId: string) => {

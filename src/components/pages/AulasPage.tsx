@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Aula, Turma, Materia, Capitulo, Escola } from '@/types';
+import { Aula, Turma, Materia, Capitulo, Escola, Professor } from '@/types';
 
 interface AulasPageProps {
   aulas: Aula[];
@@ -9,6 +9,7 @@ interface AulasPageProps {
   materias: Materia[];
   capitulos: Capitulo[];
   escolas: Escola[];
+  professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
 }
 
@@ -18,6 +19,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
   materias,
   capitulos,
   escolas,
+  professores,
   setSyncStatus,
 }) => {
   const [data, setData] = useState('');
@@ -40,13 +42,29 @@ const AulasPage: React.FC<AulasPageProps> = ({
     "8º Horário (14:40 - 15:30)"
   ];
 
-  // Filtrar as matérias da mesma escola da turma selecionada no formulário
+  // Filtrar as matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
   const materiasDaTurmaEscola = React.useMemo(() => {
     if (!turmaId) return [];
-    const turmaSelected = turmas.find(t => t.id === turmaId);
-    if (!turmaSelected) return [];
-    return materias.filter(m => m.escolaId === turmaSelected.escolaId);
-  }, [turmaId, turmas, materias]);
+    
+    const idsVinculados = new Set<string>();
+    professores.forEach(prof => {
+      if (prof.vinculos) {
+        prof.vinculos.forEach(v => {
+          if (v.turmaId === turmaId) {
+            v.materias.forEach(mid => idsVinculados.add(mid));
+          }
+        });
+      }
+    });
+
+    if (idsVinculados.size === 0) {
+      const turmaSelected = turmas.find(t => t.id === turmaId);
+      if (!turmaSelected) return [];
+      return materias.filter(m => m.escolaId === turmaSelected.escolaId);
+    }
+
+    return materias.filter(m => idsVinculados.has(m.id));
+  }, [turmaId, turmas, materias, professores]);
 
   const handleTurmaChange = (id: string) => {
     setTurmaId(id);

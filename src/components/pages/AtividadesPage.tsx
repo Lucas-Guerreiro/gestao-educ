@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Atividade, Turma, Materia, Bimestre, Escola } from '@/types';
+import { Atividade, Turma, Materia, Bimestre, Escola, Professor } from '@/types';
 
 interface AtividadesPageProps {
   atividades: Atividade[];
@@ -9,6 +9,7 @@ interface AtividadesPageProps {
   materias: Materia[];
   bimestres: Bimestre[];
   escolas: Escola[];
+  professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
 }
 
@@ -18,6 +19,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   materias,
   bimestres,
   escolas,
+  professores,
   setSyncStatus,
 }) => {
   const [nome, setNome] = useState('');
@@ -40,13 +42,29 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   const [filtroTurma, setFiltroTurma] = useState('');
   const [filtroBimestre, setFiltroBimestre] = useState('');
 
-  // Filtrar as matérias da mesma escola da turma selecionada no formulário
+  // Filtrar as matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
   const materiasDaTurmaEscola = React.useMemo(() => {
     if (!turmaId) return [];
-    const turmaSelected = turmas.find(t => t.id === turmaId);
-    if (!turmaSelected) return [];
-    return materias.filter(m => m.escolaId === turmaSelected.escolaId);
-  }, [turmaId, turmas, materias]);
+    
+    const idsVinculados = new Set<string>();
+    professores.forEach(prof => {
+      if (prof.vinculos) {
+        prof.vinculos.forEach(v => {
+          if (v.turmaId === turmaId) {
+            v.materias.forEach(mid => idsVinculados.add(mid));
+          }
+        });
+      }
+    });
+
+    if (idsVinculados.size === 0) {
+      const turmaSelected = turmas.find(t => t.id === turmaId);
+      if (!turmaSelected) return [];
+      return materias.filter(m => m.escolaId === turmaSelected.escolaId);
+    }
+
+    return materias.filter(m => idsVinculados.has(m.id));
+  }, [turmaId, turmas, materias, professores]);
 
   const handleTurmaChange = (id: string) => {
     setTurmaId(id);

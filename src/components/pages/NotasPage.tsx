@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
 
 interface NotasPageProps {
   alunos: Aluno[];
@@ -12,6 +12,7 @@ interface NotasPageProps {
   notas: Nota[];
   escolas: Escola[];
   apontamentos: Apontamento[];
+  professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
 }
 
@@ -24,6 +25,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
   notas,
   escolas,
   apontamentos,
+  professores,
   setSyncStatus,
 }) => {
   const [turmaId, setTurmaId] = useState('');
@@ -78,12 +80,28 @@ const NotasPage: React.FC<NotasPageProps> = ({
     setBimestreId('');
   };
 
-  // Matérias que têm atividades na turma selecionada
+  // Matérias que têm atividades na turma selecionada e que são lecionadas nela (com fallback para qualquer matéria com atividades)
   const materiasDaTurma = useMemo(() => {
     if (!turmaId) return materias;
-    const ids = new Set(atividades.filter(at => at.turmaId === turmaId).map(at => at.materiaId));
-    return materias.filter(m => ids.has(m.id));
-  }, [turmaId, atividades, materias]);
+    const ativMateriaIds = new Set(atividades.filter(at => at.turmaId === turmaId).map(at => at.materiaId));
+    
+    const idsVinculados = new Set<string>();
+    professores.forEach(prof => {
+      if (prof.vinculos) {
+        prof.vinculos.forEach(v => {
+          if (v.turmaId === turmaId) {
+            v.materias.forEach(mid => idsVinculados.add(mid));
+          }
+        });
+      }
+    });
+
+    if (idsVinculados.size === 0) {
+      return materias.filter(m => ativMateriaIds.has(m.id));
+    }
+    
+    return materias.filter(m => ativMateriaIds.has(m.id) && idsVinculados.has(m.id));
+  }, [turmaId, atividades, materias, professores]);
 
   // Bimestres que têm atividades na turma + matéria selecionadas
   const bimestresDaTurmaMateria = useMemo(() => {

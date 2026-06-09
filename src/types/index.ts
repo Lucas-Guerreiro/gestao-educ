@@ -62,6 +62,7 @@ export interface Professor {
    * @cascade ON DELETE CASCADE (Remove o ID da matéria deletada do array)
    */
   materias: string[]; // IDs de matérias
+  vinculos?: { turmaId: string; materias: string[] }[];
 }
 
 /**
