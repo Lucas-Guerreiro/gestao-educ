@@ -79,6 +79,13 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
     return materias.filter(m => idsVinculados.has(m.id));
   }, [turmaId, turmas, materias, professores]);
 
+  // Auto-selecionar matéria se houver apenas uma vinculada à turma
+  useEffect(() => {
+    if (turmaId && materiasDaTurmaEscola.length === 1) {
+      setMateriaId(materiasDaTurmaEscola[0].id);
+    }
+  }, [turmaId, materiasDaTurmaEscola]);
+
   // Filtrar alunos ativos da turma selecionada
   const alunosFiltrados = useMemo(() => {
     return alunos.filter(a => String(a.turmaId) === turmaId && a.ativo !== false);

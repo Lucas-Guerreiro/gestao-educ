@@ -171,6 +171,13 @@ const SdModal: React.FC<SdModalProps> = ({
   // Filter chapters of selected Class/Subject
   const capitulosFiltrados = capitulos.filter(c => c.turmaId === turmaId && c.materiaId === materiaId);
 
+  // Auto-selecionar matéria se houver apenas uma vinculada à turma
+  useEffect(() => {
+    if (turmaId && materiasFiltradas.length === 1) {
+      setMateriaId(materiasFiltradas[0].id);
+    }
+  }, [turmaId, materiasFiltradas]);
+
   const toggleCapitulo = (capId: string) => {
     const existe = selectedCaps.some(c => c.capituloId === capId);
     if (existe) {

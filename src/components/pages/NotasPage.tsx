@@ -112,6 +112,13 @@ const NotasPage: React.FC<NotasPageProps> = ({
     return materias.filter(m => ativMateriaIds.has(m.id) && idsVinculados.has(m.id));
   }, [turmaId, atividades, materias, professores]);
 
+  // Auto-selecionar matéria se houver apenas uma vinculada à turma
+  useEffect(() => {
+    if (turmaId && materiasDaTurma.length === 1) {
+      setMateriaId(materiasDaTurma[0].id);
+    }
+  }, [turmaId, materiasDaTurma]);
+
   // Bimestres que têm atividades na turma + matéria selecionadas
   const bimestresDaTurmaMateria = useMemo(() => {
     if (!turmaId || !materiaId) return bimestres;
@@ -431,7 +438,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
             </label>
             <select value={selectedBimestreId} onChange={(e) => onBimestreChange(e.target.value)} disabled={!materiaId}>
               <option value="">— selecione —</option>
-              {bimestresDaTurmaMateria.map(b => (
+              {bimestres.map(b => (
                 <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>
               ))}
             </select>

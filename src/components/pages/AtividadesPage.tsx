@@ -76,6 +76,13 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
     return materias.filter(m => idsVinculados.has(m.id));
   }, [turmaId, turmas, materias, professores]);
 
+  // Auto-selecionar matéria se houver apenas uma vinculada à turma
+  useEffect(() => {
+    if (turmaId && materiasDaTurmaEscola.length === 1) {
+      setMateriaId(materiasDaTurmaEscola[0].id);
+    }
+  }, [turmaId, materiasDaTurmaEscola]);
+
   const handleTurmaChange = (id: string) => {
     setTurmaId(id);
     setMateriaId('');

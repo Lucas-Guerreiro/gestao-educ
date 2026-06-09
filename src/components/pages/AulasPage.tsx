@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aula, Turma, Materia, Capitulo, Escola, Professor } from '@/types';
@@ -65,6 +65,13 @@ const AulasPage: React.FC<AulasPageProps> = ({
 
     return materias.filter(m => idsVinculados.has(m.id));
   }, [turmaId, turmas, materias, professores]);
+
+  // Auto-selecionar matéria se houver apenas uma vinculada à turma
+  useEffect(() => {
+    if (turmaId && materiasDaTurmaEscola.length === 1) {
+      setMateriaId(materiasDaTurmaEscola[0].id);
+    }
+  }, [turmaId, materiasDaTurmaEscola]);
 
   const handleTurmaChange = (id: string) => {
     setTurmaId(id);
