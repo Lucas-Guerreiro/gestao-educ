@@ -1514,3 +1514,70 @@ tr:hover td {
   display: none;
   padding: 20px;
 }
+
+/* ==========================================================================
+   EFEITO RÉGUA (DESTAQUE DE LINHA COMPLETA) - LANÇAMENTO E BOLETIM
+   ========================================================================== */
+
+tr.table-row-hover {
+  transition: background-color 0.15s ease;
+}
+
+tr.table-row-hover td {
+  border-top: 2px solid transparent !important;
+  border-bottom: 2px solid var(--border) !important;
+  border-left: 3px solid transparent !important;
+  border-right: 3px solid transparent !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, border-radius 0.15s ease;
+}
+
+/* 1. Efeito ao passar o mouse (Hover) */
+tr.table-row-hover:hover td {
+  background-color: #f1f5f9 !important; /* fundo cinza azulado muito suave */
+  border-top-color: #3b82f6 !important;
+  border-bottom-color: #3b82f6 !important;
+}
+
+tr.table-row-hover:hover td:first-child {
+  border-left-color: #3b82f6 !important;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+tr.table-row-hover:hover td:last-child {
+  border-right-color: #3b82f6 !important;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* 2. Efeito quando um campo de digitação (input de nota) está ativo/focado (Focus-within) */
+tr.table-row-hover:focus-within td {
+  background-color: #e0f2fe !important; /* fundo azul suave de foco */
+  border-top-color: #2563eb !important;
+  border-bottom-color: #2563eb !important;
+}
+
+tr.table-row-hover:focus-within td:first-child {
+  border-left-color: #2563eb !important;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+tr.table-row-hover:focus-within td:last-child {
+  border-right-color: #2563eb !important;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Desabilitar o efeito visual de hover e focus-within durante a impressão física */
+@media print {
+  tr.table-row-hover:hover td,
+  tr.table-row-hover:focus-within td {
+    background-color: transparent !important;
+    border-top-color: transparent !important;
+    border-bottom-color: var(--border) !important;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
+    border-radius: 0 !important;
+  }
+}

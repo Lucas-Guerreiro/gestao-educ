@@ -669,7 +669,7 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
                     const aprovado = mediaFinal !== null && mediaFinal >= 7.0;
 
                     return (
-                      <tr key={mat.id} style={{ borderBottom: '1px solid var(--border)', transition: '0.15s' }}>
+                      <tr key={mat.id} className="table-row-hover" style={{ borderBottom: '1px solid var(--border)', transition: '0.15s' }}>
                         <td style={{ padding: '12px', fontWeight: 800, color: 'var(--text-main)' }}>{mat.nome}</td>
                         {mediasBimestrais.map((m, idx) => (
                           <td key={idx} style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>
