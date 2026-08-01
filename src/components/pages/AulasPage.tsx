@@ -137,11 +137,11 @@ const AulasPage: React.FC<AulasPageProps> = ({
 
   const editar = (aula: Aula) => {
     setEditingId(aula.id);
-    setData(aula.data);
-    setHorario(aula.horario);
-    setTurmaId(aula.turmaId);
-    setMateriaId(aula.materiaId);
-    setTipo(aula.tipo);
+    setData(aula.data || '');
+    setHorario(aula.horario || '');
+    setTurmaId(aula.turmaId || '');
+    setMateriaId(aula.materiaId || '');
+    setTipo(aula.tipo || 'teorica');
     setCapituloId(aula.capituloId || '');
     setRealizada(aula.realizada);
   };
@@ -291,7 +291,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
                   <div style={{ flex: 1, paddingRight: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)' }}>
-                        {formatarData(aula.data)} — {aula.horario.split(' ')[0]}
+                        {formatarData(aula.data)} — {aula.horario ? aula.horario.split(' ')[0] : '—'}
                       </span>
                       <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '8.5px', padding: '2px 5px' }}>
                         {aula.tipo.toUpperCase()}

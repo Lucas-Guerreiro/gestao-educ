@@ -1,0 +1,256 @@
+/* 
+  ProvasPage.css
+  Estilos adaptados para a dashboard do professor dentro do ecossistema gestao-educ
+*/
+
+.provas-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+}
+
+/* Painel de Estatísticas Superiores */
+.provas-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.provas-stat-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-left: 4px solid hsl(250, 89%, 65%);
+}
+
+.provas-stat-card.locked {
+  border-left-color: hsl(355, 78%, 56%);
+}
+.provas-stat-card.offline {
+  border-left-color: hsl(38, 92%, 50%);
+}
+
+.provas-stat-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.provas-stat-lbl {
+  font-size: 0.75rem;
+  color: hsl(215, 20%, 65%);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+/* Layout de Duas Colunas */
+.provas-dashboard-layout {
+  display: grid;
+  grid-template-columns: 2fr 1.1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .provas-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Coluna de Alunos */
+.provas-students-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.provas-students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* Card Individual de Aluno */
+.provas-student-card {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.provas-student-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.provas-student-card.status-locked {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+}
+
+.provas-student-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.provas-student-info h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.provas-student-info span {
+  font-size: 0.75rem;
+  color: hsl(215, 20%, 65%);
+}
+
+/* Telemetria */
+.provas-telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.8rem;
+}
+
+.provas-tel-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.provas-tel-lbl {
+  color: hsl(215, 16%, 47%);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.provas-tel-val {
+  color: #fff;
+  font-weight: 600;
+}
+.provas-tel-val.ok { color: hsl(145, 63%, 49%); }
+.provas-tel-val.warning { color: hsl(38, 92%, 50%); }
+.provas-tel-val.danger { color: hsl(355, 78%, 56%); }
+
+/* Progresso */
+.provas-card-progress-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.provas-card-progress-bar .bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.provas-card-progress-bar .bar-fill {
+  height: 100%;
+  background: hsl(250, 89%, 65%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.provas-card-progress-bar .bar-text {
+  font-size: 0.75rem;
+  color: hsl(215, 20%, 65%);
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.provas-student-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Coluna de Logs */
+.provas-logs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 80vh;
+  position: sticky;
+  top: 20px;
+}
+
+.provas-logs-feed {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 65vh;
+  padding-right: 4px;
+}
+
+.provas-log-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  border-left: 3px solid hsl(215, 16%, 47%);
+  background: rgba(255, 255, 255, 0.01);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.provas-log-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+.provas-log-student-name {
+  color: #fff;
+  font-weight: 700;
+}
+.provas-log-time {
+  font-size: 0.7rem;
+  color: hsl(215, 16%, 47%);
+}
+
+.provas-log-item.log-info { border-left-color: hsl(210, 100%, 50%); background: rgba(210, 100, 50, 0.08); }
+.provas-log-item.log-warning { border-left-color: hsl(38, 92%, 50%); background: rgba(38, 92, 50, 0.08); }
+.provas-log-item.log-danger { border-left-color: hsl(355, 78%, 56%); background: rgba(355, 78, 56, 0.08); }
+.provas-log-item.log-success { border-left-color: hsl(145, 63%, 49%); background: rgba(145, 63, 49, 0.08); }
+
+/* Modal de Logs */
+.provas-modal-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-top: 12px;
+}

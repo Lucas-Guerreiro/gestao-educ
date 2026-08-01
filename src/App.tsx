@@ -37,6 +37,8 @@ import RankingPage from './components/pages/RankingPage';
 import RelatorioPage from './components/pages/RelatorioPage';
 import ApontamentosPage from './components/pages/ApontamentosPage';
 import SharedNotasPage from './components/pages/SharedNotasPage';
+import ProvasPage from './components/pages/ProvasPage';
+import AlunoProvaPage from './components/pages/AlunoProvaPage';
 
 const App: React.FC = () => {
   // Authentication states
@@ -443,6 +445,8 @@ const App: React.FC = () => {
             onBimestreChange={handleBimestreChange}
           />
         );
+      case 'provas':
+        return <ProvasPage setSyncStatus={setSyncStatus} />;
       default:
         return <EscolaPage escolas={escolas} turmas={turmas} setSyncStatus={setSyncStatus} />;
     }
@@ -450,6 +454,13 @@ const App: React.FC = () => {
 
   // Verificar se é acesso compartilhado de notas para professores convidados (bypass de login)
   const queryParams = new URLSearchParams(window.location.search);
+
+  // Bypass para a prova do aluno (Kiosk Mode BYOD)
+  const isAlunoProva = queryParams.get('prova') === 'true';
+  if (isAlunoProva) {
+    return <AlunoProvaPage />;
+  }
+
   const isCompartilhado = queryParams.get('compartilhado') === 'true';
   const sharedMapStr = queryParams.get('map') || '';
   const sharedAtividadeId = queryParams.get('atividadeId') || '';

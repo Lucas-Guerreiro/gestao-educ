@@ -1,0 +1,519 @@
+/* 
+  AlunoProvaPage.css
+  Estilos adaptados para o ambiente React do Gestão-Educ (BYOD Mobile-First)
+*/
+
+.aluno-prova-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: radial-gradient(circle at top right, hsl(222, 40%, 12%), hsl(222, 47%, 7%));
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  overflow-y: auto;
+}
+
+.aluno-setup-card {
+  width: 100%;
+  max-width: 450px;
+  background: rgba(20, 24, 40, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.logo-tag {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 2px;
+}
+.logo-tag span {
+  color: hsl(250, 89%, 65%);
+}
+
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rules-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.rules-box h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: #fff;
+  letter-spacing: 0.05em;
+}
+
+.rules-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rules-box li {
+  font-size: 0.825rem;
+  color: hsl(215, 20%, 65%);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Layout de Prova Ativa */
+.aluno-exam-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 12px;
+  gap: 12px;
+  animation: fadeIn 0.4s ease-out;
+  min-height: 100vh;
+}
+
+.aluno-exam-header {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(20, 24, 40, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+@media (max-width: 480px) {
+  .aluno-exam-header {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .aluno-device-status {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+}
+
+.aluno-student-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aluno-avatar-dot {
+  width: 10px;
+  height: 10px;
+  background-color: hsl(145, 63%, 49%);
+  border-radius: 50%;
+  box-shadow: 0 0 10px hsl(145, 63%, 49%);
+}
+
+.aluno-student-meta h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.aluno-student-meta p {
+  font-size: 0.75rem;
+  color: hsl(215, 20%, 65%);
+}
+
+.aluno-exam-timers {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.aluno-timer-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.aluno-global-timer {
+  color: hsl(190, 90%, 50%);
+}
+.aluno-global-timer.warning {
+  color: hsl(355, 78%, 56%) !important;
+}
+
+.aluno-question-timer {
+  font-size: 0.8rem;
+  color: hsl(215, 20%, 65%);
+}
+
+.aluno-device-status {
+  grid-column: 1 / span 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+/* Progresso */
+.aluno-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aluno-progress-bar-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.aluno-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, hsl(250, 89%, 65%), hsl(190, 90%, 50%));
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.1, 0.8, 0.25, 1);
+}
+
+.aluno-progress-text {
+  font-size: 0.75rem;
+  color: hsl(215, 20%, 65%);
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Card da Questão */
+.aluno-question-container {
+  flex-grow: 1;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 24, 40, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.aluno-question-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  user-select: none;
+}
+
+/* Tipos de Questões */
+.aluno-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aluno-option-card {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  gap: 12px;
+}
+
+.aluno-option-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.aluno-option-card.selected {
+  background: rgba(108, 93, 211, 0.15);
+  border-color: hsl(250, 89%, 65%);
+}
+
+.aluno-option-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid hsl(215, 16%, 47%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.aluno-option-card.selected .aluno-option-radio {
+  border-color: hsl(250, 89%, 65%);
+  background-color: hsl(250, 89%, 65%);
+}
+
+.aluno-option-card.selected .aluno-option-radio::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background-color: #fff;
+  border-radius: 50%;
+}
+
+.aluno-option-label {
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+/* Dissertativa */
+.aluno-essay-textarea {
+  width: 100%;
+  min-height: 150px;
+  background: hsl(223, 47%, 10%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #fff;
+  padding: 16px;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  transition: all 0.3s ease;
+  user-select: text;
+}
+
+.aluno-essay-textarea:focus {
+  border-color: hsl(250, 89%, 65%);
+  box-shadow: 0 0 0 3px rgba(108, 93, 211, 0.15);
+}
+
+/* Verdadeiro ou Falso */
+.aluno-tf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aluno-tf-row {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  gap: 12px;
+}
+
+.aluno-tf-statement {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.aluno-tf-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.aluno-btn-tf {
+  background: hsl(224, 46%, 18%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: hsl(215, 20%, 65%);
+  min-height: 40px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.aluno-btn-tf.selected-true {
+  background-color: rgba(74, 222, 128, 0.1);
+  border-color: hsl(145, 63%, 49%);
+  color: hsl(145, 63%, 49%);
+  font-weight: 700;
+}
+
+.aluno-btn-tf.selected-false {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: hsl(355, 78%, 56%);
+  color: hsl(355, 78%, 56%);
+  font-weight: 700;
+}
+
+/* Rodapé de Navegação */
+.aluno-exam-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.aluno-exam-footer button {
+  flex: 1;
+}
+
+/* Modais e Overlays */
+.aluno-lock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(8, 10, 18, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 99999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.aluno-lock-card {
+  background: linear-gradient(185deg, hsl(355, 45%, 15%), hsl(223, 47%, 10%));
+  border: 2px solid hsl(355, 78%, 56%);
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(239, 68, 68, 0.25);
+  animation: pulseGlow 3s infinite;
+}
+
+.aluno-lock-card h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  color: hsl(355, 78%, 56%);
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+
+.aluno-lock-details {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+  border-left: 4px solid hsl(355, 78%, 56%);
+}
+.aluno-lock-details p {
+  font-size: 0.85rem;
+  color: hsl(215, 20%, 65%);
+  margin-bottom: 4px;
+}
+
+.aluno-re-trigger-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+}
+.aluno-re-trigger-box p {
+  font-size: 0.825rem;
+  color: hsl(215, 20%, 65%);
+  margin-bottom: 12px;
+}
+
+/* Modal de Confirmação */
+.aluno-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(8, 10, 18, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 50000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.aluno-confirm-modal-card {
+  background: linear-gradient(185deg, hsl(223, 47%, 12%), hsl(223, 47%, 16%));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 450px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.aluno-confirm-modal-card h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+.aluno-confirm-modal-card p {
+  font-size: 0.95rem;
+  color: hsl(215, 20%, 65%);
+  margin-bottom: 24px;
+}
+
+.aluno-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Conclusão */
+.aluno-success-icon {
+  font-size: 4rem;
+  color: hsl(145, 63%, 49%);
+  margin-bottom: 16px;
+}
+.aluno-finish-details {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.aluno-finish-details p {
+  font-size: 0.9rem;
+  color: hsl(215, 20%, 65%);
+  margin-bottom: 8px;
+}

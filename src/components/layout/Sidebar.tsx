@@ -34,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { sec: 'ranking', label: 'Ranking', icon: 'ti-trophy', cat: 'Notas & Resultados' },
     { sec: 'rel', label: 'Relatório', icon: 'ti-chart-bar', cat: 'Notas & Resultados' },
     { sec: 'apontamentos', label: 'Apontamentos', icon: 'ti-checklist', cat: 'Notas & Resultados' },
+    { sec: 'provas', label: 'Provas Online', icon: 'ti-clipboard-text', cat: 'Notas & Resultados' },
   ];
 
   // Agrupar itens por categoria

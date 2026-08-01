@@ -61,7 +61,7 @@ const GradePage: React.FC<GradePageProps> = ({
   // Filtrar aulas do período e da turma
   const obterAulaNaCelula = (dataStr: string, horarioStr: string) => {
     if (!selectedTurmaId) return null;
-    return aulas.find(a => a.turmaId === selectedTurmaId && a.data === dataStr && a.horario.startsWith(horarioStr.split(' ')[0]));
+    return aulas.find(a => a.turmaId === selectedTurmaId && a.data === dataStr && (a.horario || '').startsWith(horarioStr.split(' ')[0]));
   };
 
   return (
