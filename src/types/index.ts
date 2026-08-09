@@ -131,6 +131,7 @@ export interface Aula {
   /** @fk Chave Estrangeira -> Capitulo.id | @cardinality N:1 (Opcional) | @cascade ON DELETE SET NULL */
   capituloId?: string;
   realizada: boolean;
+  descricao?: string;
 }
 
 /**

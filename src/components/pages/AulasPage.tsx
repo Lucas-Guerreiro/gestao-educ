@@ -29,6 +29,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
   const [tipo, setTipo] = useState<'teorica' | 'pratica' | 'revisao' | 'avaliacao' | 'pedagogica' | 'outra'>('teorica');
   const [capituloId, setCapituloId] = useState('');
   const [realizada, setRealizada] = useState(false);
+  const [descricao, setDescricao] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const horariosDisponiveis = [
@@ -106,7 +107,8 @@ const AulasPage: React.FC<AulasPageProps> = ({
         materiaId,
         tipo,
         capituloId: capituloId || null,
-        realizada
+        realizada,
+        descricao: descricao || ''
       };
 
       if (editingId) {
@@ -117,12 +119,13 @@ const AulasPage: React.FC<AulasPageProps> = ({
       }
 
       setData('');
-      setHorario('1º Horário (07:30 - 08:20)');
+      setHorario('1º Tempo (Manhã)');
       setTurmaId('');
       setMateriaId('');
       setTipo('teorica');
       setCapituloId('');
       setRealizada(false);
+      setDescricao('');
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
@@ -150,6 +153,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
     setTipo(aula.tipo || 'teorica');
     setCapituloId(aula.capituloId || '');
     setRealizada(aula.realizada);
+    setDescricao(aula.descricao || '');
   };
 
   const deletar = async (id: string) => {
@@ -248,6 +252,27 @@ const AulasPage: React.FC<AulasPageProps> = ({
             </div>
           </div>
 
+          <div className="f">
+            <label>Descrição da Aula / Conteúdo Planejado</label>
+            <textarea 
+              value={descricao} 
+              onChange={(e) => setDescricao(e.target.value)} 
+              placeholder="Descreva o conteúdo que será abordado, dinâmica, objetivos ou observações da aula..."
+              rows={3}
+              style={{ 
+                padding: '8px 12px', 
+                borderRadius: '10px', 
+                border: '1px solid var(--border)', 
+                fontSize: '13px', 
+                fontFamily: 'inherit',
+                width: '100%', 
+                resize: 'vertical',
+                minHeight: '70px',
+                outline: 'none'
+              }}
+            />
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <input 
               type="checkbox" 
@@ -263,7 +288,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
             {editingId && (
-              <button type="button" className="btn" onClick={() => { setEditingId(null); setData(''); setHorario('1º Tempo (Manhã)'); setTurmaId(''); setMateriaId(''); setTipo('teorica'); setCapituloId(''); setRealizada(false); }}>
+              <button type="button" className="btn" onClick={() => { setEditingId(null); setData(''); setHorario('1º Tempo (Manhã)'); setTurmaId(''); setMateriaId(''); setTipo('teorica'); setCapituloId(''); setRealizada(false); setDescricao(''); }}>
                 Cancelar
               </button>
             )}
@@ -311,6 +336,12 @@ const AulasPage: React.FC<AulasPageProps> = ({
                     {cap && (
                       <div style={{ fontSize: '11px', color: '#1e40af', marginTop: '2px', fontWeight: 600 }}>
                         📌 Capítulo: {cap.nome}
+                      </div>
+                    )}
+
+                    {aula.descricao && (
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '5px', background: '#f8fafc', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>
+                        📝 {aula.descricao}
                       </div>
                     )}
                   </div>

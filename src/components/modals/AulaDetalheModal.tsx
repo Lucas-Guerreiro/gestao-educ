@@ -78,6 +78,15 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{cap.descricao || 'Sem descrição.'}</span>
             </div>
           ) : null}
+
+          {aula.descricao ? (
+            <div id="ad-desc" style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', marginBottom: '14px', fontSize: '13px', color: 'var(--text-main)', lineHeight: 1.6 }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '6px' }}>
+                📝 Descrição / Conteúdo da Aula
+              </div>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{aula.descricao}</div>
+            </div>
+          ) : null}
           
           {exerciciosVinculados.length > 0 ? (
             <div id="ad-exercicios-section">
