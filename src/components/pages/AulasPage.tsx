@@ -23,7 +23,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
   setSyncStatus,
 }) => {
   const [data, setData] = useState('');
-  const [horario, setHorario] = useState('1º Horário (07:30 - 08:20)');
+  const [horario, setHorario] = useState('1º Tempo (Manhã)');
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
   const [tipo, setTipo] = useState<'teorica' | 'pratica' | 'revisao' | 'avaliacao' | 'pedagogica' | 'outra'>('teorica');
@@ -32,14 +32,20 @@ const AulasPage: React.FC<AulasPageProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const horariosDisponiveis = [
-    "1º Horário (07:30 - 08:20)",
-    "2º Horário (08:20 - 09:10)",
-    "3º Horário (09:10 - 10:00)",
-    "4º Horário (10:20 - 11:10)",
-    "5º Horário (11:10 - 12:00)",
-    "6º Horário (13:00 - 13:50)",
-    "7º Horário (13:50 - 14:40)",
-    "8º Horário (14:40 - 15:30)"
+    "1º Tempo (Manhã)",
+    "2º Tempo (Manhã)",
+    "3º Tempo (Manhã)",
+    "4º Tempo (Manhã)",
+    "5º Tempo (Manhã)",
+    "6º Tempo (Manhã)",
+    "7º Tempo (Manhã)",
+    "1º Tempo (Tarde)",
+    "2º Tempo (Tarde)",
+    "3º Tempo (Tarde)",
+    "4º Tempo (Tarde)",
+    "5º Tempo (Tarde)",
+    "6º Tempo (Tarde)",
+    "7º Tempo (Tarde)"
   ];
 
   // Filtrar as matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
@@ -257,7 +263,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
             {editingId && (
-              <button type="button" className="btn" onClick={() => { setEditingId(null); setData(''); setHorario('1º Horário (07:30 - 08:20)'); setTurmaId(''); setMateriaId(''); setTipo('teorica'); setCapituloId(''); setRealizada(false); }}>
+              <button type="button" className="btn" onClick={() => { setEditingId(null); setData(''); setHorario('1º Tempo (Manhã)'); setTurmaId(''); setMateriaId(''); setTipo('teorica'); setCapituloId(''); setRealizada(false); }}>
                 Cancelar
               </button>
             )}
@@ -291,7 +297,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
                   <div style={{ flex: 1, paddingRight: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)' }}>
-                        {formatarData(aula.data)} — {aula.horario ? aula.horario.split(' ')[0] : '—'}
+                        {formatarData(aula.data)} — {aula.horario || '—'}
                       </span>
                       <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '8.5px', padding: '2px 5px' }}>
                         {aula.tipo.toUpperCase()}

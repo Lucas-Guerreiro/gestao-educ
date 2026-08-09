@@ -26,11 +26,20 @@ const GradePage: React.FC<GradePageProps> = ({
   ];
 
   const horarios = [
-    "1º Horário (07:30 - 08:20)",
-    "2º Horário (08:20 - 09:10)",
-    "3º Horário (09:10 - 10:00)",
-    "4º Horário (10:20 - 11:10)",
-    "5º Horário (11:10 - 12:00)",
+    "1º Tempo (Manhã)",
+    "2º Tempo (Manhã)",
+    "3º Tempo (Manhã)",
+    "4º Tempo (Manhã)",
+    "5º Tempo (Manhã)",
+    "6º Tempo (Manhã)",
+    "7º Tempo (Manhã)",
+    "1º Tempo (Tarde)",
+    "2º Tempo (Tarde)",
+    "3º Tempo (Tarde)",
+    "4º Tempo (Tarde)",
+    "5º Tempo (Tarde)",
+    "6º Tempo (Tarde)",
+    "7º Tempo (Tarde)"
   ];
 
   // Obter datas da semana selecionada
@@ -61,7 +70,7 @@ const GradePage: React.FC<GradePageProps> = ({
   // Filtrar aulas do período e da turma
   const obterAulaNaCelula = (dataStr: string, horarioStr: string) => {
     if (!selectedTurmaId) return null;
-    return aulas.find(a => a.turmaId === selectedTurmaId && a.data === dataStr && (a.horario || '').startsWith(horarioStr.split(' ')[0]));
+    return aulas.find(a => a.turmaId === selectedTurmaId && a.data === dataStr && a.horario === horarioStr);
   };
 
   return (

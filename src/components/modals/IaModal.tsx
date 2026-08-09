@@ -294,7 +294,7 @@ const IaModal: React.FC<IaModalProps> = ({
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}><b>Aulas Planejadas ({aulasGeradas.length}):</b></div>
                 <ul style={{ paddingLeft: '16px', fontSize: '12px', marginBottom: '14px' }}>
                   {aulasGeradas.map((a, idx) => (
-                    <li key={idx}><b>{(a.data || '').split('-').reverse().join('/')} - {(a.horario || '').split(' ')[0]}</b> | Aula {(a.tipo || '').toUpperCase()}: {a.nomeAula}</li>
+                    <li key={idx}><b>{(a.data || '').split('-').reverse().join('/')} - {a.horario || '—'}</b> | Aula {(a.tipo || '').toUpperCase()}: {a.nomeAula}</li>
                   ))}
                 </ul>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}><b>Exercícios Sugeridos para os Capítulos ({exerciciosGerados.length}):</b></div>
