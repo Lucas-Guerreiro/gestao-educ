@@ -16,6 +16,7 @@ const GradePage: React.FC<GradePageProps> = ({
 }) => {
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
   const [semanaOffset, setSemanaOffset] = useState(0); // 0 = semana atual, -1 = anterior, 1 = seguinte
+  const [diaAtivoIdx, setDiaAtivoIdx] = useState(0); // 0 = Segunda, 1 = Terça, etc.
 
   const diasSemana = [
     { nome: 'Segunda-feira', valor: 1 },
@@ -82,8 +83,69 @@ const GradePage: React.FC<GradePageProps> = ({
   return (
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
+      <style>{`
+        .grade-desktop {
+          display: block;
+        }
+        .grade-mobile {
+          display: none;
+        }
+        
+        .dia-tab-btn {
+          flex: 1;
+          padding: 10px 8px;
+          border: 1px solid var(--border);
+          border-bottom: 2px solid var(--border);
+          background: #f8fafc;
+          color: var(--text-muted);
+          font-size: 11px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          text-align: center;
+          border-radius: 8px 8px 0 0;
+          min-width: 75px;
+        }
+        .dia-tab-btn.active {
+          background: #fff;
+          color: var(--primary);
+          border-bottom: 2px solid var(--primary);
+          font-weight: 800;
+        }
+
+        .mobile-horario-row {
+          background: #fff;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          box-shadow: var(--shadow-sm);
+        }
+
+        @media (max-width: 768px) {
+          .grade-desktop {
+            display: none !important;
+          }
+          .grade-mobile {
+            display: block !important;
+          }
+          
+          .controls-container {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 12px;
+          }
+          .controls-nav {
+            justify-content: space-between;
+            width: 100%;
+          }
+        }
+      `}</style>
+
       {/* Controles de Filtro e Navegação */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="controls-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div className="f" style={{ minWidth: '220px', maxWidth: '300px' }}>
           <label style={{ fontSize: '10px', fontWeight: 800 }}>Selecione a Turma para filtrar a Grade</label>
           <select value={selectedTurmaId} onChange={(e) => setSelectedTurmaId(e.target.value)}>
@@ -92,7 +154,7 @@ const GradePage: React.FC<GradePageProps> = ({
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="controls-nav" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button className="btn" onClick={() => setSemanaOffset(semanaOffset - 1)}>
             ◀ Anterior
           </button>
@@ -108,87 +170,178 @@ const GradePage: React.FC<GradePageProps> = ({
         </div>
       </div>
 
-      {/* Grid Calendário Semanal Geral */}
-      <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: '800px' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid var(--border)' }}>
-              <th style={{ width: '140px', padding: '12px 10px', textAlign: 'left', fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)' }}>Horário</th>
-              {diasSemana.map((dia, idx) => (
-                <th key={dia.valor} style={{ padding: '12px 10px', textAlign: 'center', fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)' }}>
-                  <div>{dia.nome}</div>
-                  <span style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 600 }}>({formatarDataCabecalho(datasSemana[idx])})</span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {horarios.map(h => (
-              <tr key={h} style={{ borderBottom: '1px solid var(--border)' }}>
-                <td style={{ padding: '14px 10px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', background: '#fafafa', verticalAlign: 'middle' }}>
-                  {h}
-                </td>
-                {datasSemana.map((dt, idx) => {
-                  const aulasNaCelula = obterAulasNaCelula(dt, h);
-
-                  return (
-                    <td key={idx} style={{ padding: '8px', verticalAlign: 'top', minHeight: '110px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '90px' }}>
-                        {aulasNaCelula.length > 0 ? (
-                          aulasNaCelula.map(aula => {
-                            const tur = turmas.find(t => t.id === aula.turmaId);
-                            const mat = materias.find(m => m.id === aula.materiaId);
-
-                            return (
-                              <div 
-                                key={aula.id} 
-                                onClick={() => abrirAulaDetalheModal(aula)}
-                                style={{ 
-                                  background: aula.realizada ? '#f0fdf4' : '#eff6ff', 
-                                  border: aula.realizada ? '1px solid #bbf7d0' : '1px solid #bfdbfe', 
-                                  borderRadius: '10px', 
-                                  padding: '8px 10px', 
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: '4px',
-                                  boxShadow: 'var(--shadow-sm)',
-                                  transition: 'all 0.15s ease'
-                                }}
-                                className="weekly-cell-card"
-                              >
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', flexWrap: 'wrap' }}>
-                                  <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
-                                    {aula.tipo.toUpperCase()}
-                                  </span>
-                                  {aula.realizada && <span style={{ fontSize: '9px' }}>✅</span>}
-                                </div>
-                                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
-                                  {mat ? mat.nome : 'Matéria'}
-                                </div>
-                                <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                  🏫 {tur ? tur.nome : '—'}
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          selectedTurmaId ? (
-                            <div style={{ border: '2px dashed #f1f5f9', borderRadius: '10px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: '20px', fontWeight: 300, minHeight: '90px' }}>
-                              +
-                            </div>
-                          ) : (
-                            <div style={{ flex: 1 }} />
-                          )
-                        )}
-                      </div>
-                    </td>
-                  );
-                })}
+      {/* 1. VIEW DESKTOP (Tabela Completa) */}
+      <div className="grade-desktop">
+        <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: '800px' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                <th style={{ width: '140px', padding: '12px 10px', textAlign: 'left', fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)' }}>Horário</th>
+                {diasSemana.map((dia, idx) => (
+                  <th key={dia.valor} style={{ padding: '12px 10px', textAlign: 'center', fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+                    <div>{dia.nome}</div>
+                    <span style={{ fontSize: '10.5px', color: 'var(--primary)', fontWeight: 600 }}>({formatarDataCabecalho(datasSemana[idx])})</span>
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {horarios.map(h => (
+                <tr key={h} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '14px 10px', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', background: '#fafafa', verticalAlign: 'middle' }}>
+                    {h}
+                  </td>
+                  {datasSemana.map((dt, idx) => {
+                    const aulasNaCelula = obterAulasNaCelula(dt, h);
+
+                    return (
+                      <td key={idx} style={{ padding: '8px', verticalAlign: 'top', minHeight: '110px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '90px' }}>
+                          {aulasNaCelula.length > 0 ? (
+                            aulasNaCelula.map(aula => {
+                              const tur = turmas.find(t => t.id === aula.turmaId);
+                              const mat = materias.find(m => m.id === aula.materiaId);
+
+                              return (
+                                <div 
+                                  key={aula.id} 
+                                  onClick={() => abrirAulaDetalheModal(aula)}
+                                  style={{ 
+                                    background: aula.realizada ? '#f0fdf4' : '#eff6ff', 
+                                    border: aula.realizada ? '1px solid #bbf7d0' : '1px solid #bfdbfe', 
+                                    borderRadius: '10px', 
+                                    padding: '8px 10px', 
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '4px',
+                                    boxShadow: 'var(--shadow-sm)',
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                  className="weekly-cell-card"
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', flexWrap: 'wrap' }}>
+                                    <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
+                                      {aula.tipo.toUpperCase()}
+                                    </span>
+                                    {aula.realizada && <span style={{ fontSize: '9px' }}>✅</span>}
+                                  </div>
+                                  <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
+                                    {mat ? mat.nome : 'Matéria'}
+                                  </div>
+                                  <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                    🏫 {tur ? tur.nome : '—'}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            selectedTurmaId ? (
+                              <div style={{ border: '2px dashed #f1f5f9', borderRadius: '10px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: '20px', fontWeight: 300, minHeight: '90px' }}>
+                                +
+                              </div>
+                            ) : (
+                              <div style={{ flex: 1 }} />
+                            )
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 2. VIEW MOBILE (Tabs Deslizantes por Dia) */}
+      <div className="grade-mobile">
+        {/* Seletor de Dia da Semana (Tabs) */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '16px', overflowX: 'auto', gap: '2px', paddingBottom: '2px' }}>
+          {diasSemana.map((dia, idx) => {
+            const isActive = diaAtivoIdx === idx;
+            return (
+              <button
+                key={dia.valor}
+                type="button"
+                className={`dia-tab-btn ${isActive ? 'active' : ''}`}
+                onClick={() => setDiaAtivoIdx(idx)}
+              >
+                <div style={{ fontWeight: 800 }}>{dia.nome.split('-')[0]}</div>
+                <span style={{ fontSize: '9.5px', color: isActive ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 600 }}>
+                  ({formatarDataCabecalho(datasSemana[idx])})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Listagem de Horários Vertical */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {horarios.map(h => {
+            const dt = datasSemana[diaAtivoIdx];
+            const aulasNaCelula = obterAulasNaCelula(dt, h);
+
+            return (
+              <div key={h} className="mobile-horario-row">
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px', marginBottom: '4px' }}>
+                  ⏰ {h}
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {aulasNaCelula.length > 0 ? (
+                    aulasNaCelula.map(aula => {
+                      const tur = turmas.find(t => t.id === aula.turmaId);
+                      const mat = materias.find(m => m.id === aula.materiaId);
+
+                      return (
+                        <div 
+                          key={aula.id} 
+                          onClick={() => abrirAulaDetalheModal(aula)}
+                          style={{ 
+                            background: aula.realizada ? '#f0fdf4' : '#eff6ff', 
+                            border: aula.realizada ? '1px solid #bbf7d0' : '1px solid #bfdbfe', 
+                            borderRadius: '10px', 
+                            padding: '10px 12px', 
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '4px',
+                            boxShadow: 'var(--shadow-sm)'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
+                              {aula.tipo.toUpperCase()}
+                            </span>
+                            {aula.realizada && <span style={{ fontSize: '9px' }}>✅</span>}
+                          </div>
+                          <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
+                            {mat ? mat.nome : 'Matéria'}
+                          </div>
+                          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>
+                            🏫 {tur ? tur.nome : '—'}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    selectedTurmaId ? (
+                      <div style={{ border: '2px dashed #e2e8f0', borderRadius: '10px', padding: '12px', textAlign: 'center', color: '#cbd5e1', fontSize: '12px', fontWeight: 600 }}>
+                        + Agendar Aula
+                      </div>
+                    ) : (
+                      <div style={{ fontStyle: 'italic', color: '#cbd5e1', fontSize: '11px', textAlign: 'center', padding: '6px' }}>
+                        Sem aulas planejadas
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
     </div>
