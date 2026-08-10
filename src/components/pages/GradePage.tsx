@@ -266,6 +266,25 @@ const GradePage: React.FC<GradePageProps> = ({
                                   <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
                                     🏫 {tur ? tur.nome : '—'}
                                   </div>
+                                  {aula.descricao && (
+                                    <div style={{ 
+                                      fontSize: '9.5px', 
+                                      color: '#64748b', 
+                                      lineHeight: 1.3, 
+                                      marginTop: '4px',
+                                      borderTop: '1px solid rgba(0,0,0,0.04)',
+                                      paddingTop: '4px',
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      fontStyle: 'italic',
+                                      whiteSpace: 'pre-wrap'
+                                    }} title={aula.descricao}>
+                                      📝 {aula.descricao}
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })
@@ -386,6 +405,25 @@ const GradePage: React.FC<GradePageProps> = ({
                           <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>
                             🏫 {tur ? tur.nome : '—'}
                           </div>
+                          {aula.descricao && (
+                            <div style={{ 
+                              fontSize: '10px', 
+                              color: '#64748b', 
+                              lineHeight: 1.3, 
+                              marginTop: '4px',
+                              borderTop: '1px solid rgba(0,0,0,0.04)',
+                              paddingTop: '4px',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              fontStyle: 'italic',
+                              whiteSpace: 'pre-wrap'
+                            }} title={aula.descricao}>
+                              📝 {aula.descricao}
+                            </div>
+                          )}
                         </div>
                       );
                     })
