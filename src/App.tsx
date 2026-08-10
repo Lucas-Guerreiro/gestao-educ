@@ -48,7 +48,7 @@ const App: React.FC = () => {
 
   // Navigation state
   const [currentSec, setCurrentSec] = useState('escola');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [syncStatus, setSyncStatus] = useState<'ok' | 'saving' | 'err'>('ok');
 
   // Database Collections States
@@ -541,12 +541,29 @@ const App: React.FC = () => {
             return;
           }
           setCurrentSec(sec);
+          setSidebarCollapsed(true); // Fecha o menu lateral automaticamente após a seleção
         }} 
         syncStatus={syncStatus}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
         perfil={perfil}
       />
+
+      {/* Overlay Backdrop para fechar a Sidebar ao clicar fora */}
+      {!sidebarCollapsed && (
+        <div 
+          onClick={() => setSidebarCollapsed(true)} 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.4)',
+            zIndex: 1999,
+            backdropFilter: 'blur(1px)',
+            transition: 'opacity 0.2s ease',
+            cursor: 'pointer'
+          }}
+        />
+      )}
 
       {/* Main Workspace Column */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowX: 'hidden' }}>
