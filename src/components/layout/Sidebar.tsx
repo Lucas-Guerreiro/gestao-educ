@@ -6,6 +6,7 @@ interface SidebarProps {
   syncStatus: 'ok' | 'saving' | 'err';
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  perfil?: 'admin' | 'professor';
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -14,8 +15,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   syncStatus,
   collapsed,
   setCollapsed,
+  perfil = 'admin',
 }) => {
-  const menuItems = [
+  const menuItems = perfil === 'professor' ? [
+    { sec: 'visao-aulas', label: 'Grade Semanal', icon: 'ti-layout-grid', cat: 'Professor' },
+    { sec: 'capitulos', label: 'Capítulos', icon: 'ti-folder', cat: 'Professor' },
+    { sec: 'ativ', label: 'Atividades', icon: 'ti-clipboard-list', cat: 'Professor' },
+    { sec: 'lan', label: 'Lançar Notas', icon: 'ti-pencil', cat: 'Professor' },
+  ] : [
     { sec: 'escola', label: 'Escola Turma', icon: 'ti-building', cat: 'Cadastros' },
     { sec: 'profs', label: 'Professores', icon: 'ti-user-check', cat: 'Cadastros' },
     { sec: 'bim', label: 'Bimestres', icon: 'ti-calendar', cat: 'Cadastros' },
@@ -38,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   // Agrupar itens por categoria
-  const categories = ['Cadastros', 'Planejamentos', 'Notas & Resultados'];
+  const categories = perfil === 'professor' ? ['Professor'] : ['Cadastros', 'Planejamentos', 'Notas & Resultados'];
 
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`} id="sidebar">

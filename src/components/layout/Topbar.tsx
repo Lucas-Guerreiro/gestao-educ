@@ -14,6 +14,7 @@ interface TopbarProps {
   onBimestreChange: (id: string) => void;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  perfil?: 'admin' | 'professor';
 }
 
 const Topbar: React.FC<TopbarProps> = ({
@@ -29,6 +30,7 @@ const Topbar: React.FC<TopbarProps> = ({
   onBimestreChange,
   collapsed,
   setCollapsed,
+  perfil = 'admin',
 }) => {
   const sectionMeta: Record<string, { label: string; icon: string }> = {
     'escola': { label: 'Escola Turma', icon: 'ti-building' },
@@ -129,14 +131,16 @@ const Topbar: React.FC<TopbarProps> = ({
       </div>
 
       <div className="tb-btns">
-        <button 
-          className="tb-btn" 
-          id="btn-alterar-senha" 
-          style={{ background: '#334155', color: '#fff' }}
-          onClick={abrirSenhaModal}
-        >
-          <i className="ti ti-lock"></i> Alterar Senha
-        </button>
+        {perfil === 'admin' && (
+          <button 
+            className="tb-btn" 
+            id="btn-alterar-senha" 
+            style={{ background: '#334155', color: '#fff' }}
+            onClick={abrirSenhaModal}
+          >
+            <i className="ti ti-lock"></i> Alterar Senha
+          </button>
+        )}
         <button 
           className="tb-btn" 
           id="btn-sair" 
@@ -145,13 +149,15 @@ const Topbar: React.FC<TopbarProps> = ({
         >
           <i className="ti ti-logout"></i> Sair
         </button>
-        <button 
-          className="tb-btn tb-bk" 
-          id="btn-backup"
-          onClick={abrirBackupModal}
-        >
-          <i className="ti ti-cloud-upload"></i> Backup
-        </button>
+        {perfil === 'admin' && (
+          <button 
+            className="tb-btn tb-bk" 
+            id="btn-backup"
+            onClick={abrirBackupModal}
+          >
+            <i className="ti ti-cloud-upload"></i> Backup
+          </button>
+        )}
       </div>
     </div>
   );

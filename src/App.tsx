@@ -43,6 +43,7 @@ import AlunoProvaPage from './components/pages/AlunoProvaPage';
 const App: React.FC = () => {
   // Authentication states
   const [autenticado, setAutenticado] = useState(false);
+  const [perfil, setPerfil] = useState<'admin' | 'professor'>('admin');
   const [adminConfig, setAdminConfig] = useState<AdminConfig>({ senha: 'admin123' });
 
   // Navigation state
@@ -155,8 +156,10 @@ const App: React.FC = () => {
   // Read authentication on mount
   useEffect(() => {
     const isAuth = sessionStorage.getItem('es_autenticado');
+    const userPerfil = sessionStorage.getItem('es_perfil') as 'admin' | 'professor';
     if (isAuth === 'true') {
       setAutenticado(true);
+      setPerfil(userPerfil || 'admin');
     }
   }, []);
 
@@ -280,6 +283,7 @@ const App: React.FC = () => {
   const realizarLogout = () => {
     setAutenticado(false);
     sessionStorage.removeItem('es_autenticado');
+    sessionStorage.removeItem('es_perfil');
   };
 
   const renderActiveSection = () => {
@@ -508,7 +512,22 @@ const App: React.FC = () => {
 
   // If not authenticated, render Login Lock Screen
   if (!autenticado) {
-    return <LoginScreen adminConfig={adminConfig} setAutenticado={setAutenticado} />;
+    return (
+      <LoginScreen 
+        adminConfig={adminConfig} 
+        setAutenticado={(auth, pref) => {
+          setAutenticado(auth);
+          const userPref = pref || 'admin';
+          setPerfil(userPref);
+          sessionStorage.setItem('es_perfil', userPref);
+          if (userPref === 'professor') {
+            setCurrentSec('visao-aulas'); // Ao abrir o sistema deve abrir na tela Grade semanal
+          } else {
+            setCurrentSec('escola');
+          }
+        }} 
+      />
+    );
   }
 
   return (
@@ -516,10 +535,17 @@ const App: React.FC = () => {
       {/* Sidebar Navigation */}
       <Sidebar 
         currentSec={currentSec} 
-        setCurrentSec={setCurrentSec} 
+        setCurrentSec={(sec) => {
+          // Bloquear o professor de acessar seções que não sejam as do seu menu por segurança
+          if (perfil === 'professor' && !['visao-aulas', 'capitulos', 'ativ', 'lan'].includes(sec)) {
+            return;
+          }
+          setCurrentSec(sec);
+        }} 
         syncStatus={syncStatus}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
+        perfil={perfil}
       />
 
       {/* Main Workspace Column */}
@@ -537,6 +563,7 @@ const App: React.FC = () => {
           onBimestreChange={handleBimestreChange}
           collapsed={sidebarCollapsed}
           setCollapsed={setSidebarCollapsed}
+          perfil={perfil}
         />
 
         <div style={{ flex: 1, padding: '12px' }}>

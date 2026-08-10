@@ -3,7 +3,7 @@ import { AdminConfig } from '@/types';
 
 interface LoginScreenProps {
   adminConfig: AdminConfig;
-  setAutenticado: (autenticado: boolean) => void;
+  setAutenticado: (autenticado: boolean, perfil: 'admin' | 'professor') => void;
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ adminConfig, setAutenticado }) => {
@@ -14,13 +14,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ adminConfig, setAutenticado }
   const tentarLogin = () => {
     const senhaCorreta = adminConfig.senha || 'admin123';
     if (senha === senhaCorreta) {
-      setAutenticado(true);
+      setAutenticado(true, 'admin');
       setErro(false);
       setSenha('');
       sessionStorage.setItem('es_autenticado', 'true');
+      sessionStorage.setItem('es_perfil', 'admin');
     } else {
       setErro(true);
     }
+  };
+
+  const entrarComoProfessor = () => {
+    setAutenticado(true, 'professor');
+    sessionStorage.setItem('es_autenticado', 'true');
+    sessionStorage.setItem('es_perfil', 'professor');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -77,11 +84,26 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ adminConfig, setAutenticado }
             onClick={tentarLogin}
             style={{ width: '100%', height: '44px', background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(139,92,246,0.25)' }}
           >
-            <i className="ti ti-login" style={{ fontSize: '16px' }}></i> Entrar
+            <i className="ti ti-login" style={{ fontSize: '16px' }}></i> Entrar como Administrador
+          </button>
+          
+          <div style={{ margin: '14px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#64748b', fontSize: '11px', fontWeight: 700 }}>
+            <span style={{ flex: 1, height: '1px', background: '#334155' }}></span>
+            <span>OU</span>
+            <span style={{ flex: 1, height: '1px', background: '#334155' }}></span>
+          </div>
+
+          <button 
+            id="login-prof-btn" 
+            type="button" 
+            onClick={entrarComoProfessor}
+            style={{ width: '100%', height: '44px', background: 'linear-gradient(135deg,#10b981,#059669)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}
+          >
+            <i className="ti ti-user-check" style={{ fontSize: '16px' }}></i> Acesso do Professor (Rápido)
           </button>
           
           <div style={{ marginTop: '1.2rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#64748b', lineHeight: 1.6 }}>
-            <i className="ti ti-info-circle" style={{ color: '#3b82f6', marginRight: '2px' }}></i> Senha padrão: <b style={{ color: '#94a3b8' }}>admin123</b>
+            <i className="ti ti-info-circle" style={{ color: '#3b82f6', marginRight: '2px' }}></i> Senha do administrador: <b style={{ color: '#94a3b8' }}>admin123</b>
           </div>
         </div>
       </div>
