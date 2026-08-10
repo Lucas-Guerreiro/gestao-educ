@@ -1,5 +1,7 @@
 import React from 'react';
 import { Aula, Turma, Materia, Capitulo, SequenciaDidatica, ExerciciosIA } from '@/types';
+import { db } from '../../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 interface AulaDetalheModalProps {
   aula: Aula | null;
@@ -111,7 +113,7 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
             </div>
           )}
           
-          <div id="ad-realizada-badge" style={{ marginTop: '14px' }}>
+          <div id="ad-realizada-badge" style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {aula.realizada ? (
               <div style={{ background: 'var(--success-light)', color: 'var(--success-text)', padding: '10px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <i className="ti ti-circle-check" style={{ fontSize: '16px' }}></i> Aula ministrada e concluída!
@@ -121,6 +123,36 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
                 <i className="ti ti-clock" style={{ fontSize: '16px' }}></i> Planejada (ministração pendente)
               </div>
             )}
+
+            <button
+              onClick={async () => {
+                try {
+                  await updateDoc(doc(db, 'aulas', aula.id), { realizada: !aula.realizada });
+                } catch (err) {
+                  console.error("Erro ao atualizar status de conclusão da aula:", err);
+                }
+              }}
+              style={{
+                width: '100%',
+                height: '40px',
+                background: aula.realizada ? '#f1f5f9' : 'linear-gradient(135deg, #10b981, #059669)',
+                border: '1px solid ' + (aula.realizada ? '#cbd5e1' : '#059669'),
+                borderRadius: '10px',
+                color: aula.realizada ? 'var(--text-main)' : '#fff',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <i className={aula.realizada ? "ti ti-arrow-back" : "ti ti-circle-check"}></i>
+              {aula.realizada ? "Marcar como Planejada (Desfazer)" : "Marcar como Aula Já Ministrada (Concluída)"}
+            </button>
           </div>
         </div>
       </div>

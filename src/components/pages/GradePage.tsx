@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Aula, Turma, Materia } from '@/types';
+import { db } from '../../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 interface GradePageProps {
   aulas: Aula[];
@@ -220,11 +222,40 @@ const GradePage: React.FC<GradePageProps> = ({
                                   }}
                                   className="weekly-cell-card"
                                 >
-                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', flexWrap: 'wrap' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', width: '100%' }}>
                                     <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
                                       {aula.tipo.toUpperCase()}
                                     </span>
-                                    {aula.realizada && <span style={{ fontSize: '9px' }}>✅</span>}
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        try {
+                                          await updateDoc(doc(db, 'aulas', aula.id), { realizada: !aula.realizada });
+                                        } catch (err) {
+                                          console.error("Erro ao atualizar status da aula:", err);
+                                        }
+                                      }}
+                                      style={{
+                                        background: aula.realizada ? 'var(--success)' : 'transparent',
+                                        border: '1px solid var(--success)',
+                                        borderRadius: '50%',
+                                        width: '18px',
+                                        height: '18px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        color: aula.realizada ? '#fff' : 'var(--success)',
+                                        padding: 0,
+                                        fontSize: '9px',
+                                        boxShadow: 'var(--shadow-sm)',
+                                        transition: 'all 0.2s',
+                                        flexShrink: 0
+                                      }}
+                                      title={aula.realizada ? "Desmarcar como realizada" : "Marcar como realizada (concluída)"}
+                                    >
+                                      <i className="ti ti-check" style={{ fontWeight: 'bold' }}></i>
+                                    </button>
                                   </div>
                                   <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
                                     {mat ? mat.nome : 'Matéria'}
@@ -311,11 +342,40 @@ const GradePage: React.FC<GradePageProps> = ({
                             boxShadow: 'var(--shadow-sm)'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
                             <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
                               {aula.tipo.toUpperCase()}
                             </span>
-                            {aula.realizada && <span style={{ fontSize: '9px' }}>✅</span>}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  await updateDoc(doc(db, 'aulas', aula.id), { realizada: !aula.realizada });
+                                } catch (err) {
+                                  console.error("Erro ao atualizar status da aula:", err);
+                                }
+                              }}
+                              style={{
+                                background: aula.realizada ? 'var(--success)' : 'transparent',
+                                border: '1px solid var(--success)',
+                                borderRadius: '50%',
+                                width: '18px',
+                                height: '18px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                color: aula.realizada ? '#fff' : 'var(--success)',
+                                padding: 0,
+                                fontSize: '9px',
+                                boxShadow: 'var(--shadow-sm)',
+                                transition: 'all 0.2s',
+                                flexShrink: 0
+                              }}
+                              title={aula.realizada ? "Desmarcar como realizada" : "Marcar como realizada (concluída)"}
+                            >
+                              <i className="ti ti-check" style={{ fontWeight: 'bold' }}></i>
+                            </button>
                           </div>
                           <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
                             {mat ? mat.nome : 'Matéria'}
