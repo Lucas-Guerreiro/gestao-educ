@@ -152,6 +152,7 @@ const App: React.FC = () => {
   const [sdModalId, setSdModalId] = useState<string | null>(null);
   const [isAulaDetalheOpen, setIsAulaDetalheOpen] = useState(false);
   const [aulaDetalhe, setAulaDetalhe] = useState<Aula | null>(null);
+  const [isBimestreChoiceModalOpen, setIsBimestreChoiceModalOpen] = useState(false);
 
   // Read authentication on mount
   useEffect(() => {
@@ -163,6 +164,10 @@ const App: React.FC = () => {
       setPerfil(activePerfil);
       if (activePerfil === 'professor') {
         setCurrentSec('visao-aulas'); // Ao abrir/recarregar o sistema com professor, abre na Grade Semanal
+        const confirmado = sessionStorage.getItem('es_bimestre_confirmado');
+        if (confirmado !== 'true') {
+          setIsBimestreChoiceModalOpen(true);
+        }
       } else {
         setCurrentSec('escola');
       }
@@ -290,6 +295,7 @@ const App: React.FC = () => {
     setAutenticado(false);
     sessionStorage.removeItem('es_autenticado');
     sessionStorage.removeItem('es_perfil');
+    sessionStorage.removeItem('es_bimestre_confirmado');
   };
 
   const renderActiveSection = () => {
@@ -528,6 +534,7 @@ const App: React.FC = () => {
           sessionStorage.setItem('es_perfil', userPref);
           if (userPref === 'professor') {
             setCurrentSec('visao-aulas'); // Ao abrir o sistema deve abrir na tela Grade semanal
+            setIsBimestreChoiceModalOpen(true); // Abre o modal de escolha de bimestre
           } else {
             setCurrentSec('escola');
           }
@@ -664,6 +671,49 @@ const App: React.FC = () => {
           fecharModal={() => setIsImportModalOpen(false)}
           setSyncStatus={setSyncStatus}
         />
+      )}
+      {/* Modal de Escolha Inicial de Bimestre para o Professor */}
+      {isBimestreChoiceModalOpen && (
+        <div style={{ display: 'flex', position: 'fixed', inset: 0, background: 'rgba(15,23,42,.65)', zIndex: 4000, alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(3px)' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '380px', boxShadow: 'var(--shadow-lg)', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)' }}>
+            <div style={{ padding: '20px', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: '#fff', textAlign: 'center' }}>
+              <div style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                <i className="ti ti-calendar-event" style={{ fontSize: '24px' }}></i>
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: 800 }}>Bimestre de Trabalho</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: '4px' }}>Selecione o bimestre ativo para os seus lançamentos</div>
+            </div>
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="f" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)' }}>Escolha o Bimestre *</label>
+                <select 
+                  value={selectedBimestreId} 
+                  onChange={(e) => handleBimestreChange(e.target.value)}
+                  style={{ width: '100%', height: '42px', fontSize: '14px', fontWeight: 700, borderRadius: '8px', border: '1px solid var(--border)', padding: '0 8px' }}
+                >
+                  <option value="">— selecione o bimestre —</option>
+                  {bimestresAtivos.map(b => (
+                    <option key={b.id} value={b.id}>{b.nome}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={() => {
+                  if (!selectedBimestreId) {
+                    alert("Por favor, selecione um bimestre para continuar.");
+                    return;
+                  }
+                  setIsBimestreChoiceModalOpen(false);
+                  sessionStorage.setItem('es_bimestre_confirmado', 'true');
+                }}
+                className="btn pri"
+                style={{ width: '100%', height: '42px', fontSize: '14px', fontWeight: 700, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                Confirmar e Iniciar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

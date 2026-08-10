@@ -58,7 +58,10 @@ const GradePage: React.FC<GradePageProps> = ({
     for (let i = 0; i < 5; i++) {
       const d = new Date(segunda);
       d.setDate(segunda.getDate() + i);
-      datas.push(d.toISOString().split('T')[0]);
+      const ano = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const dia = String(d.getDate()).padStart(2, '0');
+      datas.push(`${ano}-${mes}-${dia}`);
     }
     return datas;
   };
