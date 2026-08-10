@@ -1653,34 +1653,4 @@ tr.table-row-hover:focus-within td:last-child {
   .filters-flex-wrap > div {
     width: 100% !important;
   }
-
-  /* Ajustes da Topbar */
-  .topbar {
-    padding: 10px 12px !important;
-    gap: 8px !important;
-  }
-  
-  .topbar-title {
-    font-size: 14px !important;
-  }
-
-  .topbar > div:nth-child(3) {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    justify-content: space-between !important;
-    gap: 6px !important;
-  }
-
-  .tb-btns {
-    width: 100% !important;
-    justify-content: flex-end !important;
-    margin-top: 4px !important;
-  }
-
-  .tb-btns button {
-    flex: 1 !important;
-    padding: 6px 10px !important;
-    font-size: 11px !important;
-  }
 }
