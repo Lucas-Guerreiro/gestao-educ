@@ -485,17 +485,11 @@ const NotasPage: React.FC<NotasPageProps> = ({
                   return (
                     <div 
                       key={ativ.id} 
+                      className="flex-row-mobile-stack table-row-hover"
                       style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between', 
                         padding: '12px 16px', 
-                        background: '#f8fafc', 
-                        border: '1px solid var(--border)', 
-                        borderRadius: '12px',
                         cursor: 'default'
                       }}
-                      className="table-row-hover"
                     >
                       <div style={{ flex: 1, paddingRight: '12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>

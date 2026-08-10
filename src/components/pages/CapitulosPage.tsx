@@ -141,7 +141,7 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px', padding: '1rem', flexWrap: 'wrap' }}>
+    <div className="two-col-layout">
       
       {/* Form */}
       <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', height: 'fit-content' }}>
@@ -227,7 +227,8 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
               return (
                 <div 
                   key={cap.id} 
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px' }}
+                  className="flex-row-mobile-stack"
+                  style={{ padding: '10px 14px' }}
                 >
                   <div style={{ flex: 1, paddingRight: '8px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{cap.nome}</span>

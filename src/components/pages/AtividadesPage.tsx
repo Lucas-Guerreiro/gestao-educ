@@ -236,7 +236,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px', padding: '1rem', flexWrap: 'wrap' }}>
+    <div className="two-col-layout">
       
       {/* Form */}
       <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', height: 'fit-content' }}>
@@ -365,7 +365,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
         </div>
 
         {/* Filtros de Lista */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '1.25rem', background: '#f8fafc', padding: '10px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+        <div className="filters-flex-wrap">
           <div className="f" style={{ flex: 1, minWidth: '120px' }}>
             <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Turma</label>
             <select value={filtroTurma} onChange={(e) => setFiltroTurma(e.target.value)} style={{ height: '34px', fontSize: '12px' }}>
@@ -406,7 +406,8 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
               return (
                 <div 
                   key={ativ.id} 
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px' }}
+                  className="flex-row-mobile-stack"
+                  style={{ padding: '10px 14px' }}
                 >
                   <div style={{ flex: 1, paddingRight: '8px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{ativ.nome}</span>
