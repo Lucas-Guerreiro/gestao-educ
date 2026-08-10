@@ -59,7 +59,7 @@ const Topbar: React.FC<TopbarProps> = ({
         className="tb-btn tb-menu-toggle" 
         id="btn-toggle-menu-topbar" 
         style={{ 
-          background: 'var(--bg-card)', 
+          background: '#f1f5f9', 
           border: '1px solid var(--border)', 
           borderRadius: '8px', 
           width: '36px', 
@@ -69,14 +69,14 @@ const Topbar: React.FC<TopbarProps> = ({
           justifyContent: 'center', 
           cursor: 'pointer', 
           marginRight: '12px', 
-          color: 'var(--text-main)', 
+          color: '#1e293b', 
           boxShadow: 'var(--shadow-sm)',
           transition: 'all 0.2s ease'
         }}
         onClick={() => setCollapsed(!collapsed)}
         title={collapsed ? "Expandir menu" : "Recolher menu"}
       >
-        <i className="ti ti-menu-2" style={{ fontSize: '18px' }}></i>
+        <i className="ti ti-menu-2" style={{ fontSize: '18px', color: '#1e293b' }}></i>
       </button>
 
       <div className="topbar-title" id="topbar-title">
