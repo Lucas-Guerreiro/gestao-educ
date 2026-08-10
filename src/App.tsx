@@ -159,7 +159,13 @@ const App: React.FC = () => {
     const userPerfil = sessionStorage.getItem('es_perfil') as 'admin' | 'professor';
     if (isAuth === 'true') {
       setAutenticado(true);
-      setPerfil(userPerfil || 'admin');
+      const activePerfil = userPerfil || 'admin';
+      setPerfil(activePerfil);
+      if (activePerfil === 'professor') {
+        setCurrentSec('visao-aulas'); // Ao abrir/recarregar o sistema com professor, abre na Grade Semanal
+      } else {
+        setCurrentSec('escola');
+      }
     }
   }, []);
 
