@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, updateDoc, doc, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Capitulo, Turma, Materia, Escola, Professor } from '@/types';
 
@@ -25,6 +25,15 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [outrasTurmasSelecionadas, setOutrasTurmasSelecionadas] = useState<string[]>([]);
+
+  // Filtrar as outras turmas da mesma escola que a turma principal selecionada
+  const outrasTurmas = React.useMemo(() => {
+    if (!turmaId) return [];
+    const turmaSelecionada = turmas.find(t => t.id === turmaId);
+    if (!turmaSelecionada) return [];
+    return turmas.filter(t => t.escolaId === turmaSelecionada.escolaId && t.id !== turmaId);
+  }, [turmaId, turmas]);
 
   // Filtrar as matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
   const materiasDaTurmaEscola = React.useMemo(() => {
@@ -82,13 +91,29 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
         await updateDoc(doc(db, 'capitulos', editingId), payload);
         setEditingId(null);
       } else {
-        await addDoc(collection(db, 'capitulos'), payload);
+        const batch = writeBatch(db);
+        
+        // 1. Turma principal
+        const mainRef = doc(collection(db, 'capitulos'));
+        batch.set(mainRef, payload);
+        
+        // 2. Outras turmas selecionadas
+        outrasTurmasSelecionadas.forEach(tId => {
+          const repRef = doc(collection(db, 'capitulos'));
+          batch.set(repRef, {
+            ...payload,
+            turmaId: tId
+          });
+        });
+        
+        await batch.commit();
       }
 
       setNome('');
       setDescricao('');
       setTurmaId('');
       setMateriaId('');
+      setOutrasTurmasSelecionadas([]);
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
@@ -102,6 +127,7 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
     setDescricao(cap.descricao || '');
     setTurmaId(cap.turmaId);
     setMateriaId(cap.materiaId);
+    setOutrasTurmasSelecionadas([]);
   };
 
   const deletar = async (id: string) => {
@@ -197,9 +223,38 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
             />
           </div>
 
+          {/* Checkboxes de Replicação para Outras Turmas (Apenas na Criação) */}
+          {!editingId && outrasTurmas.length > 0 && (
+            <div className="f" style={{ border: '1px solid #e2e8f0', padding: '12px', borderRadius: '10px', background: '#f8fafc', marginTop: '4px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>
+                Replicar este capítulo também para:
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '120px', overflowY: 'auto' }}>
+                {outrasTurmas.map(t => {
+                  const isChecked = outrasTurmasSelecionadas.includes(t.id);
+                  return (
+                    <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer', fontWeight: 500, color: 'var(--text-main)' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked}
+                        onChange={() => {
+                          setOutrasTurmasSelecionadas(prev => 
+                            prev.includes(t.id) ? prev.filter(id => id !== t.id) : [...prev, t.id]
+                          );
+                        }}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>{t.nome}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
             {editingId && (
-              <button type="button" className="btn" onClick={() => { setEditingId(null); setNome(''); setDescricao(''); setTurmaId(''); setMateriaId(''); }}>
+              <button type="button" className="btn" onClick={() => { setEditingId(null); setNome(''); setDescricao(''); setTurmaId(''); setMateriaId(''); setOutrasTurmasSelecionadas([]); }}>
                 Cancelar
               </button>
             )}
