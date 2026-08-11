@@ -26,6 +26,8 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
   const [materiaId, setMateriaId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [outrasTurmasSelecionadas, setOutrasTurmasSelecionadas] = useState<string[]>([]);
+  const [filtroTurma, setFiltroTurma] = useState('');
+  const [filtroMateria, setFiltroMateria] = useState('');
 
   // Filtrar as outras turmas da mesma escola que a turma principal selecionada
   const outrasTurmas = React.useMemo(() => {
@@ -271,11 +273,43 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
           <i className="ti ti-list" style={{ color: 'var(--primary)' }}></i> Banco de Capítulos
         </div>
 
+        {/* Filtros de Lista */}
+        <div className="filters-flex-wrap">
+          <div className="f" style={{ flex: 1, minWidth: '120px' }}>
+            <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Turma</label>
+            <select value={filtroTurma} onChange={(e) => setFiltroTurma(e.target.value)} style={{ height: '34px', fontSize: '12px' }}>
+              <option value="">— Todas as Turmas —</option>
+              {turmas.map(t => {
+                const esc = escolas.find(e => e.id === t.escolaId);
+                return <option key={t.id} value={t.id}>{t.nome} ({esc ? esc.nome : 'Escola'})</option>;
+              })}
+            </select>
+          </div>
+          <div className="f" style={{ flex: 1, minWidth: '120px' }}>
+            <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Matéria</label>
+            <select value={filtroMateria} onChange={(e) => setFiltroMateria(e.target.value)} style={{ height: '34px', fontSize: '12px' }}>
+              <option value="">— Todas as Matérias —</option>
+              {materias.map(m => {
+                const esc = escolas.find(e => e.id === m.escolaId);
+                return <option key={m.id} value={m.id}>{m.nome} ({esc ? esc.nome : 'Escola'})</option>;
+              })}
+            </select>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '500px', overflowY: 'auto' }}>
-          {capitulos.length === 0 ? (
-            <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12px' }}>Nenhum capítulo cadastrado.</div>
-          ) : (
-            capitulos.map(cap => {
+          {(() => {
+            const capitulosFiltrados = capitulos.filter(cap => {
+              const atendeTurma = filtroTurma ? cap.turmaId === filtroTurma : true;
+              const atendeMateria = filtroMateria ? cap.materiaId === filtroMateria : true;
+              return atendeTurma && atendeMateria;
+            });
+
+            if (capitulosFiltrados.length === 0) {
+              return <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12px' }}>Nenhum capítulo correspondente aos filtros.</div>;
+            }
+
+            return capitulosFiltrados.map(cap => {
               const tur = turmas.find(t => t.id === cap.turmaId);
               const mat = materias.find(m => m.id === cap.materiaId);
 
@@ -307,8 +341,8 @@ const CapitulosPage: React.FC<CapitulosPageProps> = ({
                   </div>
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
       </div>
 
