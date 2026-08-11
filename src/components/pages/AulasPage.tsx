@@ -31,6 +31,8 @@ const AulasPage: React.FC<AulasPageProps> = ({
   const [realizada, setRealizada] = useState(false);
   const [descricao, setDescricao] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [filtroTurma, setFiltroTurma] = useState('');
+  const [filtroData, setFiltroData] = useState('');
 
   const horariosDisponiveis = [
     "1º Tempo (Manhã)",
@@ -310,11 +312,57 @@ const AulasPage: React.FC<AulasPageProps> = ({
           <i className="ti ti-list" style={{ color: 'var(--primary)' }}></i> Aulas Agendadas
         </div>
 
+        {/* Filtros de Lista */}
+        <div className="filters-flex-wrap">
+          <div className="f" style={{ flex: 1, minWidth: '120px' }}>
+            <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Turma</label>
+            <select value={filtroTurma} onChange={(e) => setFiltroTurma(e.target.value)} style={{ height: '34px', fontSize: '12px' }}>
+              <option value="">— Todas as Turmas —</option>
+              {turmas.map(t => {
+                const esc = escolas.find(e => e.id === t.escolaId);
+                return <option key={t.id} value={t.id}>{t.nome} ({esc ? esc.nome : 'Escola'})</option>;
+              })}
+              <option value="SOP">SOP (Orientação Pedagógica)</option>
+              <option value="Capela">Capela</option>
+            </select>
+          </div>
+          <div className="f" style={{ flex: 1, minWidth: '120px' }}>
+            <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Data</label>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <input 
+                type="date" 
+                value={filtroData} 
+                onChange={(e) => setFiltroData(e.target.value)} 
+                style={{ height: '34px', fontSize: '12px', flex: 1, padding: '0 8px', borderRadius: '8px', border: '1px solid var(--border)' }} 
+              />
+              {filtroData && (
+                <button 
+                  type="button" 
+                  className="btn" 
+                  onClick={() => setFiltroData('')}
+                  style={{ height: '34px', padding: '0 10px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderColor: 'var(--border)' }}
+                  title="Limpar Data"
+                >
+                  <i className="ti ti-x" style={{ fontSize: '14px' }}></i>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '500px', overflowY: 'auto' }}>
-          {aulas.length === 0 ? (
-            <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12px' }}>Nenhuma aula agendada.</div>
-          ) : (
-            [...aulas].sort((a,b) => (b.data || '').localeCompare(a.data || '')).map(aula => {
+          {(() => {
+            const aulasFiltradas = aulas.filter(aula => {
+              const atendeTurma = filtroTurma ? aula.turmaId === filtroTurma : true;
+              const atendeData = filtroData ? aula.data === filtroData : true;
+              return atendeTurma && atendeData;
+            });
+
+            if (aulasFiltradas.length === 0) {
+              return <div style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '12px' }}>Nenhuma aula correspondente aos filtros.</div>;
+            }
+
+            return [...aulasFiltradas].sort((a,b) => (b.data || '').localeCompare(a.data || '')).map(aula => {
               const tur = turmas.find(t => t.id === aula.turmaId);
               const mat = materias.find(m => m.id === aula.materiaId);
               const cap = capitulos.find(c => c.id === aula.capituloId);
@@ -383,8 +431,8 @@ const AulasPage: React.FC<AulasPageProps> = ({
                   </div>
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
       </div>
 
