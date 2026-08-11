@@ -58,16 +58,24 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
       <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '520px', boxShadow: 'var(--shadow-lg)', overflow: 'hidden', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)' }}>
         <div id="ad-header" style={{ padding: '16px 20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', flexShrink: 0, color: '#fff', background: 'linear-gradient(135deg, var(--dark), var(--dark-hover))' }}>
           <div style={{ flex: 1 }}>
-            <div className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ marginBottom: '6px' }}>
-              {aula.tipo.toUpperCase()}
-            </div>
+            {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') ? (
+              <div className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ marginBottom: '6px' }}>
+                {aula.tipo.toUpperCase()}
+              </div>
+            ) : (
+              <div style={{ display: 'inline-block', background: '#d8b4fe', color: '#581c87', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '6px' }}>
+                EVENTO ESPECIAL
+              </div>
+            )}
             <div id="ad-titulo" style={{ fontSize: '16px', fontWeight: 800, lineHeight: 1.3 }}>
-              {mat ? mat.nome : 'Matéria Não Vinculada'}
+              {aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? aula.turmaId.toUpperCase() : (mat ? mat.nome : 'Matéria Não Vinculada')}
             </div>
             <div id="ad-meta" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               <span><i className="ti ti-calendar"></i> {formatarDataExibicao(aula.data)}</span>
               <span><i className="ti ti-clock"></i> {aula.horario}</span>
-              <span><i className="ti ti-users"></i> Turma: {tur ? tur.nome : '—'}</span>
+              {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
+                <span><i className="ti ti-users"></i> Turma: {tur ? tur.nome : '—'}</span>
+              )}
             </div>
           </div>
           <button onClick={fecharModal} style={{ border: 'none', background: 'rgba(255,255,255,.2)', cursor: 'pointer', fontSize: '18px', color: '#fff', lineHeight: 1, borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
@@ -108,9 +116,11 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
               </div>
             </div>
           ) : (
-            <div id="ad-sem-atividades" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic' }}>
-              Nenhuma atividade programada para esta aula.
-            </div>
+            !(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
+              <div id="ad-sem-atividades" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic' }}>
+                Nenhuma atividade programada para esta aula.
+              </div>
+            )
           )}
           
           <div id="ad-realizada-badge" style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>

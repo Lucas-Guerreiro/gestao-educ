@@ -36,17 +36,13 @@ const GradePage: React.FC<GradePageProps> = ({
     "5º Tempo (Manhã)",
     "6º Tempo (Manhã)",
     "7º Tempo (Manhã)",
-    "SOP (Manhã)",
-    "Capela (Manhã)",
     "1º Tempo (Tarde)",
     "2º Tempo (Tarde)",
     "3º Tempo (Tarde)",
     "4º Tempo (Tarde)",
     "5º Tempo (Tarde)",
     "6º Tempo (Tarde)",
-    "7º Tempo (Tarde)",
-    "SOP (Tarde)",
-    "Capela (Tarde)"
+    "7º Tempo (Tarde)"
   ];
 
   // Obter datas da semana selecionada
@@ -216,8 +212,8 @@ const GradePage: React.FC<GradePageProps> = ({
                                   key={aula.id} 
                                   onClick={() => abrirAulaDetalheModal(aula)}
                                   style={{ 
-                                    background: aula.realizada ? '#f0fdf4' : '#eff6ff', 
-                                    border: aula.realizada ? '1px solid #bbf7d0' : '1px solid #bfdbfe', 
+                                    background: aula.realizada ? '#f0fdf4' : (aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '#faf5ff' : '#eff6ff'), 
+                                    border: aula.realizada ? '1px solid #bbf7d0' : (aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '1px solid #e9d5ff' : '1px solid #bfdbfe'), 
                                     borderRadius: '10px', 
                                     padding: '8px 10px', 
                                     cursor: 'pointer',
@@ -230,9 +226,15 @@ const GradePage: React.FC<GradePageProps> = ({
                                   className="weekly-cell-card"
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', width: '100%' }}>
-                                    <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
-                                      {aula.tipo.toUpperCase()}
-                                    </span>
+                                    {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') ? (
+                                      <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
+                                        {aula.tipo.toUpperCase()}
+                                      </span>
+                                    ) : (
+                                      <span style={{ fontSize: '8px', background: '#d8b4fe', color: '#581c87', padding: '1px 4px', borderRadius: '4px', fontWeight: 800 }}>
+                                        EVENTO
+                                      </span>
+                                    )}
                                     <button
                                       onClick={async (e) => {
                                         e.stopPropagation();
@@ -264,12 +266,14 @@ const GradePage: React.FC<GradePageProps> = ({
                                       <i className="ti ti-check" style={{ fontWeight: 'bold' }}></i>
                                     </button>
                                   </div>
-                                  <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
-                                    {mat ? mat.nome : 'Matéria'}
+                                  <div style={{ fontSize: '12px', fontWeight: 800, color: aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '#6b21a8' : 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
+                                    {aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? aula.turmaId.toUpperCase() : (mat ? mat.nome : 'Matéria')}
                                   </div>
-                                  <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                    🏫 {tur ? tur.nome : '—'}
-                                  </div>
+                                  {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
+                                    <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                      🏫 {tur ? tur.nome : '—'}
+                                    </div>
+                                  )}
                                   {aula.descricao && (
                                     <div style={{ 
                                       fontSize: '9.5px', 

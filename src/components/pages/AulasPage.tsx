@@ -40,17 +40,13 @@ const AulasPage: React.FC<AulasPageProps> = ({
     "5º Tempo (Manhã)",
     "6º Tempo (Manhã)",
     "7º Tempo (Manhã)",
-    "SOP (Manhã)",
-    "Capela (Manhã)",
     "1º Tempo (Tarde)",
     "2º Tempo (Tarde)",
     "3º Tempo (Tarde)",
     "4º Tempo (Tarde)",
     "5º Tempo (Tarde)",
     "6º Tempo (Tarde)",
-    "7º Tempo (Tarde)",
-    "SOP (Tarde)",
-    "Capela (Tarde)"
+    "7º Tempo (Tarde)"
   ];
 
   // Filtrar as matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma
@@ -97,7 +93,8 @@ const AulasPage: React.FC<AulasPageProps> = ({
 
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!data || !horario || !turmaId || !materiaId || !tipo) {
+    const ehEspecial = turmaId === 'SOP' || turmaId === 'Capela';
+    if (!data || !horario || !turmaId || (!ehEspecial && (!materiaId || !tipo))) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -108,9 +105,9 @@ const AulasPage: React.FC<AulasPageProps> = ({
         data,
         horario,
         turmaId,
-        materiaId,
-        tipo,
-        capituloId: capituloId || null,
+        materiaId: ehEspecial ? '' : materiaId,
+        tipo: ehEspecial ? 'outra' : tipo,
+        capituloId: ehEspecial ? '' : (capituloId || null),
         realizada,
         descricao: descricao || ''
       };
@@ -179,6 +176,8 @@ const AulasPage: React.FC<AulasPageProps> = ({
     return dStr.split('-').reverse().join('/');
   };
 
+  const ehEspecial = turmaId === 'SOP' || turmaId === 'Capela';
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '20px', padding: '1rem', flexWrap: 'wrap' }}>
       
@@ -211,18 +210,20 @@ const AulasPage: React.FC<AulasPageProps> = ({
                   const esc = escolas.find(e => e.id === t.escolaId);
                   return <option key={t.id} value={t.id}>{t.nome} ({esc ? esc.nome : 'Escola'})</option>;
                 })}
+                <option value="SOP">SOP (Orientação Pedagógica)</option>
+                <option value="Capela">Capela</option>
               </select>
             </div>
             <div className="f">
               <label>
-                Matéria Vinculada *
-                {turmaId && materiasDaTurmaEscola.length === 0 && (
+                Matéria Vinculada {!ehEspecial && '*'}
+                {turmaId && !ehEspecial && materiasDaTurmaEscola.length === 0 && (
                   <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhuma matéria nesta escola</span>
                 )}
               </label>
-              <select value={materiaId} onChange={(e) => handleMateriaChange(e.target.value)} disabled={!turmaId}>
+              <select value={materiaId} onChange={(e) => handleMateriaChange(e.target.value)} disabled={!turmaId || ehEspecial}>
                 <option value="">— selecione —</option>
-                {materiasDaTurmaEscola.map(m => {
+                {!ehEspecial && materiasDaTurmaEscola.map(m => {
                   const esc = escolas.find(e => e.id === m.escolaId);
                   return <option key={m.id} value={m.id}>{m.nome} ({esc ? esc.nome : 'Escola'})</option>;
                 })}
@@ -233,7 +234,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div className="f">
               <label>Tipo de Aula *</label>
-              <select value={tipo} onChange={(e) => setTipo(e.target.value as any)}>
+              <select value={tipo} onChange={(e) => setTipo(e.target.value as any)} disabled={ehEspecial}>
                 <option value="teorica">📖 Teórica</option>
                 <option value="pratica">🧪 Prática / Lab</option>
                 <option value="revisao">🔄 Revisão de Conteúdo</option>
@@ -245,13 +246,13 @@ const AulasPage: React.FC<AulasPageProps> = ({
             <div className="f">
               <label>
                 Capítulo Mapeado
-                {turmaId && materiaId && capitulosFiltrados.length === 0 && (
+                {turmaId && materiaId && !ehEspecial && capitulosFiltrados.length === 0 && (
                   <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px' }}>Nenhum capítulo cadastrado</span>
                 )}
               </label>
-              <select value={capituloId} onChange={(e) => setCapituloId(e.target.value)} disabled={!turmaId || !materiaId}>
+              <select value={capituloId} onChange={(e) => setCapituloId(e.target.value)} disabled={!turmaId || !materiaId || ehEspecial}>
                 <option value="">— sem capítulo associado —</option>
-                {capitulosFiltrados.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                {!ehEspecial && capitulosFiltrados.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </select>
             </div>
           </div>
@@ -328,13 +329,28 @@ const AulasPage: React.FC<AulasPageProps> = ({
                       <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)' }}>
                         {formatarData(aula.data)} — {aula.horario || '—'}
                       </span>
-                      <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '8.5px', padding: '2px 5px' }}>
-                        {aula.tipo.toUpperCase()}
-                      </span>
+                      {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
+                        <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '8.5px', padding: '2px 5px' }}>
+                          {aula.tipo.toUpperCase()}
+                        </span>
+                      )}
+                      {(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
+                        <span style={{ fontSize: '8.5px', background: '#d8b4fe', color: '#581c87', padding: '2px 5px', borderRadius: '4px', fontWeight: 800 }}>
+                          EVENTO
+                        </span>
+                      )}
                     </div>
 
                     <div style={{ fontSize: '12.5px', color: 'var(--text-main)', fontWeight: 700, marginTop: '4px' }}>
-                      📖 {mat ? mat.nome : '—'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>(Turma: {tur ? tur.nome : '—'})</span>
+                      {aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? (
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#6b21a8' }}>
+                          ✨ {aula.turmaId.toUpperCase()}
+                        </span>
+                      ) : (
+                        <>
+                          📖 {mat ? mat.nome : '—'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>(Turma: {tur ? tur.nome : '—'})</span>
+                        </>
+                      )}
                     </div>
 
                     {cap && (
