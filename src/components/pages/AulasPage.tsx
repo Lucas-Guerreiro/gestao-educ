@@ -363,10 +363,6 @@ const AulasPage: React.FC<AulasPageProps> = ({
             }
 
             return [...aulasFiltradas].sort((a,b) => (b.data || '').localeCompare(a.data || '')).map(aula => {
-              const tur = turmas.find(t => t.id === aula.turmaId);
-              const mat = materias.find(m => m.id === aula.materiaId);
-              const cap = capitulos.find(c => c.id === aula.capituloId);
-
               return (
                 <div 
                   key={aula.id} 
@@ -377,35 +373,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
                       <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-main)' }}>
                         {formatarData(aula.data)} — {aula.horario || '—'}
                       </span>
-                      {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
-                        <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '8.5px', padding: '2px 5px' }}>
-                          {aula.tipo.toUpperCase()}
-                        </span>
-                      )}
-                      {(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
-                        <span style={{ fontSize: '8.5px', background: '#d8b4fe', color: '#581c87', padding: '2px 5px', borderRadius: '4px', fontWeight: 800 }}>
-                          EVENTO
-                        </span>
-                      )}
                     </div>
-
-                    <div style={{ fontSize: '12.5px', color: 'var(--text-main)', fontWeight: 700, marginTop: '4px' }}>
-                      {aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? (
-                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#6b21a8' }}>
-                          ✨ {aula.turmaId.toUpperCase()}
-                        </span>
-                      ) : (
-                        <>
-                          📖 {mat ? mat.nome : '—'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 500 }}>(Turma: {tur ? tur.nome : '—'})</span>
-                        </>
-                      )}
-                    </div>
-
-                    {cap && (
-                      <div style={{ fontSize: '11px', color: '#1e40af', marginTop: '2px', fontWeight: 600 }}>
-                        📌 Capítulo: {cap.nome}
-                      </div>
-                    )}
 
                     {aula.descricao && (
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '5px', background: '#f8fafc', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>
