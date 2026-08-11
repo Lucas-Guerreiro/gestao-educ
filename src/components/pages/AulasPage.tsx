@@ -40,13 +40,17 @@ const AulasPage: React.FC<AulasPageProps> = ({
     "5º Tempo (Manhã)",
     "6º Tempo (Manhã)",
     "7º Tempo (Manhã)",
+    "SOP (Manhã)",
+    "Capela (Manhã)",
     "1º Tempo (Tarde)",
     "2º Tempo (Tarde)",
     "3º Tempo (Tarde)",
     "4º Tempo (Tarde)",
     "5º Tempo (Tarde)",
     "6º Tempo (Tarde)",
-    "7º Tempo (Tarde)"
+    "7º Tempo (Tarde)",
+    "SOP (Tarde)",
+    "Capela (Tarde)"
   ];
 
   // Filtrar as matérias vinculadas à turma através de qualquer professor, com fallback para as matérias da escola da turma

@@ -36,13 +36,17 @@ const GradePage: React.FC<GradePageProps> = ({
     "5º Tempo (Manhã)",
     "6º Tempo (Manhã)",
     "7º Tempo (Manhã)",
+    "SOP (Manhã)",
+    "Capela (Manhã)",
     "1º Tempo (Tarde)",
     "2º Tempo (Tarde)",
     "3º Tempo (Tarde)",
     "4º Tempo (Tarde)",
     "5º Tempo (Tarde)",
     "6º Tempo (Tarde)",
-    "7º Tempo (Tarde)"
+    "7º Tempo (Tarde)",
+    "SOP (Tarde)",
+    "Capela (Tarde)"
   ];
 
   // Obter datas da semana selecionada
