@@ -63,6 +63,8 @@ export interface Professor {
    */
   materias: string[]; // IDs de matérias
   vinculos?: { turmaId: string; materias: string[] }[];
+  email?: string;
+  senha?: string;
 }
 
 /**

@@ -156,15 +156,15 @@ const App: React.FC = () => {
 
   // Read authentication on mount
   useEffect(() => {
-    const isAuth = sessionStorage.getItem('es_autenticado');
-    const userPerfil = sessionStorage.getItem('es_perfil') as 'admin' | 'professor';
+    const isAuth = localStorage.getItem('es_autenticado');
+    const userPerfil = localStorage.getItem('es_perfil') as 'admin' | 'professor';
     if (isAuth === 'true') {
       setAutenticado(true);
       const activePerfil = userPerfil || 'admin';
       setPerfil(activePerfil);
       if (activePerfil === 'professor') {
         setCurrentSec('visao-aulas'); // Ao abrir/recarregar o sistema com professor, abre na Grade Semanal
-        const confirmado = sessionStorage.getItem('es_bimestre_confirmado');
+        const confirmado = localStorage.getItem('es_bimestre_confirmado');
         if (confirmado !== 'true') {
           setIsBimestreChoiceModalOpen(true);
         }
@@ -293,9 +293,10 @@ const App: React.FC = () => {
 
   const realizarLogout = () => {
     setAutenticado(false);
-    sessionStorage.removeItem('es_autenticado');
-    sessionStorage.removeItem('es_perfil');
-    sessionStorage.removeItem('es_bimestre_confirmado');
+    localStorage.removeItem('es_autenticado');
+    localStorage.removeItem('es_perfil');
+    localStorage.removeItem('es_professor_id');
+    localStorage.removeItem('es_bimestre_confirmado');
   };
 
   const renderActiveSection = () => {
@@ -531,7 +532,8 @@ const App: React.FC = () => {
           setAutenticado(auth);
           const userPref = pref || 'admin';
           setPerfil(userPref);
-          sessionStorage.setItem('es_perfil', userPref);
+          localStorage.setItem('es_perfil', userPref);
+          localStorage.setItem('es_autenticado', 'true');
           if (userPref === 'professor') {
             setCurrentSec('visao-aulas'); // Ao abrir o sistema deve abrir na tela Grade semanal
             setIsBimestreChoiceModalOpen(true); // Abre o modal de escolha de bimestre
@@ -704,7 +706,7 @@ const App: React.FC = () => {
                     return;
                   }
                   setIsBimestreChoiceModalOpen(false);
-                  sessionStorage.setItem('es_bimestre_confirmado', 'true');
+                  localStorage.setItem('es_bimestre_confirmado', 'true');
                 }}
                 className="btn pri"
                 style={{ width: '100%', height: '42px', fontSize: '14px', fontWeight: 700, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}

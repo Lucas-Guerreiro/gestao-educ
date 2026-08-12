@@ -15,6 +15,8 @@ const ProfsPage: React.FC<ProfsPageProps> = ({ professores, materias, escolas, t
   const [profNome, setProfNome] = useState('');
   const [vinculos, setVinculos] = useState<{ turmaId: string; materias: string[] }[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
 
   const salvar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +32,8 @@ const ProfsPage: React.FC<ProfsPageProps> = ({ professores, materias, escolas, t
         nome: profNome.trim(),
         materias: derivedMaterias,
         vinculos: vinculos,
+        email: email.trim().toLowerCase(),
+        senha: senha.trim()
       };
 
       if (editingId) {
@@ -40,6 +44,8 @@ const ProfsPage: React.FC<ProfsPageProps> = ({ professores, materias, escolas, t
       }
       setProfNome('');
       setVinculos([]);
+      setEmail('');
+      setSenha('');
       setSyncStatus('ok');
     } catch (err) {
       setSyncStatus('err');
@@ -69,6 +75,8 @@ const ProfsPage: React.FC<ProfsPageProps> = ({ professores, materias, escolas, t
     setEditingId(prof.id);
     setProfNome(prof.nome);
     setVinculos(prof.vinculos || []);
+    setEmail(prof.email || '');
+    setSenha(prof.senha || '');
   };
 
   const deletar = async (id: string) => {
@@ -111,6 +119,27 @@ const ProfsPage: React.FC<ProfsPageProps> = ({ professores, materias, escolas, t
               onChange={(e) => setProfNome(e.target.value)} 
               placeholder="Ex: Prof. Roberto Silva" 
             />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div className="f">
+              <label>E-mail / Usuário de Acesso</label>
+              <input 
+                type="email"
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="Ex: roberto@escola.com" 
+              />
+            </div>
+            <div className="f">
+              <label>Senha de Acesso</label>
+              <input 
+                type="text"
+                value={senha} 
+                onChange={(e) => setSenha(e.target.value)} 
+                placeholder="Ex: roberto123" 
+              />
+            </div>
           </div>
 
           <div className="f">
@@ -157,7 +186,7 @@ const ProfsPage: React.FC<ProfsPageProps> = ({ professores, materias, escolas, t
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
             {editingId && (
-              <button type="button" className="btn" onClick={() => { setEditingId(null); setProfNome(''); setVinculos([]); }}>
+              <button type="button" className="btn" onClick={() => { setEditingId(null); setProfNome(''); setVinculos([]); setEmail(''); setSenha(''); }}>
                 Cancelar
               </button>
             )}
@@ -185,6 +214,11 @@ const ProfsPage: React.FC<ProfsPageProps> = ({ professores, materias, escolas, t
               >
                 <div>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{prof.nome}</span>
+                  {prof.email && (
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                      ({prof.email})
+                    </span>
+                  )}
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
                     {(!prof.vinculos || prof.vinculos.length === 0) ? (
                       <span style={{ fontSize: '9px', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', color: '#64748b' }}>Sem vínculos</span>
