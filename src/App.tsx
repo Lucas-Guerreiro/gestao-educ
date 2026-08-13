@@ -363,6 +363,10 @@ const App: React.FC = () => {
             aulas={aulasAtivas} 
             turmas={turmas} 
             materias={materias} 
+            capitulos={capitulos}
+            escolas={escolas}
+            professores={professores}
+            setSyncStatus={setSyncStatus}
             abrirAulaDetalheModal={(a) => { setAulaDetalhe(a); setIsAulaDetalheOpen(true); }}
           />
         );
