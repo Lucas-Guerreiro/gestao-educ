@@ -829,21 +829,27 @@ const NotasPage: React.FC<NotasPageProps> = ({
                           <span>{aluno.nome}</span>
                           {aluno.especificidade && (
                             <span 
-                              title="Este aluno possui uma especificidade cadastrada no sistema. Requer atenção pedagógica especial."
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                alert(`Informações de Acessibilidade/Especificidade de ${aluno.nome}:\n\n- ${aluno.especificidade}`);
+                              }}
+                              title="Clique para ver a especificidade deste aluno"
                               style={{ 
-                                background: '#fffbeb', 
-                                border: '1px solid #fde68a', 
-                                color: '#b45309', 
+                                cursor: 'pointer',
+                                background: '#eff6ff', 
+                                border: '1px solid #bfdbfe', 
+                                color: '#1d4ed8', 
                                 padding: '1.5px 6px', 
                                 borderRadius: '6px', 
-                                fontSize: '9px', 
+                                fontSize: '9.5px', 
                                 fontWeight: 800,
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '3px'
+                                gap: '3px',
+                                userSelect: 'none'
                               }}
                             >
-                              ⚠️ Atenção
+                              ℹ️ Esp.
                             </span>
                           )}
                         </div>
