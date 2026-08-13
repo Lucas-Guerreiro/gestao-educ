@@ -12,6 +12,7 @@ interface AtividadesPageProps {
   professores: Professor[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
   selectedBimestreId: string;
+  onNavegarSeccao?: (seccao: string) => void;
 }
 
 const AtividadesPage: React.FC<AtividadesPageProps> = ({
@@ -23,6 +24,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   professores,
   setSyncStatus,
   selectedBimestreId,
+  onNavegarSeccao,
 }) => {
   const [nome, setNome] = useState('');
   const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal'>('prova');
@@ -360,8 +362,19 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
 
       {/* Lista */}
       <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)' }}>
-        <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>
-          <i className="ti ti-list" style={{ color: 'var(--primary)' }}></i> Planejamento
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)' }}>
+            <i className="ti ti-list" style={{ color: 'var(--primary)' }}></i> Planejamento
+          </div>
+          {onNavegarSeccao && (
+            <button 
+              onClick={() => onNavegarSeccao('lan')}
+              className="btn pri"
+              style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px', fontWeight: 700 }}
+            >
+              <i className="ti ti-notes" style={{ fontSize: '15px' }}></i> Lançar Notas
+            </button>
+          )}
         </div>
 
         {/* Filtros de Lista */}

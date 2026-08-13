@@ -331,6 +331,7 @@ const App: React.FC = () => {
             professores={professores}
             setSyncStatus={setSyncStatus}
             selectedBimestreId={selectedBimestreId}
+            onNavegarSeccao={(sec) => setCurrentSec(sec)}
           />
         );
       case 'capitulos':
