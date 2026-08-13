@@ -393,6 +393,7 @@ const App: React.FC = () => {
             setSyncStatus={setSyncStatus}
             selectedBimestreId={selectedBimestreId}
             onBimestreChange={handleBimestreChange}
+            onNavegarSeccao={(sec) => setCurrentSec(sec)}
           />
         );
       case 'conceito':

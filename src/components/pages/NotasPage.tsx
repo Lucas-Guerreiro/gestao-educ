@@ -16,6 +16,7 @@ interface NotasPageProps {
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
   selectedBimestreId: string;
   onBimestreChange: (id: string) => void;
+  onNavegarSeccao?: (seccao: string) => void;
 }
 
 const NotasPage: React.FC<NotasPageProps> = ({
@@ -31,6 +32,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
   setSyncStatus,
   selectedBimestreId,
   onBimestreChange,
+  onNavegarSeccao,
 }) => {
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
@@ -401,6 +403,22 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
   return (
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      
+      {/* Título e Ação */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
+          <i className="ti ti-notes" style={{ color: 'var(--primary)', marginRight: '4px' }}></i> Lançamento de Notas
+        </div>
+        {onNavegarSeccao && (
+          <button 
+            onClick={() => onNavegarSeccao('ativ')}
+            className="btn pri"
+            style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px', fontWeight: 700 }}
+          >
+            <i className="ti ti-checklist" style={{ fontSize: '15px' }}></i> Atividades
+          </button>
+        )}
+      </div>
       
       {/* Filtros da Grade */}
       <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.25rem', border: '1px solid var(--border)' }}>
