@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Turma, Materia, Capitulo, Escola, Professor } from '@/types';
+import { Aula, Turma, Materia, Capitulo, Escola, Professor } from '@/types';
 
 interface ProgramarAulaModalProps {
   turmas: Turma[];
@@ -12,6 +12,7 @@ interface ProgramarAulaModalProps {
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
   fecharModal: () => void;
   defaultData?: string; // Permitir abrir já com a data pré-selecionada
+  aulaEdicao?: Aula | null; // Aula a ser editada (se houver)
 }
 
 const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
@@ -22,16 +23,17 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
   professores,
   setSyncStatus,
   fecharModal,
-  defaultData = ''
+  defaultData = '',
+  aulaEdicao = null
 }) => {
-  const [data, setData] = useState(defaultData);
-  const [horario, setHorario] = useState('1º Tempo (Manhã)');
-  const [turmaId, setTurmaId] = useState('');
-  const [materiaId, setMateriaId] = useState('');
-  const [tipo, setTipo] = useState<'teorica' | 'pratica' | 'revisao' | 'avaliacao' | 'pedagogica' | 'outra'>('teorica');
-  const [capituloId, setCapituloId] = useState('');
-  const [realizada, setRealizada] = useState(false);
-  const [descricao, setDescricao] = useState('');
+  const [data, setData] = useState(aulaEdicao ? aulaEdicao.data : defaultData);
+  const [horario, setHorario] = useState(aulaEdicao ? aulaEdicao.horario : '1º Tempo (Manhã)');
+  const [turmaId, setTurmaId] = useState(aulaEdicao ? aulaEdicao.turmaId : '');
+  const [materiaId, setMateriaId] = useState(aulaEdicao ? aulaEdicao.materiaId : '');
+  const [tipo, setTipo] = useState<'teorica' | 'pratica' | 'revisao' | 'avaliacao' | 'pedagogica' | 'outra'>(aulaEdicao ? (aulaEdicao.tipo as any) : 'teorica');
+  const [capituloId, setCapituloId] = useState(aulaEdicao ? aulaEdicao.capituloId || '' : '');
+  const [realizada, setRealizada] = useState(aulaEdicao ? aulaEdicao.realizada : false);
+  const [descricao, setDescricao] = useState(aulaEdicao ? aulaEdicao.descricao || '' : '');
   const [loading, setLoading] = useState(false);
 
   const horariosDisponiveis = [
@@ -75,12 +77,12 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
     return materias.filter(m => idsVinculados.has(m.id));
   }, [turmaId, turmas, materias, professores]);
 
-  // Auto-selecionar matéria se houver apenas uma vinculada à turma
+  // Auto-selecionar matéria se houver apenas uma vinculada à turma (somente para novas programações)
   useEffect(() => {
-    if (turmaId && materiasDaTurmaEscola.length === 1) {
+    if (!aulaEdicao && turmaId && materiasDaTurmaEscola.length === 1) {
       setMateriaId(materiasDaTurmaEscola[0].id);
     }
-  }, [turmaId, materiasDaTurmaEscola]);
+  }, [turmaId, materiasDaTurmaEscola, aulaEdicao]);
 
   // Filtrar capítulos pela turma e matéria selecionadas
   const capitulosFiltrados = useMemo(() => {
@@ -121,7 +123,11 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
         descricao: descricao || ''
       };
 
-      await addDoc(collection(db, 'aulas'), payload);
+      if (aulaEdicao) {
+        await updateDoc(doc(db, 'aulas', aulaEdicao.id), payload as any);
+      } else {
+        await addDoc(collection(db, 'aulas'), payload);
+      }
       setSyncStatus('ok');
       fecharModal();
     } catch (err) {
@@ -142,7 +148,9 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexShrink: 0, color: '#fff', background: 'linear-gradient(135deg, var(--dark), var(--dark-hover))' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="ti ti-calendar-plus" style={{ fontSize: '20px' }}></i>
-            <span style={{ fontSize: '15px', fontWeight: 800 }}>Programar Nova Aula</span>
+            <span style={{ fontSize: '15px', fontWeight: 800 }}>
+              {aulaEdicao ? 'Editar Aula Agendada' : 'Programar Nova Aula'}
+            </span>
           </div>
           <button onClick={fecharModal} style={{ border: 'none', background: 'rgba(255,255,255,.2)', cursor: 'pointer', fontSize: '18px', color: '#fff', lineHeight: 1, borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
         </div>
@@ -263,7 +271,7 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
                 <>⏳ Salvando...</>
               ) : (
                 <>
-                  <i className="ti ti-check"></i> Agendar Aula
+                  <i className="ti ti-device-floppy"></i> {aulaEdicao ? 'Salvar Alterações' : 'Agendar Aula'}
                 </>
               )}
             </button>

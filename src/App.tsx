@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { 
   Escola, Turma, Aluno, Materia, Professor, 
@@ -18,6 +18,7 @@ import IaModal from './components/modals/IaModal';
 import SdModal from './components/modals/SdModal';
 import AlunoModal from './components/modals/AlunoModal';
 import ImportModal from './components/modals/ImportModal';
+import ProgramarAulaModal from './components/modals/ProgramarAulaModal';
 
 // Pages
 import EscolaPage from './components/pages/EscolaPage';
@@ -153,6 +154,8 @@ const App: React.FC = () => {
   const [isAulaDetalheOpen, setIsAulaDetalheOpen] = useState(false);
   const [aulaDetalhe, setAulaDetalhe] = useState<Aula | null>(null);
   const [isBimestreChoiceModalOpen, setIsBimestreChoiceModalOpen] = useState(false);
+  const [isProgramarModalOpen, setIsProgramarModalOpen] = useState(false);
+  const [aulaParaEditar, setAulaParaEditar] = useState<Aula | null>(null);
 
   // Read authentication on mount
   useEffect(() => {
@@ -363,11 +366,8 @@ const App: React.FC = () => {
             aulas={aulasAtivas} 
             turmas={turmas} 
             materias={materias} 
-            capitulos={capitulos}
-            escolas={escolas}
-            professores={professores}
-            setSyncStatus={setSyncStatus}
             abrirAulaDetalheModal={(a) => { setAulaDetalhe(a); setIsAulaDetalheOpen(true); }}
+            onAdicionarAula={() => setIsProgramarModalOpen(true)}
           />
         );
       case 'sd':
@@ -637,6 +637,19 @@ const App: React.FC = () => {
           exerciciosIA={simulatedExerciciosIA}
           fecharModal={() => { setAulaDetalhe(null); setIsAulaDetalheOpen(false); }}
           onNavegarSeccao={(sec) => setCurrentSec(sec)}
+          onEditar={(aula) => { setAulaParaEditar(aula); setIsAulaDetalheOpen(false); setAulaDetalhe(null); }}
+          onExcluir={async (aulaId) => {
+            setSyncStatus('saving');
+            try {
+              await deleteDoc(doc(db, 'aulas', aulaId));
+              setSyncStatus('ok');
+              setIsAulaDetalheOpen(false);
+              setAulaDetalhe(null);
+            } catch (err: any) {
+              setSyncStatus('err');
+              alert('Erro ao excluir aula: ' + err.message);
+            }
+          }}
         />
       )}
 
@@ -679,6 +692,19 @@ const App: React.FC = () => {
           turmas={turmas}
           fecharModal={() => setIsImportModalOpen(false)}
           setSyncStatus={setSyncStatus}
+        />
+      )}
+
+      {(isProgramarModalOpen || aulaParaEditar) && (
+        <ProgramarAulaModal 
+          turmas={turmas}
+          materias={materias}
+          capitulos={capitulos}
+          escolas={escolas}
+          professores={professores}
+          setSyncStatus={setSyncStatus}
+          fecharModal={() => { setIsProgramarModalOpen(false); setAulaParaEditar(null); }}
+          aulaEdicao={aulaParaEditar}
         />
       )}
       {/* Modal de Escolha Inicial de Bimestre para o Professor */}

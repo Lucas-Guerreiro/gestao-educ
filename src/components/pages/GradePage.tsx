@@ -1,34 +1,27 @@
 import React, { useState } from 'react';
-import { Aula, Turma, Materia, Capitulo, Escola, Professor } from '@/types';
+import { Aula, Turma, Materia } from '@/types';
 import { db } from '../../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import ProgramarAulaModal from '../modals/ProgramarAulaModal';
+
 
 interface GradePageProps {
   aulas: Aula[];
   turmas: Turma[];
   materias: Materia[];
-  capitulos: Capitulo[];
-  escolas: Escola[];
-  professores: Professor[];
-  setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
   abrirAulaDetalheModal: (aula: Aula) => void;
+  onAdicionarAula?: () => void;
 }
 
 const GradePage: React.FC<GradePageProps> = ({
   aulas,
   turmas,
   materias,
-  capitulos,
-  escolas,
-  professores,
-  setSyncStatus,
   abrirAulaDetalheModal,
+  onAdicionarAula,
 }) => {
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
   const [semanaOffset, setSemanaOffset] = useState(0); // 0 = semana atual, -1 = anterior, 1 = seguinte
   const [diaAtivoIdx, setDiaAtivoIdx] = useState(0); // 0 = Segunda, 1 = Terça, etc.
-  const [isProgramarModalOpen, setIsProgramarModalOpen] = useState(false);
 
   const diasSemana = [
     { nome: 'Segunda-feira', valor: 1 },
@@ -184,7 +177,11 @@ const GradePage: React.FC<GradePageProps> = ({
           </button>
           <button 
             className="btn pri" 
-            onClick={() => setIsProgramarModalOpen(true)}
+            onClick={() => {
+              if (onAdicionarAula) {
+                onAdicionarAula();
+              }
+            }}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, height: '38px', padding: '0 14px' }}
           >
             <i className="ti ti-calendar-plus" style={{ fontSize: '16px' }}></i> Adicionar Aula
@@ -469,17 +466,6 @@ const GradePage: React.FC<GradePageProps> = ({
           })}
         </div>
       </div>
-      {isProgramarModalOpen && (
-        <ProgramarAulaModal 
-          turmas={turmas}
-          materias={materias}
-          capitulos={capitulos}
-          escolas={escolas}
-          professores={professores}
-          setSyncStatus={setSyncStatus}
-          fecharModal={() => setIsProgramarModalOpen(false)}
-        />
-      )}
     </div>
   );
 };

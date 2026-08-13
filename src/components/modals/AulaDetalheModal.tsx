@@ -12,6 +12,8 @@ interface AulaDetalheModalProps {
   exerciciosIA: ExerciciosIA[];
   fecharModal: () => void;
   onNavegarSeccao?: (seccao: string) => void;
+  onEditar?: (aula: Aula) => void;
+  onExcluir?: (aulaId: string) => void;
 }
 
 const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
@@ -23,6 +25,8 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
   exerciciosIA,
   fecharModal,
   onNavegarSeccao,
+  onEditar,
+  onExcluir,
 }) => {
   if (!aula) return null;
 
@@ -206,6 +210,51 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
                 }}
               >
                 <i className="ti ti-notes" style={{ fontSize: '16px' }}></i> Lançar Notas
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
+              <button
+                onClick={() => {
+                  if (onEditar) {
+                    onEditar(aula);
+                  }
+                }}
+                className="btn"
+                style={{
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontWeight: 700,
+                  fontSize: '13px'
+                }}
+              >
+                <i className="ti ti-pencil" style={{ fontSize: '16px' }}></i> Editar Aula
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirm("Deseja realmente excluir esta aula?")) {
+                    if (onExcluir) {
+                      onExcluir(aula.id);
+                    }
+                  }
+                }}
+                className="btn"
+                style={{
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  borderColor: '#fca5a5',
+                  color: '#dc2626'
+                }}
+              >
+                <i className="ti ti-trash" style={{ fontSize: '16px' }}></i> Excluir Aula
               </button>
             </div>
           </div>
