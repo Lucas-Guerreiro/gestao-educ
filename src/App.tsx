@@ -630,6 +630,7 @@ const App: React.FC = () => {
           sequencias={sequencias}
           exerciciosIA={simulatedExerciciosIA}
           fecharModal={() => { setAulaDetalhe(null); setIsAulaDetalheOpen(false); }}
+          onNavegarSeccao={(sec) => setCurrentSec(sec)}
         />
       )}
 

@@ -11,6 +11,7 @@ interface AulaDetalheModalProps {
   sequencias: SequenciaDidatica[];
   exerciciosIA: ExerciciosIA[];
   fecharModal: () => void;
+  onNavegarSeccao?: (seccao: string) => void;
 }
 
 const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
@@ -21,6 +22,7 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
   sequencias,
   exerciciosIA,
   fecharModal,
+  onNavegarSeccao,
 }) => {
   if (!aula) return null;
 
@@ -163,6 +165,49 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
               <i className={aula.realizada ? "ti ti-arrow-back" : "ti ti-circle-check"}></i>
               {aula.realizada ? "Marcar como Planejada (Desfazer)" : "Marcar como Aula Já Ministrada (Concluída)"}
             </button>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '4px' }}>
+              <button
+                onClick={() => {
+                  if (onNavegarSeccao) {
+                    onNavegarSeccao('ativ');
+                  }
+                  fecharModal();
+                }}
+                className="btn"
+                style={{
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontWeight: 700,
+                  fontSize: '13px'
+                }}
+              >
+                <i className="ti ti-checklist" style={{ fontSize: '16px' }}></i> Atividades
+              </button>
+              <button
+                onClick={() => {
+                  if (onNavegarSeccao) {
+                    onNavegarSeccao('lan');
+                  }
+                  fecharModal();
+                }}
+                className="btn"
+                style={{
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontWeight: 700,
+                  fontSize: '13px'
+                }}
+              >
+                <i className="ti ti-notes" style={{ fontSize: '16px' }}></i> Lançar Notas
+              </button>
+            </div>
           </div>
         </div>
       </div>
