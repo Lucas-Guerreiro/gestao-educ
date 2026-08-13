@@ -824,7 +824,30 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
                   return (
                     <tr key={aluno.id} className="table-row-hover">
-                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-main)', borderBottom: '1px solid var(--border)' }}>{aluno.nome}</td>
+                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-main)', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span>{aluno.nome}</span>
+                          {aluno.especificidade && (
+                            <span 
+                              title={`Especificidade: ${aluno.especificidade}`}
+                              style={{ 
+                                background: '#fffbeb', 
+                                border: '1px solid #fde68a', 
+                                color: '#b45309', 
+                                padding: '1.5px 6px', 
+                                borderRadius: '6px', 
+                                fontSize: '9px', 
+                                fontWeight: 800,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px'
+                              }}
+                            >
+                              ⚠️ {aluno.especificidade}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       
                       {qualitativasColapsadas && qualitativas.length > 0 && (
                         <td style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>

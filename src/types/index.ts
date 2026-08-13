@@ -34,6 +34,7 @@ export interface Aluno {
   nascimento?: string;
   ativo?: boolean;
   observacoes?: string;
+  especificidade?: string;
 }
 
 /**

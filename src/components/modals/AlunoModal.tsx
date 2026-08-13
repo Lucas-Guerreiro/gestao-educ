@@ -23,6 +23,7 @@ const AlunoModal: React.FC<AlunoModalProps> = ({
   const [nascimento, setNascimento] = useState('');
   const [ativo, setAtivo] = useState(true);
   const [observacoes, setObservacoes] = useState('');
+  const [especificidade, setEspecificidade] = useState('');
 
   useEffect(() => {
     if (alunoId) {
@@ -33,6 +34,7 @@ const AlunoModal: React.FC<AlunoModalProps> = ({
         setNascimento(al.nascimento || '');
         setAtivo(al.ativo !== false);
         setObservacoes(al.observacoes || '');
+        setEspecificidade(al.especificidade || '');
       }
     } else {
       setNome('');
@@ -40,6 +42,7 @@ const AlunoModal: React.FC<AlunoModalProps> = ({
       setNascimento('');
       setAtivo(true);
       setObservacoes('');
+      setEspecificidade('');
     }
   }, [alunoId, alunos]);
 
@@ -54,7 +57,8 @@ const AlunoModal: React.FC<AlunoModalProps> = ({
       turmaId,
       nascimento,
       ativo,
-      observacoes: observacoes.trim()
+      observacoes: observacoes.trim(),
+      especificidade: especificidade.trim()
     };
 
     setSyncStatus('saving');
@@ -103,6 +107,10 @@ const AlunoModal: React.FC<AlunoModalProps> = ({
               <option value="true">✅ Ativo</option>
               <option value="false">⛔ Inativo</option>
             </select>
+          </div>
+          <div className="f">
+            <label>Especificidade do Aluno</label>
+            <input value={especificidade} onChange={(e) => setEspecificidade(e.target.value)} placeholder="Ex: TDAH, Autismo, Dislexia, Cadeirante..." />
           </div>
           <div className="f">
             <label>Observações</label>
