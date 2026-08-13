@@ -824,35 +824,23 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
                   return (
                     <tr key={aluno.id} className="table-row-hover">
-                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-main)', borderBottom: '1px solid var(--border)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <span>{aluno.nome}</span>
-                          {aluno.especificidade && (
-                            <span 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                alert(`Informações de Acessibilidade/Especificidade de ${aluno.nome}:\n\n- ${aluno.especificidade}`);
-                              }}
-                              title="Clique para ver a especificidade deste aluno"
-                              style={{ 
-                                cursor: 'pointer',
-                                background: '#eff6ff', 
-                                border: '1px solid #bfdbfe', 
-                                color: '#1d4ed8', 
-                                padding: '1.5px 6px', 
-                                borderRadius: '6px', 
-                                fontSize: '9.5px', 
-                                fontWeight: 800,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '3px',
-                                userSelect: 'none'
-                              }}
-                            >
-                              ℹ️ Esp.
-                            </span>
-                          )}
-                        </div>
+                      <td 
+                        onClick={(e) => {
+                          if (aluno.especificidade) {
+                            e.stopPropagation();
+                            alert(`Informações de Acessibilidade/Especificidade de ${aluno.nome}:\n\n- ${aluno.especificidade}`);
+                          }
+                        }}
+                        style={{ 
+                          padding: '10px', 
+                          fontWeight: 700, 
+                          color: aluno.especificidade ? '#1e40af' : 'var(--text-main)', 
+                          cursor: aluno.especificidade ? 'pointer' : 'default',
+                          borderBottom: '1px solid var(--border)' 
+                        }}
+                        title={aluno.especificidade ? "Clique para ver informações pedagógicas especiais deste aluno" : undefined}
+                      >
+                        {aluno.nome}
                       </td>
                       
                       {qualitativasColapsadas && qualitativas.length > 0 && (
