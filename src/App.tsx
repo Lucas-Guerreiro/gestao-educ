@@ -554,7 +554,7 @@ const App: React.FC = () => {
         currentSec={currentSec} 
         setCurrentSec={(sec) => {
           // Bloquear o professor de acessar seções que não sejam as do seu menu por segurança
-          if (perfil === 'professor' && !['visao-aulas', 'capitulos', 'ativ', 'lan'].includes(sec)) {
+          if (perfil === 'professor' && !['visao-aulas', 'aulas', 'capitulos', 'ativ', 'lan'].includes(sec)) {
             return;
           }
           setCurrentSec(sec);

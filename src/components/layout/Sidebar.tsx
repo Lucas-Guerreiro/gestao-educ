@@ -19,6 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const menuItems = perfil === 'professor' ? [
     { sec: 'visao-aulas', label: 'Grade Semanal', icon: 'ti-layout-grid', cat: 'Professor' },
+    { sec: 'aulas', label: 'Aulas', icon: 'ti-clock-hour-4', cat: 'Professor' },
     { sec: 'capitulos', label: 'Capítulos', icon: 'ti-folder', cat: 'Professor' },
     { sec: 'ativ', label: 'Atividades', icon: 'ti-clipboard-list', cat: 'Professor' },
     { sec: 'lan', label: 'Lançar Notas', icon: 'ti-pencil', cat: 'Professor' },
