@@ -829,7 +829,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                           <span>{aluno.nome}</span>
                           {aluno.especificidade && (
                             <span 
-                              title={`Especificidade: ${aluno.especificidade}`}
+                              title="Este aluno possui uma especificidade cadastrada no sistema. Requer atenção pedagógica especial."
                               style={{ 
                                 background: '#fffbeb', 
                                 border: '1px solid #fde68a', 
@@ -843,7 +843,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                 gap: '3px'
                               }}
                             >
-                              ⚠️ {aluno.especificidade}
+                              ⚠️ Atenção
                             </span>
                           )}
                         </div>
