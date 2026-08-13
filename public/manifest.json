@@ -1,0 +1,18 @@
+{
+  "name": "EscolaSystem - Gestão Escolar",
+  "short_name": "EscolaSystem",
+  "description": "Sistema de Gestão Escolar Premium",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/app_icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
