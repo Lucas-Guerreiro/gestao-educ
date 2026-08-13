@@ -1,29 +1,16 @@
-// Service Worker básico para critérios de instalação PWA do EscolaSystem
-const CACHE_NAME = 'escolasystem-v1';
+// Service Worker passivo para EscolaSystem PWA
+// Evita problemas de cache agressivo com hashes dinâmicos gerados pelo Vite
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/app_icon.png',
-        '/manifest.json'
-      ]);
-    })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  // Limpa absolutamente todos os caches antigos para evitar tela branca por scripts deletados
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
+        keys.map((key) => caches.delete(key))
       );
     })
   );
@@ -31,9 +18,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+  // Listener vazio: permite que o navegador faça as requisições direto da rede,
+  // garantindo que os novos bundles JS do Vite sejam carregados sem conflito,
+  // mas atendendo aos requisitos mínimos de PWA instalável do Chrome/iOS.
 });
