@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Escola, Apontamento, Professor } from '@/types';
@@ -86,9 +86,10 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
     }
   }, [turmaId, materiasDaTurmaEscola]);
 
-  // Filtrar alunos ativos da turma selecionada
+  // Alunos filtrados pela turma ativa
   const alunosFiltrados = useMemo(() => {
-    return alunos.filter(a => String(a.turmaId) === turmaId && a.ativo !== false);
+    if (!turmaId) return [];
+    return alunos.filter(a => String(a.turmaId) === String(turmaId) && a.ativo !== false);
   }, [alunos, turmaId]);
 
   // Obter registro de apontamento do aluno na data e matéria específicas
@@ -104,7 +105,7 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
   // Salvar apontamento no Firestore de forma atômica e determinística
   const salvarApontamentoCampo = async (
     alunoId: string, 
-    campo: 'tarefa' | 'material' | 'comportamento' | 'observacao', 
+    campo: 'tarefa' | 'material' | 'comportamento' | 'observacao' | 'presenca', 
     valor: any
   ) => {
     if (!turmaId || !materiaId || !bimestreId || !dataApontamento) return;
@@ -118,16 +119,17 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
     try {
       const registroExistente = obterApontamento(alunoId);
       
-      const payload: Partial<Apontamento> = {
+      const payload: any = {
         alunoId,
         turmaId,
         materiaId,
         bimestreId,
         data: dataApontamento,
-        tarefa: registroExistente ? registroExistente.tarefa : '',
-        material: registroExistente ? registroExistente.material : '',
-        comportamento: registroExistente ? registroExistente.comportamento : '',
-        observacao: registroExistente ? registroExistente.observacao : '',
+        presenca: registroExistente ? registroExistente.presenca || '' : '',
+        tarefa: registroExistente ? registroExistente.tarefa || '' : '',
+        material: registroExistente ? registroExistente.material || '' : '',
+        comportamento: registroExistente ? registroExistente.comportamento || '' : '',
+        observacao: registroExistente ? registroExistente.observacao || '' : '',
       };
 
       // Atualizar apenas o campo alterado
@@ -143,8 +145,8 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
     }
   };
 
-  // Marcar um campo específico como 'sim' ou 'excelente' para todos os alunos filtrados (apontamento em lote!)
-  const marcarLote = async (campo: 'tarefa' | 'material', valor: 'sim' | 'nao') => {
+  // Marcar um campo específico para todos os alunos filtrados (apontamento em lote!)
+  const marcarLote = async (campo: 'tarefa' | 'material' | 'presenca', valor: 'sim' | 'nao' | 'presente' | 'falta') => {
     if (!turmaId || !materiaId || !bimestreId || !dataApontamento || alunosFiltrados.length === 0) {
       alert('Por favor, selecione os filtros e certifique-se de que há alunos ativos na turma.');
       return;
@@ -161,16 +163,17 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
         const docId = `${aluno.id}_${materiaId}_${dataApontamento}`;
         const registroExistente = obterApontamento(aluno.id);
 
-        const payload = {
+        const payload: any = {
           alunoId: aluno.id,
           turmaId,
           materiaId,
           bimestreId,
           data: dataApontamento,
-          tarefa: registroExistente ? registroExistente.tarefa : '',
-          material: registroExistente ? registroExistente.material : '',
-          comportamento: registroExistente ? registroExistente.comportamento : '',
-          observacao: registroExistente ? registroExistente.observacao : '',
+          presenca: registroExistente ? registroExistente.presenca || '' : '',
+          tarefa: registroExistente ? registroExistente.tarefa || '' : '',
+          material: registroExistente ? registroExistente.material || '' : '',
+          comportamento: registroExistente ? registroExistente.comportamento || '' : '',
+          observacao: registroExistente ? registroExistente.observacao || '' : '',
         };
 
         payload[campo] = valor;
@@ -259,18 +262,26 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
           
           {/* Cabeçalho de Dica e Atalhos de Lote */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '500px', lineHeight: '1.5' }}>
-              💡 <b>Dicas de Lançamento:</b> Clique nos botões para marcar o status de tarefa e material. As observações são salvas automaticamente quando você termina de digitar (perde o foco ou pressiona Enter).
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '400px', lineHeight: '1.5' }}>
+              💡 <b>Dica:</b> Lançamentos em lote ajudam a preencher a planilha com um único clique.
             </div>
             
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button 
                 type="button" 
                 className="btn" 
+                onClick={() => marcarLote('presenca', 'presente')}
+                style={{ fontSize: '11.5px', padding: '6px 12px', borderColor: '#10b981', color: '#047857', background: '#ecfdf5', fontWeight: 700 }}
+              >
+                <i className="ti ti-check"></i> Presença (Todos)
+              </button>
+              <button 
+                type="button" 
+                className="btn" 
                 onClick={() => marcarLote('tarefa', 'sim')}
                 style={{ fontSize: '11.5px', padding: '6px 12px', borderColor: '#86efac', color: '#166534', background: '#f0fdf4', fontWeight: 700 }}
               >
-                <i className="ti ti-checklist"></i> Marcar todas as Tarefas como FEITO
+                <i className="ti ti-checklist"></i> Tarefas Entregues (Todos)
               </button>
               <button 
                 type="button" 
@@ -278,7 +289,7 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
                 onClick={() => marcarLote('material', 'sim')}
                 style={{ fontSize: '11.5px', padding: '6px 12px', borderColor: '#86efac', color: '#166534', background: '#f0fdf4', fontWeight: 700 }}
               >
-                <i className="ti ti-briefcase"></i> Marcar todos os Materiais como COMPLETO
+                <i className="ti ti-briefcase"></i> Material Completo (Todos)
               </button>
             </div>
           </div>
@@ -290,6 +301,9 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
                 <tr style={{ color: 'var(--text-muted)', fontWeight: 800 }}>
                   <th style={{ padding: '12px 10px', textAlign: 'left', minWidth: '180px', position: 'sticky', top: 0, zIndex: 10, background: '#fff', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
                     Nome do Aluno
+                  </th>
+                  <th style={{ padding: '12px 10px', textAlign: 'center', width: '160px', position: 'sticky', top: 0, zIndex: 10, background: '#fff', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                    Presença
                   </th>
                   <th style={{ padding: '12px 10px', textAlign: 'center', width: '160px', position: 'sticky', top: 0, zIndex: 10, background: '#fff', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
                     Tarefa de Casa
@@ -308,6 +322,7 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
               <tbody>
                 {alunosFiltrados.map((aluno) => {
                   const ap = obterApontamento(aluno.id);
+                  const statusPresenca = ap ? ap.presenca : '';
                   const statusTarefa = ap ? ap.tarefa : '';
                   const statusMaterial = ap ? ap.material : '';
                   const statusComportamento = ap ? ap.comportamento : '';
@@ -318,10 +333,85 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
 
                   return (
                     <tr key={aluno.id} className="table-row-hover">
-                      <td style={{ padding: '12px 10px', fontWeight: 700, color: 'var(--text-main)', borderBottom: '1px solid var(--border)' }}>
+                      <td 
+                        style={{ 
+                          padding: '12px 10px', 
+                          fontWeight: 700, 
+                          color: aluno.especificidade ? '#1e40af' : 'var(--text-main)', 
+                          borderBottom: '1px solid var(--border)',
+                          cursor: aluno.especificidade ? 'pointer' : 'default'
+                        }}
+                        onClick={() => {
+                          if (aluno.especificidade) {
+                            alert(`Informações de Acessibilidade/Especificidade de ${aluno.nome}:\n\n- ${aluno.especificidade}`);
+                          }
+                        }}
+                        title={aluno.especificidade ? "Clique para ver a especificidade do aluno" : undefined}
+                      >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span>{aluno.nome}</span>
+                          {aluno.especificidade && <span style={{ color: '#b45309', fontSize: '8px', background: '#fffbeb', padding: '1px 4px', borderRadius: '4px', border: '1px solid #fde68a' }}>⚠️ Esp.</span>}
                           {isSaving && <span style={{ fontSize: '10px', color: 'var(--primary)' }}>⏳</span>}
+                        </div>
+                      </td>
+
+                      {/* Botões de Presença */}
+                      <td style={{ padding: '8px 10px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ display: 'inline-flex', gap: '3px', background: '#f1f5f9', padding: '3px', borderRadius: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => salvarApontamentoCampo(aluno.id, 'presenca', 'presente')}
+                            style={{
+                              border: 'none',
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              background: statusPresenca === 'presente' ? '#10b981' : 'transparent',
+                              color: statusPresenca === 'presente' ? '#fff' : '#64748b',
+                              transition: 'all 0.15s ease'
+                            }}
+                            title="Presente"
+                          >
+                            Pres.
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => salvarApontamentoCampo(aluno.id, 'presenca', 'falta')}
+                            style={{
+                              border: 'none',
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              background: statusPresenca === 'falta' ? '#ef4444' : 'transparent',
+                              color: statusPresenca === 'falta' ? '#fff' : '#64748b',
+                              transition: 'all 0.15s ease'
+                            }}
+                            title="Falta"
+                          >
+                            Falta
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => salvarApontamentoCampo(aluno.id, 'presenca', 'justificada')}
+                            style={{
+                              border: 'none',
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              background: statusPresenca === 'justificada' ? '#f59e0b' : 'transparent',
+                              color: statusPresenca === 'justificada' ? '#fff' : '#64748b',
+                              transition: 'all 0.15s ease'
+                            }}
+                            title="Falta Justificada"
+                          >
+                            Just.
+                          </button>
                         </div>
                       </td>
 

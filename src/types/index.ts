@@ -230,4 +230,5 @@ export interface Apontamento {
   material: 'sim' | 'nao' | 'parcial' | '';
   comportamento: 'excelente' | 'bom' | 'regular' | 'indisciplinado' | '';
   observacao: string;
+  presenca?: 'presente' | 'falta' | 'justificada' | '';
 }

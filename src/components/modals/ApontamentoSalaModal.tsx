@@ -63,7 +63,7 @@ const ApontamentoSalaModal: React.FC<ApontamentoSalaModalProps> = ({
   // Salvar apontamento no Firestore
   const salvarApontamentoCampo = async (
     alunoId: string, 
-    campo: 'tarefa' | 'material' | 'comportamento' | 'observacao', 
+    campo: 'tarefa' | 'material' | 'comportamento' | 'observacao' | 'presenca', 
     valor: string
   ) => {
     if (!turmaId || !materiaId || !bimestreId || !dataApontamento) return;
@@ -83,6 +83,7 @@ const ApontamentoSalaModal: React.FC<ApontamentoSalaModalProps> = ({
         materiaId,
         bimestreId,
         data: dataApontamento,
+        presenca: registroExistente ? registroExistente.presenca || '' : '',
         tarefa: registroExistente ? registroExistente.tarefa || '' : '',
         material: registroExistente ? registroExistente.material || '' : '',
         comportamento: registroExistente ? registroExistente.comportamento || '' : '',
@@ -102,8 +103,8 @@ const ApontamentoSalaModal: React.FC<ApontamentoSalaModalProps> = ({
     }
   };
 
-  // Marcar um campo específico como 'sim' ou 'excelente' para todos os alunos em lote
-  const marcarTodos = async (campo: 'tarefa' | 'material', valor: 'sim' | 'nao') => {
+  // Marcar um campo específico como 'sim', 'nao', 'presente', etc. para todos os alunos em lote
+  const marcarTodos = async (campo: 'tarefa' | 'material' | 'presenca', valor: 'sim' | 'nao' | 'presente' | 'falta') => {
     if (!turmaId || !materiaId || !bimestreId || !dataApontamento || alunosDaTurma.length === 0) {
       alert('Certifique-se de preencher todos os filtros e que existam alunos.');
       return;
@@ -125,6 +126,7 @@ const ApontamentoSalaModal: React.FC<ApontamentoSalaModalProps> = ({
           materiaId,
           bimestreId,
           data: dataApontamento,
+          presenca: registroExistente ? registroExistente.presenca || '' : '',
           tarefa: registroExistente ? registroExistente.tarefa || '' : '',
           material: registroExistente ? registroExistente.material || '' : '',
           comportamento: registroExistente ? registroExistente.comportamento || '' : '',
@@ -144,7 +146,7 @@ const ApontamentoSalaModal: React.FC<ApontamentoSalaModalProps> = ({
 
   return (
     <div id="apontamento-sala-modal" style={{ display: 'flex', position: 'fixed', inset: 0, background: 'rgba(15,23,42,.55)', zIndex: 3000, alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(2px)' }}>
-      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '960px', boxShadow: 'var(--shadow-lg)', overflow: 'hidden', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)' }}>
+      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '1020px', boxShadow: 'var(--shadow-lg)', overflow: 'hidden', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)' }}>
         
         {/* Header */}
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexShrink: 0, color: '#fff', background: 'linear-gradient(135deg, var(--dark), var(--dark-hover))' }}>
@@ -180,6 +182,14 @@ const ApontamentoSalaModal: React.FC<ApontamentoSalaModalProps> = ({
               <button 
                 type="button" 
                 className="btn" 
+                onClick={() => marcarTodos('presenca', 'presente')}
+                style={{ height: '36px', fontSize: '11.5px', padding: '0 12px', borderColor: '#10b981', color: '#047857', background: '#ecfdf5' }}
+              >
+                ✓ Presença (Todos)
+              </button>
+              <button 
+                type="button" 
+                className="btn" 
                 onClick={() => marcarTodos('tarefa', 'sim')}
                 style={{ height: '36px', fontSize: '11.5px', padding: '0 12px', borderColor: 'var(--primary)', color: 'var(--primary)' }}
               >
@@ -201,17 +211,18 @@ const ApontamentoSalaModal: React.FC<ApontamentoSalaModalProps> = ({
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', background: '#fff' }}>
               <thead>
                 <tr style={{ background: '#fafafa', borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 10px', width: '220px', color: 'var(--text-muted)' }}>Nome do Aluno</th>
+                  <th style={{ padding: '12px 10px', width: '200px', color: 'var(--text-muted)' }}>Nome do Aluno</th>
+                  <th style={{ padding: '12px 10px', width: '160px', textAlign: 'center', color: 'var(--text-muted)' }}>Presença</th>
                   <th style={{ padding: '12px 10px', width: '150px', textAlign: 'center', color: 'var(--text-muted)' }}>Fez a Tarefa?</th>
                   <th style={{ padding: '12px 10px', width: '150px', textAlign: 'center', color: 'var(--text-muted)' }}>Trouxe Material?</th>
-                  <th style={{ padding: '12px 10px', width: '180px', color: 'var(--text-muted)' }}>Comportamento</th>
+                  <th style={{ padding: '12px 10px', width: '160px', color: 'var(--text-muted)' }}>Comportamento</th>
                   <th style={{ padding: '12px 10px', color: 'var(--text-muted)' }}>Anotações / Observação</th>
                 </tr>
               </thead>
               <tbody>
                 {alunosDaTurma.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    <td colSpan={6} style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                       Nenhum aluno ativo matriculado nesta turma.
                     </td>
                   </tr>
@@ -241,6 +252,57 @@ const ApontamentoSalaModal: React.FC<ApontamentoSalaModalProps> = ({
                         >
                           {aluno.nome}
                           {aluno.especificidade && <span style={{ color: '#b45309', fontSize: '8px', marginLeft: '6px', background: '#fffbeb', padding: '1px 4px', borderRadius: '4px', border: '1px solid #fde68a' }}>⚠️ Esp.</span>}
+                        </td>
+
+                        {/* Presença */}
+                        <td style={{ padding: '10px', textAlign: 'center' }}>
+                          <div style={{ display: 'inline-flex', gap: '3px' }}>
+                            <button 
+                              type="button" 
+                              onClick={() => salvarApontamentoCampo(aluno.id, 'presenca', 'presente')}
+                              className={`btn ${ap?.presenca === 'presente' ? 'pri' : ''}`}
+                              style={{ 
+                                padding: '4px 8px', 
+                                fontSize: '10.5px', 
+                                height: '24px',
+                                background: ap?.presenca === 'presente' ? 'var(--success)' : '#fff',
+                                color: ap?.presenca === 'presente' ? '#fff' : 'var(--text-main)',
+                                border: ap?.presenca === 'presente' ? '1px solid var(--success)' : '1px solid var(--border)'
+                              }}
+                            >
+                              Pres.
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => salvarApontamentoCampo(aluno.id, 'presenca', 'falta')}
+                              className={`btn ${ap?.presenca === 'falta' ? 'danger-badge' : ''}`}
+                              style={{ 
+                                padding: '4px 8px', 
+                                fontSize: '10.5px', 
+                                height: '24px',
+                                background: ap?.presenca === 'falta' ? '#fee2e2' : '#fff',
+                                color: ap?.presenca === 'falta' ? '#ef4444' : 'var(--text-main)',
+                                border: ap?.presenca === 'falta' ? '1px solid #fca5a5' : '1px solid var(--border)'
+                              }}
+                            >
+                              Falta
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => salvarApontamentoCampo(aluno.id, 'presenca', 'justificada')}
+                              className={`btn ${ap?.presenca === 'justificada' ? 'warning-badge' : ''}`}
+                              style={{ 
+                                padding: '4px 8px', 
+                                fontSize: '10.5px', 
+                                height: '24px',
+                                background: ap?.presenca === 'justificada' ? '#fef3c7' : '#fff',
+                                color: ap?.presenca === 'justificada' ? '#d97706' : 'var(--text-main)',
+                                border: ap?.presenca === 'justificada' ? '1px solid #fde68a' : '1px solid var(--border)'
+                              }}
+                            >
+                              Just.
+                            </button>
+                          </div>
                         </td>
 
                         {/* Tarefa */}
