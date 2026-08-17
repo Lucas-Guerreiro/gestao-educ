@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
+import ApontamentoSalaModal from '../modals/ApontamentoSalaModal';
 
 interface NotasPageProps {
   alunos: Aluno[];
@@ -48,6 +49,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
   // Estados para Compartilhamento Interdisciplinar Geral
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [selectedAtivs, setSelectedAtivs] = useState<string[]>([]);
+  const [isApontamentoModalOpen, setIsApontamentoModalOpen] = useState(false);
   const [copiadoFeedback, setCopiadoFeedback] = useState(false);
 
   const toggleAtividadeSelecao = (ativId: string) => {
@@ -404,20 +406,30 @@ const NotasPage: React.FC<NotasPageProps> = ({
   return (
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
-      {/* Título e Ação */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
           <i className="ti ti-notes" style={{ color: 'var(--primary)', marginRight: '4px' }}></i> Lançamento de Notas
         </div>
-        {onNavegarSeccao && (
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button 
-            onClick={() => onNavegarSeccao('ativ')}
-            className="btn pri"
-            style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px', fontWeight: 700 }}
+            disabled={!turmaId || !materiaId || !selectedBimestreId}
+            onClick={() => setIsApontamentoModalOpen(true)}
+            className="btn"
+            style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px', fontWeight: 700, borderColor: 'var(--primary)', color: 'var(--primary)' }}
+            title={(!turmaId || !materiaId || !selectedBimestreId) ? "Selecione turma, matéria e bimestre para habilitar os apontamentos" : "Fazer apontamentos de sala para a turma"}
           >
-            <i className="ti ti-checklist" style={{ fontSize: '15px' }}></i> Atividades
+            <i className="ti ti-checklist" style={{ fontSize: '15px' }}></i> Apontar Sala
           </button>
-        )}
+          {onNavegarSeccao && (
+            <button 
+              onClick={() => onNavegarSeccao('ativ')}
+              className="btn pri"
+              style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px', fontWeight: 700 }}
+            >
+              <i className="ti ti-checklist" style={{ fontSize: '15px' }}></i> Atividades
+            </button>
+          )}
+        </div>
       </div>
       
       {/* Filtros da Grade */}
@@ -1232,6 +1244,21 @@ const NotasPage: React.FC<NotasPageProps> = ({
         </div>
       )}
 
+      {isApontamentoModalOpen && (
+        <ApontamentoSalaModal 
+          turmaId={turmaId}
+          materiaId={materiaId}
+          bimestreId={bimestreId}
+          alunos={alunos}
+          apontamentos={apontamentos}
+          turmas={turmas}
+          materias={materias}
+          bimestres={bimestres}
+          escolas={escolas}
+          setSyncStatus={setSyncStatus}
+          fecharModal={() => setIsApontamentoModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
