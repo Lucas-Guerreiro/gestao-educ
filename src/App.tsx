@@ -463,6 +463,8 @@ const App: React.FC = () => {
             escolas={escolas} 
             apontamentos={apontamentosAtivos} 
             professores={professores}
+            atividades={atividadesAtivas}
+            notas={notasAtivas}
             setSyncStatus={setSyncStatus}
             selectedBimestreId={selectedBimestreId}
             onBimestreChange={handleBimestreChange}

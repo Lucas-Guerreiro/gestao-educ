@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Aluno, Turma, Materia, Bimestre, Escola, Apontamento, Professor } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Escola, Apontamento, Professor, Atividade, Nota } from '@/types';
+import LancarNotasRapidoModal from '../modals/LancarNotasRapidoModal';
 
 interface ApontamentosPageProps {
   alunos: Aluno[];
@@ -11,6 +12,8 @@ interface ApontamentosPageProps {
   escolas: Escola[];
   apontamentos: Apontamento[];
   professores: Professor[];
+  atividades: Atividade[];
+  notas: Nota[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
   selectedBimestreId: string;
   onBimestreChange: (id: string) => void;
@@ -24,6 +27,8 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
   escolas,
   apontamentos,
   professores,
+  atividades,
+  notas,
   setSyncStatus,
   selectedBimestreId,
   onBimestreChange,
@@ -31,6 +36,7 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
+  const [isLancarNotasModalOpen, setIsLancarNotasModalOpen] = useState(false);
 
   // Sincronizar com o bimestre global
   useEffect(() => {
@@ -189,6 +195,41 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
 
   return (
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      
+      {/* Título e Ação */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
+          <i className="ti ti-checklist" style={{ color: 'var(--primary)', marginRight: '4px' }}></i> Apontamentos de Classe
+        </div>
+        <div>
+          <button 
+            onClick={() => {
+              if (!turmaId || !materiaId || !selectedBimestreId) {
+                alert("Por favor, selecione primeiro a Turma, a Disciplina e o Bimestre nos filtros abaixo para habilitar o lançamento de notas.");
+                return;
+              }
+              setIsLancarNotasModalOpen(true);
+            }}
+            className="btn"
+            style={{ 
+              padding: '6px 12px', 
+              fontSize: '12px', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              height: '32px', 
+              fontWeight: 700, 
+              borderColor: 'var(--primary)', 
+              color: 'var(--primary)',
+              background: '#eff6ff',
+              cursor: 'pointer'
+            }}
+            title="Lançar notas das atividades desta turma"
+          >
+            <i className="ti ti-notes" style={{ fontSize: '15px' }}></i> Lançar Notas
+          </button>
+        </div>
+      </div>
       
       {/* Filtros e Seletores de Apontamento */}
       <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.25rem', border: '1px solid var(--border)' }}>
@@ -606,6 +647,21 @@ const ApontamentosPage: React.FC<ApontamentosPageProps> = ({
         </div>
       )}
 
+      {isLancarNotasModalOpen && (
+        <LancarNotasRapidoModal 
+          turmaId={turmaId}
+          materiaId={materiaId}
+          bimestreId={bimestreId}
+          alunos={alunos}
+          atividades={atividades}
+          notas={notas}
+          turmas={turmas}
+          materias={materias}
+          bimestres={bimestres}
+          setSyncStatus={setSyncStatus}
+          fecharModal={() => setIsLancarNotasModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
