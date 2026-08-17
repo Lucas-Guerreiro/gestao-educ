@@ -246,6 +246,100 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
             )
           )}
 
+          {/* Seção de Resumo dos Apontamentos Realizados (Presença, Tarefa, Material, Comportamento) */}
+          {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
+            <div id="ad-resumo-apontamentos-section" style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <i className="ti ti-chart-bar" style={{ fontSize: '14px', color: 'var(--primary)' }}></i> Relatório de Frequência & Atitudes do Dia
+              </div>
+
+              <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '10px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px', background: '#fff' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                      <th style={{ padding: '8px 10px', fontWeight: 700 }}>Aluno</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700 }}>Chamada</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700 }}>Tarefa</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700 }}>Material</th>
+                      <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700 }}>Comportamento</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {alunosDaTurma.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          Nenhum aluno ativo nesta turma.
+                        </td>
+                      </tr>
+                    ) : (
+                      alunosDaTurma.map(aluno => {
+                        const ap = apontamentos.find(
+                          a => a.alunoId === aluno.id && 
+                               String(a.materiaId) === String(aula.materiaId) && 
+                               a.data === aula.data
+                        );
+
+                        const formatarPresenca = (val?: string) => {
+                          if (val === 'presente') return <span style={{ color: '#10b981', fontWeight: 700 }}>✔️ Pres.</span>;
+                          if (val === 'falta') return <span style={{ color: '#ef4444', fontWeight: 700 }}>❌ Falta</span>;
+                          if (val === 'justificada') return <span style={{ color: '#f59e0b', fontWeight: 700 }}>ℹ️ Just.</span>;
+                          return <span style={{ color: '#94a3b8' }}>—</span>;
+                        };
+
+                        const formatarTarefa = (val?: string) => {
+                          if (val === 'sim') return <span style={{ color: '#10b981', fontWeight: 700 }}>Sim</span>;
+                          if (val === 'nao') return <span style={{ color: '#ef4444', fontWeight: 700 }}>Não</span>;
+                          if (val === 'parcial') return <span style={{ color: '#d97706', fontWeight: 700 }}>Parc.</span>;
+                          return <span style={{ color: '#94a3b8' }}>—</span>;
+                        };
+
+                        const formatarMaterial = (val?: string) => {
+                          if (val === 'sim') return <span style={{ color: '#10b981', fontWeight: 700 }}>Sim</span>;
+                          if (val === 'nao') return <span style={{ color: '#ef4444', fontWeight: 700 }}>Não</span>;
+                          if (val === 'parcial') return <span style={{ color: '#d97706', fontWeight: 700 }}>Parc.</span>;
+                          return <span style={{ color: '#94a3b8' }}>—</span>;
+                        };
+
+                        const formatarComportamento = (val?: string) => {
+                          if (val === 'excelente') return '🌟 Excel.';
+                          if (val === 'bom') return '😊 Bom';
+                          if (val === 'regular') return '😐 Reg.';
+                          if (val === 'indisciplinado') return '⚠️ Indisc.';
+                          return <span style={{ color: '#94a3b8' }}>—</span>;
+                        };
+
+                        return (
+                          <tr key={aluno.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td 
+                              style={{ 
+                                padding: '8px 10px', 
+                                fontWeight: 700, 
+                                color: aluno.especificidade ? '#1e40af' : 'var(--text-main)',
+                                cursor: aluno.especificidade ? 'pointer' : 'default'
+                              }}
+                              onClick={() => {
+                                if (aluno.especificidade) {
+                                  alert(`Informações de Acessibilidade/Especificidade de ${aluno.nome}:\n\n- ${aluno.especificidade}`);
+                                }
+                              }}
+                              title={aluno.especificidade ? "Clique para ver a especificidade do aluno" : undefined}
+                            >
+                              {aluno.nome}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>{formatarPresenca(ap?.presenca)}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>{formatarTarefa(ap?.tarefa)}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>{formatarMaterial(ap?.material)}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>{formatarComportamento(ap?.comportamento)}</td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Seção de Apontamentos da Aula */}
           {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
             <div id="ad-apontamentos-section" style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
