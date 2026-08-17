@@ -635,6 +635,11 @@ const App: React.FC = () => {
           capitulos={capitulos}
           sequencias={sequencias}
           exerciciosIA={simulatedExerciciosIA}
+          alunos={alunos}
+          apontamentos={apontamentosAtivos}
+          bimestres={bimestresAtivos}
+          selectedBimestreId={selectedBimestreId}
+          setSyncStatus={setSyncStatus}
           fecharModal={() => { setAulaDetalhe(null); setIsAulaDetalheOpen(false); }}
           onNavegarSeccao={(sec) => setCurrentSec(sec)}
           onEditar={(aula) => { setAulaParaEditar(aula); setIsAulaDetalheOpen(false); setAulaDetalhe(null); }}
