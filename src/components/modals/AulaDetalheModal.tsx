@@ -50,14 +50,14 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
 
   // Alunos ativos pertencentes a esta turma
   const alunosDaTurma = useMemo(() => {
-    return alunos.filter(a => a.turmaId === aula.turmaId && a.ativo !== false);
+    return alunos.filter(a => String(a.turmaId) === String(aula.turmaId) && a.ativo !== false);
   }, [alunos, aula.turmaId]);
 
   // Apontamentos já salvos com observações para esta aula (mesma data, turma e matéria)
   const apontamentosDestaAula = useMemo(() => {
     return apontamentos.filter(ap => 
-      ap.turmaId === aula.turmaId && 
-      ap.materiaId === aula.materiaId && 
+      String(ap.turmaId) === String(aula.turmaId) && 
+      String(ap.materiaId) === String(aula.materiaId) && 
       ap.data === aula.data && 
       ap.observacao && 
       ap.observacao.trim() !== ''
@@ -68,7 +68,7 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
   const exerciciosVinculados: ExerciciosIA[] = [];
   if (cap) {
     sequencias.forEach(sd => {
-      if (sd.turmaId === aula.turmaId && sd.materiaId === aula.materiaId && sd.capitulos) {
+      if (String(sd.turmaId) === String(aula.turmaId) && String(sd.materiaId) === String(aula.materiaId) && sd.capitulos) {
         const capSd = sd.capitulos.find(c => c.capituloId === cap.id);
         if (capSd && capSd.exercicios && capSd.exercicios.length > 0) {
           capSd.exercicios.forEach(exId => {
