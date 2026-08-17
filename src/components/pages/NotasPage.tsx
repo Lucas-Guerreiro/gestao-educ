@@ -412,11 +412,28 @@ const NotasPage: React.FC<NotasPageProps> = ({
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button 
-            disabled={!turmaId || !materiaId || !selectedBimestreId}
-            onClick={() => setIsApontamentoModalOpen(true)}
+            onClick={() => {
+              if (!turmaId || !materiaId || !selectedBimestreId) {
+                alert("Por favor, selecione primeiro a Turma, a Matéria e o Bimestre nos filtros abaixo para habilitar a planilha de apontamentos da sala.");
+                return;
+              }
+              setIsApontamentoModalOpen(true);
+            }}
             className="btn"
-            style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px', fontWeight: 700, borderColor: 'var(--primary)', color: 'var(--primary)' }}
-            title={(!turmaId || !materiaId || !selectedBimestreId) ? "Selecione turma, matéria e bimestre para habilitar os apontamentos" : "Fazer apontamentos de sala para a turma"}
+            style={{ 
+              padding: '6px 12px', 
+              fontSize: '12px', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              height: '32px', 
+              fontWeight: 700, 
+              borderColor: 'var(--primary)', 
+              color: 'var(--primary)',
+              background: '#eff6ff',
+              cursor: 'pointer'
+            }}
+            title="Lançar presença, tarefas e comportamento da turma"
           >
             <i className="ti ti-checklist" style={{ fontSize: '15px' }}></i> Apontar Sala
           </button>
