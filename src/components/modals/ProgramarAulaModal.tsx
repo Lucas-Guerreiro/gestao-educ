@@ -582,6 +582,7 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
