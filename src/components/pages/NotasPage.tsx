@@ -62,8 +62,14 @@ const NotasPage: React.FC<NotasPageProps> = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [selectedAtivs, setSelectedAtivs] = useState<string[]>([]);
   const [isCriarAtivModalOpen, setIsCriarAtivModalOpen] = useState(false);
+  const [atividadeParaEditar, setAtividadeParaEditar] = useState<Atividade | null>(null);
   const [isApontamentoModalOpen, setIsApontamentoModalOpen] = useState(false);
   const [copiadoFeedback, setCopiadoFeedback] = useState(false);
+
+  const handleEditarAtividade = (ativ: Atividade) => {
+    setAtividadeParaEditar(ativ);
+    setIsCriarAtivModalOpen(true);
+  };
 
   const toggleAtividadeSelecao = (ativId: string) => {
     setSelectedAtivs(prev => 
@@ -831,7 +837,13 @@ const NotasPage: React.FC<NotasPageProps> = ({
                         <div className="nota-col-label" style={{ display: 'inline-block', padding: '6px 10px', borderRadius: '10px', background: colors.bg, color: colors.text, minWidth: '110px', border: atExpirada ? '1.5px dashed #ef4444' : 'none' }}>
                           <div style={{ fontWeight: 700, color: colors.text, fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                             {atExpirada && at.dataLimite && <i className="ti ti-lock" style={{ color: '#ef4444', fontSize: '13px' }} title={`Prazo limite expirado em ${at.dataLimite.split('-').reverse().join('/')}`}></i>}
-                            <span>{at.nome}</span>
+                            <span 
+                              onClick={() => handleEditarAtividade(at)}
+                              style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
+                              title="Ajuste rápido: clique para editar esta atividade"
+                            >
+                              {at.nome}
+                            </span>
                             <button 
                               type="button" 
                               title={selectedAtivs.includes(at.id) ? "Remover do Compartilhamento Geral" : "Selecionar para Compartilhamento Geral"}
@@ -1313,8 +1325,9 @@ const NotasPage: React.FC<NotasPageProps> = ({
           turmas={turmas}
           materias={materias}
           bimestres={bimestres}
-          fecharModal={() => setIsCriarAtivModalOpen(false)}
+          fecharModal={() => { setIsCriarAtivModalOpen(false); setAtividadeParaEditar(null); }}
           setSyncStatus={setSyncStatus}
+          atividadeEdicao={atividadeParaEditar || undefined}
         />
       )}
     </div>

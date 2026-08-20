@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Turma, Materia, Bimestre } from '@/types';
+import { Turma, Materia, Bimestre, Atividade } from '@/types';
 
 interface CriarAtividadeModalProps {
   turmaId: string;
@@ -12,6 +12,7 @@ interface CriarAtividadeModalProps {
   bimestres: Bimestre[];
   fecharModal: () => void;
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
+  atividadeEdicao?: Atividade;
 }
 
 const CriarAtividadeModal: React.FC<CriarAtividadeModalProps> = ({
@@ -22,17 +23,18 @@ const CriarAtividadeModal: React.FC<CriarAtividadeModalProps> = ({
   materias,
   bimestres,
   fecharModal,
-  setSyncStatus
+  setSyncStatus,
+  atividadeEdicao
 }) => {
-  const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal' | 'bonus'>('prova');
-  const [turmaId, setTurmaId] = useState(defaultTurmaId);
-  const [materiaId, setMateriaId] = useState(defaultMateriaId);
-  const [bimestreId, setBimestreId] = useState(defaultBimestreId);
-  const [peso, setPeso] = useState(1);
-  const [descricao, setDescricao] = useState('');
-  const [dataLimite, setDataLimite] = useState('');
-  const [liberadoVencido, setLiberadoVencido] = useState(false);
+  const [nome, setNome] = useState(atividadeEdicao ? atividadeEdicao.nome : '');
+  const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal' | 'bonus'>(atividadeEdicao ? atividadeEdicao.tipo : 'prova');
+  const [turmaId, setTurmaId] = useState(atividadeEdicao ? atividadeEdicao.turmaId : defaultTurmaId);
+  const [materiaId, setMateriaId] = useState(atividadeEdicao ? atividadeEdicao.materiaId : defaultMateriaId);
+  const [bimestreId, setBimestreId] = useState(atividadeEdicao ? atividadeEdicao.bimestreId : defaultBimestreId);
+  const [peso, setPeso] = useState(atividadeEdicao ? atividadeEdicao.peso : 1);
+  const [descricao, setDescricao] = useState(atividadeEdicao ? atividadeEdicao.descricao || '' : '');
+  const [dataLimite, setDataLimite] = useState(atividadeEdicao ? atividadeEdicao.dataLimite || '' : '');
+  const [liberadoVencido, setLiberadoVencido] = useState(atividadeEdicao ? !!atividadeEdicao.liberadoVencido : false);
   const [loading, setLoading] = useState(false);
 
   const salvar = async (e: React.FormEvent) => {
@@ -57,13 +59,17 @@ const CriarAtividadeModal: React.FC<CriarAtividadeModalProps> = ({
         liberadoVencido: !!liberadoVencido
       };
 
-      await addDoc(collection(db, 'atividades'), payload);
+      if (atividadeEdicao) {
+        await updateDoc(doc(db, 'atividades', atividadeEdicao.id), payload);
+      } else {
+        await addDoc(collection(db, 'atividades'), payload);
+      }
       setSyncStatus('ok');
       fecharModal();
     } catch (err) {
-      console.error('Erro ao criar atividade:', err);
+      console.error('Erro ao salvar atividade:', err);
       setSyncStatus('err');
-      alert('Erro ao criar atividade: ' + (err as Error).message);
+      alert('Erro ao salvar atividade: ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -77,7 +83,7 @@ const CriarAtividadeModal: React.FC<CriarAtividadeModalProps> = ({
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexShrink: 0, color: '#fff', background: 'linear-gradient(135deg, var(--dark), var(--dark-hover))' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <i className="ti ti-checklist" style={{ fontSize: '20px' }}></i>
-            <span style={{ fontSize: '15px', fontWeight: 800 }}>Criar Nova Atividade</span>
+            <span style={{ fontSize: '15px', fontWeight: 800 }}>{atividadeEdicao ? 'Editar Atividade' : 'Criar Nova Atividade'}</span>
           </div>
           <button type="button" onClick={fecharModal} style={{ border: 'none', background: 'rgba(255,255,255,.2)', cursor: 'pointer', fontSize: '18px', color: '#fff', lineHeight: 1, borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
         </div>
@@ -191,10 +197,10 @@ const CriarAtividadeModal: React.FC<CriarAtividadeModalProps> = ({
             </button>
             <button type="submit" className="btn pri" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {loading ? (
-                <>⏳ Criando...</>
+                <>{atividadeEdicao ? '⏳ Salvando...' : '⏳ Criando...'}</>
               ) : (
                 <>
-                  <i className="ti ti-device-floppy"></i> Criar Atividade
+                  <i className="ti ti-device-floppy"></i> {atividadeEdicao ? 'Salvar Alterações' : 'Criar Atividade'}
                 </>
               )}
             </button>
