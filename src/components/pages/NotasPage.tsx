@@ -18,7 +18,6 @@ interface NotasPageProps {
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
   selectedBimestreId: string;
   onBimestreChange: (id: string) => void;
-  onNavegarSeccao?: (seccao: string) => void;
   defaultTurmaId?: string;
   defaultMateriaId?: string;
 }
@@ -36,7 +35,6 @@ const NotasPage: React.FC<NotasPageProps> = ({
   setSyncStatus,
   selectedBimestreId,
   onBimestreChange,
-  onNavegarSeccao,
   defaultTurmaId = '',
   defaultMateriaId = '',
 }) => {
