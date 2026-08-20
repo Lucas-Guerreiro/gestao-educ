@@ -709,6 +709,7 @@ const App: React.FC = () => {
           capitulos={capitulos}
           escolas={escolas}
           professores={professores}
+          aulas={aulas}
           setSyncStatus={setSyncStatus}
           fecharModal={() => { setIsProgramarModalOpen(false); setAulaParaEditar(null); }}
           aulaEdicao={aulaParaEditar}

@@ -9,6 +9,7 @@ interface ProgramarAulaModalProps {
   capitulos: Capitulo[];
   escolas: Escola[];
   professores: Professor[];
+  aulas: Aula[];
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
   fecharModal: () => void;
   defaultData?: string; // Permitir abrir já com a data pré-selecionada
@@ -21,6 +22,7 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
   capitulos,
   escolas,
   professores,
+  aulas,
   setSyncStatus,
   fecharModal,
   defaultData = '',
@@ -42,6 +44,15 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
   const [capituloNome, setCapituloNome] = useState('');
   const [capituloDescricao, setCapituloDescricao] = useState('');
   const [capituloSalvando, setCapituloSalvando] = useState(false);
+
+  // Estado para visualização das aulas existentes
+  const [mostrarAulasExistentes, setMostrarAulasExistentes] = useState(false);
+
+  const aulasExistentesFiltradas = useMemo(() => {
+    if (!turmaId || !materiaId) return [];
+    return aulas.filter(a => a.turmaId === turmaId && a.materiaId === materiaId)
+      .sort((a, b) => b.data.localeCompare(a.data));
+  }, [turmaId, materiaId, aulas]);
 
   const horariosDisponiveis = [
     "1º Tempo (Manhã)",
@@ -209,7 +220,7 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
 
   return (
     <div id="programar-aula-modal" style={{ display: 'flex', position: 'fixed', inset: 0, background: 'rgba(15,23,42,.55)', zIndex: 3000, alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(2px)' }}>
-      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '520px', boxShadow: 'var(--shadow-lg)', overflow: 'hidden', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)' }}>
+      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: mostrarAulasExistentes && turmaId && materiaId && !ehEspecial ? '960px' : '520px', boxShadow: 'var(--shadow-lg)', overflow: 'hidden', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)', transition: 'max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease' }}>
         
         {/* Header */}
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexShrink: 0, color: '#fff', background: 'linear-gradient(135deg, var(--dark), var(--dark-hover))' }}>
@@ -222,8 +233,9 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
           <button onClick={fecharModal} style={{ border: 'none', background: 'rgba(255,255,255,.2)', cursor: 'pointer', fontSize: '18px', color: '#fff', lineHeight: 1, borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
         </div>
 
-        {/* Content Form */}
-        <form onSubmit={salvar} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto', padding: '20px', gap: '12px' }}>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: 'row' }}>
+          {/* Content Form */}
+          <form onSubmit={salvar} style={{ display: 'flex', flexDirection: 'column', width: mostrarAulasExistentes && turmaId && materiaId && !ehEspecial ? '50%' : '100%', overflowY: 'auto', padding: '20px', gap: '12px', boxSizing: 'border-box', transition: 'width 0.3s ease' }}>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div className="f">
@@ -421,21 +433,155 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px', flexShrink: 0 }}>
-            <button type="button" className="btn" onClick={fecharModal} disabled={loading}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn pri" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {loading ? (
-                <>⏳ Salvando...</>
-              ) : (
-                <>
-                  <i className="ti ti-device-floppy"></i> {aulaEdicao ? 'Salvar Alterações' : 'Agendar Aula'}
-                </>
-              )}
-            </button>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', flexShrink: 0 }}>
+            {turmaId && materiaId && !ehEspecial ? (
+              <button 
+                type="button" 
+                className="btn" 
+                onClick={() => setMostrarAulasExistentes(!mostrarAulasExistentes)}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  background: mostrarAulasExistentes ? 'var(--primary-light)' : 'none', 
+                  borderColor: mostrarAulasExistentes ? 'var(--primary)' : 'var(--border)',
+                  color: mostrarAulasExistentes ? 'var(--primary-text)' : 'var(--text-main)',
+                  fontWeight: 600,
+                  fontSize: '11.5px',
+                  padding: '6px 12px'
+                }}
+              >
+                <i className={mostrarAulasExistentes ? "ti ti-chevron-left" : "ti ti-list"}></i>
+                {mostrarAulasExistentes ? 'Ocultar Aulas' : `Aulas (${aulasExistentesFiltradas.length})`}
+              </button>
+            ) : <div />}
+            
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="button" className="btn" onClick={fecharModal} disabled={loading}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn pri" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {loading ? (
+                  <>⏳ Salvando...</>
+                ) : (
+                  <>
+                    <i className="ti ti-device-floppy"></i> {aulaEdicao ? 'Salvar Alterações' : 'Agendar Aula'}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
+
+        {/* Coluna da Direita: Aulas Existentes */}
+        {mostrarAulasExistentes && turmaId && materiaId && !ehEspecial && (
+          <div style={{ 
+            width: '50%', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            overflowY: 'auto', 
+            padding: '20px', 
+            gap: '12px', 
+            background: '#fafafb', 
+            borderLeft: '1px solid var(--border)',
+            boxSizing: 'border-box',
+            animation: 'fadeIn 0.2s ease-in-out'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px', flexShrink: 0 }}>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <i className="ti ti-calendar-event" style={{ fontSize: '16px' }}></i> Aulas Existentes
+              </span>
+              <span style={{ fontSize: '11px', background: 'var(--primary-light)', color: 'var(--primary-text)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                {aulasExistentesFiltradas.length} {aulasExistentesFiltradas.length === 1 ? 'aula' : 'aulas'}
+              </span>
+            </div>
+
+            {aulasExistentesFiltradas.length === 0 ? (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', color: 'var(--text-muted)', textAlign: 'center', gap: '8px' }}>
+                <i className="ti ti-calendar-off" style={{ fontSize: '32px', color: '#cbd5e1' }}></i>
+                <span style={{ fontSize: '12px' }}>Nenhuma aula registrada para esta matéria e turma.</span>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                {aulasExistentesFiltradas.map(aula => {
+                  const cap = capitulos.find(c => c.id === aula.capituloId);
+                  const [ano, mes, dia] = aula.data.split('-');
+                  const dataFormatada = `${dia}/${mes}/${ano}`;
+
+                  return (
+                    <div 
+                      key={aula.id} 
+                      style={{ 
+                        background: '#fff', 
+                        border: '1px solid var(--border)', 
+                        borderRadius: '10px', 
+                        padding: '12px',
+                        boxShadow: 'var(--shadow-sm)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
+                          {dataFormatada} — {aula.horario.split(' ')[0]}
+                        </span>
+                        <span style={{ 
+                          fontSize: '9.5px', 
+                          padding: '2px 6px', 
+                          borderRadius: '4px', 
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          background: aula.tipo === 'teorica' ? '#dbeafe' : 
+                                      aula.tipo === 'pratica' ? '#dcfce7' : 
+                                      aula.tipo === 'revisao' ? '#fef9c3' : 
+                                      aula.tipo === 'avaliacao' ? '#fee2e2' : '#f1f5f9',
+                          color: aula.tipo === 'teorica' ? '#1e40af' : 
+                                 aula.tipo === 'pratica' ? '#166534' : 
+                                 aula.tipo === 'revisao' ? '#854d0e' : 
+                                 aula.tipo === 'avaliacao' ? '#991b1b' : '#475569'
+                        }}>
+                          {aula.tipo === 'teorica' ? 'Teórica' : 
+                           aula.tipo === 'pratica' ? 'Prática' : 
+                           aula.tipo === 'revisao' ? 'Revisão' : 
+                           aula.tipo === 'avaliacao' ? 'Avaliação' : 
+                           aula.tipo === 'pedagogica' ? 'Pedagógica' : 'Outra'}
+                        </span>
+                      </div>
+
+                      {cap && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#4f46e5', fontWeight: 600 }}>
+                          <i className="ti ti-bookmark" style={{ fontSize: '12px' }}></i>
+                          <span>{cap.nome}</span>
+                        </div>
+                      )}
+
+                      {aula.descricao && (
+                        <p style={{ fontSize: '11.5px', color: '#64748b', margin: 0, lineHeight: 1.4, wordBreak: 'break-word' }}>
+                          {aula.descricao}
+                        </p>
+                      )}
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                        <span style={{ 
+                          fontSize: '9.5px', 
+                          fontWeight: 700, 
+                          color: aula.realizada ? '#166534' : '#b45309',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '2px'
+                        }}>
+                          <i className={aula.realizada ? "ti ti-circle-check" : "ti ti-circle-dashed"}></i>
+                          {aula.realizada ? 'Ministrada' : 'Programada'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
