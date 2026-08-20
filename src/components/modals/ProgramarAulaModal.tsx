@@ -36,6 +36,13 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
   const [descricao, setDescricao] = useState(aulaEdicao ? aulaEdicao.descricao || '' : '');
   const [loading, setLoading] = useState(false);
 
+  // Estados para criação/edição de capítulos
+  const [mostrarFormCapitulo, setMostrarFormCapitulo] = useState(false);
+  const [modoFormCapitulo, setModoFormCapitulo] = useState<'criar' | 'editar'>('criar');
+  const [capituloNome, setCapituloNome] = useState('');
+  const [capituloDescricao, setCapituloDescricao] = useState('');
+  const [capituloSalvando, setCapituloSalvando] = useState(false);
+
   const horariosDisponiveis = [
     "1º Tempo (Manhã)",
     "2º Tempo (Manhã)",
@@ -99,6 +106,66 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
   const handleMateriaChange = (id: string) => {
     setMateriaId(id);
     setCapituloId('');
+  };
+
+  const handleAbrirFormCapitulo = (modo: 'criar' | 'editar') => {
+    setModoFormCapitulo(modo);
+    if (modo === 'criar') {
+      setCapituloNome('');
+      setCapituloDescricao('');
+    } else {
+      const capituloAtual = capitulos.find(c => c.id === capituloId);
+      if (capituloAtual) {
+        setCapituloNome(capituloAtual.nome);
+        setCapituloDescricao(capituloAtual.descricao || '');
+      }
+    }
+    setMostrarFormCapitulo(true);
+  };
+
+  const handleCancelarCapitulo = () => {
+    setMostrarFormCapitulo(false);
+    setCapituloNome('');
+    setCapituloDescricao('');
+  };
+
+  const handleSalvarCapitulo = async () => {
+    if (!capituloNome.trim() || !turmaId || !materiaId) return;
+
+    setCapituloSalvando(true);
+    setSyncStatus('saving');
+
+    try {
+      if (modoFormCapitulo === 'criar') {
+        const novoCapitulo = {
+          turmaId,
+          materiaId,
+          nome: capituloNome.trim(),
+          descricao: capituloDescricao.trim()
+        };
+
+        const docRef = await addDoc(collection(db, 'capitulos'), novoCapitulo);
+        setCapituloId(docRef.id);
+      } else {
+        if (!capituloId) return;
+        const capituloRef = doc(db, 'capitulos', capituloId);
+        await updateDoc(capituloRef, {
+          nome: capituloNome.trim(),
+          descricao: capituloDescricao.trim()
+        });
+      }
+
+      setSyncStatus('ok');
+      setMostrarFormCapitulo(false);
+      setCapituloNome('');
+      setCapituloDescricao('');
+    } catch (error) {
+      console.error('Erro ao salvar capitulo:', error);
+      setSyncStatus('err');
+      alert('Erro ao salvar o capítulo. Tente novamente.');
+    } finally {
+      setCapituloSalvando(false);
+    }
   };
 
   const salvar = async (e: React.FormEvent) => {
@@ -225,17 +292,109 @@ const ProgramarAulaModal: React.FC<ProgramarAulaModalProps> = ({
           </div>
 
           <div className="f">
-            <label>Capítulo Mapeado</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <label style={{ margin: 0 }}>Capítulo Mapeado</label>
+              {materiaId && !ehEspecial && !mostrarFormCapitulo && (
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => handleAbrirFormCapitulo('criar')}
+                    style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: 0 }}
+                  >
+                    + Criar Novo
+                  </button>
+                  {capituloId && (
+                    <button 
+                      type="button" 
+                      onClick={() => handleAbrirFormCapitulo('editar')}
+                      style={{ background: 'none', border: 'none', color: '#d97706', cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: 0 }}
+                    >
+                      ✎ Editar
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <select 
               value={capituloId} 
               onChange={(e) => setCapituloId(e.target.value)}
-              disabled={!materiaId || ehEspecial}
+              disabled={!materiaId || ehEspecial || mostrarFormCapitulo}
             >
               <option value="">— selecione —</option>
               {capitulosFiltrados.map(c => (
                 <option key={c.id} value={c.id}>{c.nome}</option>
               ))}
             </select>
+
+            {mostrarFormCapitulo && (
+              <div style={{ 
+                background: '#f8fafc', 
+                border: '1px solid #cbd5e1', 
+                borderRadius: '8px', 
+                padding: '12px', 
+                marginTop: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)'
+              }}>
+                <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#1e293b' }}>
+                  {modoFormCapitulo === 'criar' ? 'Criar Novo Capítulo' : 'Editar Capítulo'}
+                </span>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b' }}>Nome do Capítulo *</label>
+                  <input 
+                    type="text" 
+                    value={capituloNome} 
+                    onChange={(e) => setCapituloNome(e.target.value)}
+                    placeholder="Ex: Capítulo 1: Introdução"
+                    style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#fff', color: '#1e293b', width: '100%', boxSizing: 'border-box' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b' }}>Descrição (Opcional)</label>
+                  <textarea 
+                    value={capituloDescricao} 
+                    onChange={(e) => setCapituloDescricao(e.target.value)}
+                    placeholder="Breve descrição do conteúdo do capítulo..."
+                    rows={2}
+                    style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#fff', color: '#1e293b', resize: 'vertical', width: '100%', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
+                  <button 
+                    type="button" 
+                    onClick={handleCancelarCapitulo}
+                    style={{ padding: '4px 10px', fontSize: '11px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#fff', color: '#1e293b', cursor: 'pointer' }}
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleSalvarCapitulo}
+                    disabled={capituloSalvando || !capituloNome.trim()}
+                    style={{ 
+                      padding: '4px 10px', 
+                      fontSize: '11px', 
+                      borderRadius: '6px', 
+                      border: 'none', 
+                      background: modoFormCapitulo === 'criar' ? '#2563eb' : '#d97706', 
+                      color: '#fff', 
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      opacity: !capituloNome.trim() ? 0.6 : 1
+                    }}
+                  >
+                    {capituloSalvando ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="f" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
