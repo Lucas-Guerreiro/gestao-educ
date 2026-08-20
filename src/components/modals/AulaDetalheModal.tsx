@@ -546,7 +546,7 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
         {/* Footer */}
         <div id="ad-footer" style={{ padding: '12px 20px', background: '#f8fafc', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: '10px' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
-            {aula.tipo === 'avaliacao' && (
+            {!isEspecial && (
               <button 
                 onClick={handleLancarNotas}
                 className="btn pri"
