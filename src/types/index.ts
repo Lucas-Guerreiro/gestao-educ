@@ -89,7 +89,7 @@ export interface Atividade {
   /** @pk Chave Primária Única */
   id: string;
   nome: string;
-  tipo: 'prova' | 'trabalho' | 'qualitativa' | 'pluraal';
+  tipo: 'prova' | 'trabalho' | 'qualitativa' | 'pluraal' | 'bonus';
   /** @fk Chave Estrangeira -> Turma.id | @cardinality N:1 | @cascade ON DELETE CASCADE */
   turmaId: string;
   /** @fk Chave Estrangeira -> Materia.id | @cardinality N:1 | @cascade ON DELETE CASCADE */

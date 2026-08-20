@@ -25,7 +25,7 @@ const CriarAtividadeModal: React.FC<CriarAtividadeModalProps> = ({
   setSyncStatus
 }) => {
   const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal'>('prova');
+  const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal' | 'bonus'>('prova');
   const [turmaId, setTurmaId] = useState(defaultTurmaId);
   const [materiaId, setMateriaId] = useState(defaultMateriaId);
   const [bimestreId, setBimestreId] = useState(defaultBimestreId);
@@ -105,6 +105,7 @@ const CriarAtividadeModal: React.FC<CriarAtividadeModalProps> = ({
                 <option value="trabalho">📚 Trabalho / Seminário</option>
                 <option value="pluraal">💜 Atividade PLURAAL</option>
                 <option value="qualitativa">🌟 Avaliação Qualitativa</option>
+                <option value="bonus">🎁 Ponto Bônus</option>
               </select>
             </div>
 

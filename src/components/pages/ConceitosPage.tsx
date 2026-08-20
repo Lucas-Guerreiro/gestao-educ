@@ -164,7 +164,18 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
     });
     const pontosExtras = Math.min(pontosAtitudinais, 1.0);
 
-    return Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
+    // 5. Notas de Ponto Bônus (soma direto na média final)
+    const bonusAtivs = ativs.filter(at => at.tipo === 'bonus');
+    let totalBonus = 0;
+    bonusAtivs.forEach(at => {
+      const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
+      if (reg && reg.nota !== undefined && reg.nota >= 0) {
+        totalBonus += reg.nota;
+      }
+    });
+
+    const mediaBase = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
+    return Math.min(mediaBase + totalBonus, 10.0);
   };
 
   const renderBadge = (media: number | null) => {

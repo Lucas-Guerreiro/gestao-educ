@@ -114,7 +114,18 @@ const RankingPage: React.FC<RankingPageProps> = ({
           });
           const pontosExtras = Math.min(pontosAtitudinais, 1.0);
 
-          const mediaBimestralFinal = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
+          // 3.5 Ponto Bônus (soma direto na média final)
+          const bonusAtivs = ativs.filter(at => at.tipo === 'bonus');
+          let totalBonus = 0;
+          bonusAtivs.forEach(at => {
+            const reg = notas.find(n => String(n.alunoId) === String(alunoId) && String(n.atividadeId) === String(at.id));
+            if (reg && reg.nota !== undefined && reg.nota >= 0) {
+              totalBonus += reg.nota;
+            }
+          });
+
+          const mediaBase = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
+          const mediaBimestralFinal = Math.min(mediaBase + totalBonus, 10.0);
 
           somaMediasBimestrais += mediaBimestralFinal;
           qtdMediasBimestrais++;

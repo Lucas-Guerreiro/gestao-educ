@@ -27,7 +27,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   onNavegarSeccao,
 }) => {
   const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal'>('prova');
+  const [tipo, setTipo] = useState<'prova' | 'trabalho' | 'qualitativa' | 'pluraal' | 'bonus'>('prova');
   const [turmaId, setTurmaId] = useState('');
   const [materiaId, setMateriaId] = useState('');
   const [bimestreId, setBimestreId] = useState('');
@@ -234,6 +234,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
     if (t === 'prova') return { bg: '#fee2e2', text: '#991b1b' };
     if (t === 'trabalho') return { bg: '#eff6ff', text: '#1e40af' };
     if (t === 'pluraal') return { bg: '#f3e8ff', text: '#6b21a8' };
+    if (t === 'bonus') return { bg: '#fffbeb', text: '#92400e' };
     return { bg: '#f0fdf4', text: '#166534' };
   };
 
@@ -264,6 +265,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                 <option value="trabalho">📚 Trabalho / Seminário</option>
                 <option value="pluraal">💜 Atividade PLURAAL</option>
                 <option value="qualitativa">🌟 Avaliação Qualitativa</option>
+                <option value="bonus">🎁 Ponto Bônus</option>
               </select>
             </div>
             <div className="f">

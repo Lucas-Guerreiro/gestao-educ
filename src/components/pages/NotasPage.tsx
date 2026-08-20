@@ -412,8 +412,19 @@ const NotasPage: React.FC<NotasPageProps> = ({
     });
     const pontosExtras = Math.min(pontosAtitudinais, 1.0);
 
-    const media = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
-    return media.toFixed(1);
+    // 5. Notas de Ponto Bônus (soma direto na média final)
+    const bonusAtivs = atividadesFiltradas.filter(at => at.tipo === 'bonus');
+    let totalBonus = 0;
+    bonusAtivs.forEach(at => {
+      const notaStr = obterNotaValor(alunoId, at.id);
+      if (notaStr !== '' && Number(notaStr) >= 0) {
+        totalBonus += Number(notaStr);
+      }
+    });
+
+    const mediaBase = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
+    const mediaFinal = Math.min(mediaBase + totalBonus, 10.0);
+    return mediaFinal.toFixed(1);
   };
 
   return (
@@ -920,7 +931,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                       )}
 
                       {atividadesExibidas.map((at, atIdx) => {
-                        const eOcultavel = at.tipo === 'prova' || at.tipo === 'trabalho' || at.tipo === 'pluraal';
+                        const eOcultavel = at.tipo === 'prova' || at.tipo === 'trabalho' || at.tipo === 'pluraal' || at.tipo === 'bonus';
                         const celulaOculta = eOcultavel && notasOcultas;
                         const hojeStr = new Date().toISOString().split('T')[0];
                         const atExpirada = !!(at.dataLimite && hojeStr > at.dataLimite && !at.liberadoVencido);
