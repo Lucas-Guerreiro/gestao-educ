@@ -3,6 +3,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
 import ApontamentoSalaModal from '../modals/ApontamentoSalaModal';
+import CriarAtividadeModal from '../modals/CriarAtividadeModal';
 
 interface NotasPageProps {
   alunos: Aluno[];
@@ -62,6 +63,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
   // Estados para Compartilhamento Interdisciplinar Geral
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [selectedAtivs, setSelectedAtivs] = useState<string[]>([]);
+  const [isCriarAtivModalOpen, setIsCriarAtivModalOpen] = useState(false);
   const [isApontamentoModalOpen, setIsApontamentoModalOpen] = useState(false);
   const [copiadoFeedback, setCopiadoFeedback] = useState(false);
 
@@ -450,15 +452,19 @@ const NotasPage: React.FC<NotasPageProps> = ({
           >
             <i className="ti ti-checklist" style={{ fontSize: '15px' }}></i> Apontar Sala
           </button>
-          {onNavegarSeccao && (
-            <button 
-              onClick={() => onNavegarSeccao('ativ')}
-              className="btn pri"
-              style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px', fontWeight: 700 }}
-            >
-              <i className="ti ti-checklist" style={{ fontSize: '15px' }}></i> Atividades
-            </button>
-          )}
+          <button 
+            onClick={() => {
+              if (!turmaId || !materiaId) {
+                alert("Por favor, selecione primeiro a Turma e a Matéria nos filtros abaixo para poder criar uma atividade.");
+                return;
+              }
+              setIsCriarAtivModalOpen(true);
+            }}
+            className="btn pri"
+            style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px', fontWeight: 700, cursor: 'pointer' }}
+          >
+            <i className="ti ti-plus" style={{ fontSize: '14px' }}></i> Criar Nova
+          </button>
         </div>
       </div>
       
@@ -1287,6 +1293,19 @@ const NotasPage: React.FC<NotasPageProps> = ({
           escolas={escolas}
           setSyncStatus={setSyncStatus}
           fecharModal={() => setIsApontamentoModalOpen(false)}
+        />
+      )}
+
+      {isCriarAtivModalOpen && (
+        <CriarAtividadeModal 
+          turmaId={turmaId}
+          materiaId={materiaId}
+          bimestreId={bimestreId}
+          turmas={turmas}
+          materias={materias}
+          bimestres={bimestres}
+          fecharModal={() => setIsCriarAtivModalOpen(false)}
+          setSyncStatus={setSyncStatus}
         />
       )}
     </div>
