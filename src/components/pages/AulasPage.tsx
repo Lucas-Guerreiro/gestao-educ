@@ -33,6 +33,7 @@ const AulasPage: React.FC<AulasPageProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filtroTurma, setFiltroTurma] = useState('');
   const [filtroData, setFiltroData] = useState('');
+  const [filtroMateria, setFiltroMateria] = useState('');
 
   const horariosDisponiveis = [
     "1º Tempo (Manhã)",
@@ -74,6 +75,24 @@ const AulasPage: React.FC<AulasPageProps> = ({
 
     return materias.filter(m => idsVinculados.has(m.id));
   }, [turmaId, turmas, materias, professores]);
+
+  // Filtrar matérias disponíveis para o filtro de acordo com a turma filtrada
+  const materiasParaFiltro = React.useMemo(() => {
+    if (!filtroTurma) return materias;
+    const turma = turmas.find(t => t.id === filtroTurma);
+    if (!turma) return materias;
+    return materias.filter(m => m.escolaId === turma.escolaId);
+  }, [filtroTurma, materias, turmas]);
+
+  // Resetar filtro de matérias se a matéria selecionada não fizer parte da turma filtrada
+  useEffect(() => {
+    if (filtroTurma && filtroMateria) {
+      const pertence = materiasParaFiltro.some(m => m.id === filtroMateria);
+      if (!pertence) {
+        setFiltroMateria('');
+      }
+    }
+  }, [filtroTurma, materiasParaFiltro, filtroMateria]);
 
   // Auto-selecionar matéria se houver apenas uma vinculada à turma
   useEffect(() => {
@@ -327,6 +346,16 @@ const AulasPage: React.FC<AulasPageProps> = ({
             </select>
           </div>
           <div className="f" style={{ flex: 1, minWidth: '120px' }}>
+            <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Matéria</label>
+            <select value={filtroMateria} onChange={(e) => setFiltroMateria(e.target.value)} style={{ height: '34px', fontSize: '12px' }}>
+              <option value="">— Todas as Matérias —</option>
+              {materiasParaFiltro.map(m => {
+                const esc = escolas.find(e => e.id === m.escolaId);
+                return <option key={m.id} value={m.id}>{m.nome} ({esc ? esc.nome : 'Escola'})</option>;
+              })}
+            </select>
+          </div>
+          <div className="f" style={{ flex: 1, minWidth: '120px' }}>
             <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Data</label>
             <div style={{ display: 'flex', gap: '6px' }}>
               <input 
@@ -355,7 +384,8 @@ const AulasPage: React.FC<AulasPageProps> = ({
             const aulasFiltradas = aulas.filter(aula => {
               const atendeTurma = filtroTurma ? aula.turmaId === filtroTurma : true;
               const atendeData = filtroData ? aula.data === filtroData : true;
-              return atendeTurma && atendeData;
+              const atendeMateria = filtroMateria ? aula.materiaId === filtroMateria : true;
+              return atendeTurma && atendeData && atendeMateria;
             });
 
             if (aulasFiltradas.length === 0) {
