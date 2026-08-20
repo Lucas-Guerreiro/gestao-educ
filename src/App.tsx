@@ -87,6 +87,10 @@ const App: React.FC = () => {
     localStorage.setItem('es_bimestre_ativo', bimestreId);
   };
 
+  // Estados globais para pré-seleção em redirecionamentos
+  const [globalTurmaId, setGlobalTurmaId] = useState('');
+  const [globalMateriaId, setGlobalMateriaId] = useState('');
+
   // Derive unique school years from bimestres letivos
   const anosDisponiveis = Array.from(new Set(bimestres.map(b => b.ano).filter(Boolean)));
   if (!anosDisponiveis.includes(new Date().getFullYear())) {
@@ -398,6 +402,8 @@ const App: React.FC = () => {
             selectedBimestreId={selectedBimestreId}
             onBimestreChange={handleBimestreChange}
             onNavegarSeccao={(sec) => setCurrentSec(sec)}
+            defaultTurmaId={globalTurmaId}
+            defaultMateriaId={globalMateriaId}
           />
         );
       case 'conceito':
@@ -643,7 +649,11 @@ const App: React.FC = () => {
           selectedBimestreId={selectedBimestreId}
           setSyncStatus={setSyncStatus}
           fecharModal={() => { setAulaDetalhe(null); setIsAulaDetalheOpen(false); }}
-          onNavegarSeccao={(sec) => setCurrentSec(sec)}
+          onNavegarSeccao={(sec, tId, mId) => {
+            setCurrentSec(sec);
+            if (tId) setGlobalTurmaId(tId);
+            if (mId) setGlobalMateriaId(mId);
+          }}
           onEditar={(aula) => { setAulaParaEditar(aula); setIsAulaDetalheOpen(false); setAulaDetalhe(null); }}
           onExcluir={async (aulaId) => {
             setSyncStatus('saving');

@@ -16,7 +16,7 @@ interface AulaDetalheModalProps {
   selectedBimestreId: string;
   setSyncStatus: (status: 'ok' | 'saving' | 'err') => void;
   fecharModal: () => void;
-  onNavegarSeccao?: (seccao: string) => void;
+  onNavegarSeccao?: (seccao: string, turmaId?: string, materiaId?: string) => void;
   onEditar?: (aula: Aula) => void;
   onExcluir?: (aulaId: string) => void;
 }
@@ -34,7 +34,7 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
   selectedBimestreId,
   setSyncStatus,
   fecharModal,
-  onNavegarSeccao: _onNavegarSeccao,
+  onNavegarSeccao,
   onEditar,
   onExcluir,
 }) => {
@@ -50,6 +50,13 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
   const alunosDaTurma = useMemo(() => {
     return alunos.filter(a => String(a.turmaId) === String(aula.turmaId) && a.ativo !== false);
   }, [alunos, aula.turmaId]);
+
+  const handleLancarNotas = () => {
+    if (onNavegarSeccao) {
+      onNavegarSeccao('lan', aula.turmaId, aula.materiaId);
+      fecharModal();
+    }
+  };
 
   // Obter apontamento do aluno nesta data e matéria
   const obterApontamento = (alunoId: string): Apontamento | null => {
@@ -539,6 +546,15 @@ const AulaDetalheModal: React.FC<AulaDetalheModalProps> = ({
         {/* Footer */}
         <div id="ad-footer" style={{ padding: '12px 20px', background: '#f8fafc', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: '10px' }}>
           <div style={{ display: 'flex', gap: '8px' }}>
+            {aula.tipo === 'avaliacao' && (
+              <button 
+                onClick={handleLancarNotas}
+                className="btn pri"
+                style={{ height: '32px', fontSize: '12px', fontWeight: 700, background: 'linear-gradient(135deg, #4f46e5, #4338ca)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <i className="ti ti-notes"></i> Lançar Notas
+              </button>
+            )}
             {onEditar && (
               <button 
                 onClick={() => onEditar(aula)}

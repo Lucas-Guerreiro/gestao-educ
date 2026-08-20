@@ -18,6 +18,8 @@ interface NotasPageProps {
   selectedBimestreId: string;
   onBimestreChange: (id: string) => void;
   onNavegarSeccao?: (seccao: string) => void;
+  defaultTurmaId?: string;
+  defaultMateriaId?: string;
 }
 
 const NotasPage: React.FC<NotasPageProps> = ({
@@ -34,9 +36,11 @@ const NotasPage: React.FC<NotasPageProps> = ({
   selectedBimestreId,
   onBimestreChange,
   onNavegarSeccao,
+  defaultTurmaId = '',
+  defaultMateriaId = '',
 }) => {
-  const [turmaId, setTurmaId] = useState('');
-  const [materiaId, setMateriaId] = useState('');
+  const [turmaId, setTurmaId] = useState(defaultTurmaId);
+  const [materiaId, setMateriaId] = useState(defaultMateriaId);
   const [bimestreId, setBimestreId] = useState('');
 
   // Sincronizar com o bimestre global
@@ -45,6 +49,15 @@ const NotasPage: React.FC<NotasPageProps> = ({
       setBimestreId(selectedBimestreId);
     }
   }, [selectedBimestreId]);
+
+  // Sincronizar com turma e matéria padrão vindas de navegação/redirecionamento
+  useEffect(() => {
+    if (defaultTurmaId) setTurmaId(defaultTurmaId);
+  }, [defaultTurmaId]);
+
+  useEffect(() => {
+    if (defaultMateriaId) setMateriaId(defaultMateriaId);
+  }, [defaultMateriaId]);
 
   // Estados para Compartilhamento Interdisciplinar Geral
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
