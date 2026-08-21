@@ -65,10 +65,21 @@ const NotasPage: React.FC<NotasPageProps> = ({
   const [atividadeParaEditar, setAtividadeParaEditar] = useState<Atividade | null>(null);
   const [isApontamentoModalOpen, setIsApontamentoModalOpen] = useState(false);
   const [copiadoFeedback, setCopiadoFeedback] = useState(false);
+  const [modoQualitativa, setModoQualitativa] = useState<'select' | 'input'>(() => {
+    return (localStorage.getItem('es_modo_qualitativa') as 'select' | 'input') || 'select';
+  });
 
   const handleEditarAtividade = (ativ: Atividade) => {
     setAtividadeParaEditar(ativ);
     setIsCriarAtivModalOpen(true);
+  };
+
+  const alternarModoQualitativa = () => {
+    setModoQualitativa(prev => {
+      const novo = prev === 'select' ? 'input' : 'select';
+      localStorage.setItem('es_modo_qualitativa', novo);
+      return novo;
+    });
   };
 
   const toggleAtividadeSelecao = (ativId: string) => {
@@ -274,6 +285,9 @@ const NotasPage: React.FC<NotasPageProps> = ({
     if (celulaOculta || !valorStr || valorStr === '-1') {
       return { bg: '#fff', border: '#cbd5e1', text: 'var(--text-main)' };
     }
+    if (valorStr === 'faltou') {
+      return { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' };
+    }
 
     const valor = Number(valorStr.replace(',', '.'));
     if (Number.isNaN(valor)) {
@@ -378,13 +392,15 @@ const NotasPage: React.FC<NotasPageProps> = ({
     let notaQualitativa = 0;
     if (qualitativas.length > 0) {
       let soma = 0;
+      let count = 0;
       qualitativas.forEach(at => {
         const notaStr = obterNotaValor(alunoId, at.id);
-        if (notaStr !== '' && Number(notaStr) >= 0) {
+        if (notaStr !== '' && notaStr !== 'faltou' && Number(notaStr) >= 0) {
           soma += Number(notaStr);
+          count++;
         }
       });
-      notaQualitativa = soma / qualitativas.length;
+      notaQualitativa = count > 0 ? soma / count : 0;
     }
 
     // Se o aluno não tem nota lançada em nenhuma atividade, exibe '—'
@@ -775,6 +791,27 @@ const NotasPage: React.FC<NotasPageProps> = ({
               <i className={qualitativasColapsadas ? "ti ti-layout-columns" : "ti ti-columns"}></i>
               {qualitativasColapsadas ? '📂 Mostrar Notas Qualitativas' : '📁 Colapsar Notas Qualitativas'}
             </button>
+
+            <button 
+              type="button" 
+              className="btn" 
+              onClick={alternarModoQualitativa}
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '6px', 
+                fontSize: '12.5px', 
+                fontWeight: 600,
+                borderColor: modoQualitativa === 'select' ? '#1e40af' : '#cbd5e1',
+                color: modoQualitativa === 'select' ? '#1e40af' : 'var(--text-main)',
+                background: modoQualitativa === 'select' ? '#eff6ff' : '#fff',
+                padding: '6px 12px',
+                borderRadius: '8px'
+              }}
+            >
+              <i className={modoQualitativa === 'select' ? "ti ti-list" : "ti ti-keyboard"}></i>
+              {modoQualitativa === 'select' ? '📝 Modo Qualitativa: Seleção' : '✍️ Modo Qualitativa: Digitar Nota'}
+            </button>
           </div>
 
           {/* Container de Rolagem da Tabela com Cabeçalho Congelado */}
@@ -957,43 +994,75 @@ const NotasPage: React.FC<NotasPageProps> = ({
                         return (
                           <td key={at.id} style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
                             <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
-                              <input 
-                                key={celulaOculta ? 'oculto' : 'visivel'}
-                                id={`input-nota-${alunoIdx}-${atIdx}`}
-                                defaultValue={displayVal}
-                                disabled={celulaOculta || atExpirada}
-                                onBlur={(e) => {
-                                  if (!celulaOculta && !atExpirada) {
-                                    salvarNota(aluno.id, at.id, e.target.value);
-                                  }
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const proximoInput = document.getElementById(`input-nota-${alunoIdx + 1}-${atIdx}`);
-                                    if (proximoInput) {
-                                      (proximoInput as HTMLInputElement).focus();
-                                      (proximoInput as HTMLInputElement).select();
-                                    } else {
-                                      (e.target as HTMLInputElement).blur();
+                              {at.tipo === 'qualitativa' && modoQualitativa === 'select' ? (
+                                <select
+                                  id={`input-nota-${alunoIdx}-${atIdx}`}
+                                  value={notaVal}
+                                  disabled={celulaOculta || atExpirada}
+                                  onChange={(e) => {
+                                    if (!celulaOculta && !atExpirada) {
+                                      salvarNota(aluno.id, at.id, e.target.value);
                                     }
-                                  }
-                                }}
-                                placeholder={celulaOculta ? 'Oculto' : atExpirada ? '🔒 Expirado' : `0-${obterNotaMaxima(at.tipo)}`}
-                                style={{ 
-                                  width: '100%', 
-                                  textAlign: 'center', 
-                                  padding: '6px', 
-                                  border: `1px solid ${atExpirada ? 'var(--border)' : notaColors.border}`,
-                                  borderRadius: '8px', 
-                                  fontSize: '13px', 
-                                  fontWeight: 700,
-                                  background: atExpirada ? '#f1f5f9' : notaColors.bg,
-                                  color: atExpirada ? '#94a3b8' : notaColors.text,
-                                  cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'text',
-                                  transition: 'background 160ms ease, border-color 160ms ease'
-                                }}
-                              />
+                                  }}
+                                  style={{ 
+                                    width: '100%', 
+                                    textAlign: 'center', 
+                                    padding: '6px', 
+                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#fca5a5' : notaColors.border)}`,
+                                    borderRadius: '8px', 
+                                    fontSize: '11.5px', 
+                                    fontWeight: 700,
+                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#fee2e2' : (notaVal === '' ? '#fff' : '#dcfce7')),
+                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#991b1b' : (notaVal === '' ? '#64748b' : '#166534')),
+                                    cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'pointer',
+                                    transition: 'background 160ms ease, border-color 160ms ease'
+                                  }}
+                                >
+                                  <option value="">—</option>
+                                  <option value={String(at.peso)}>Sim ({at.peso})</option>
+                                  <option value={String(at.peso / 2)}>Parc ({at.peso / 2})</option>
+                                  <option value="0">Não (0)</option>
+                                  <option value="faltou">Faltou</option>
+                                </select>
+                              ) : (
+                                <input 
+                                  key={celulaOculta ? 'oculto' : 'visivel'}
+                                  id={`input-nota-${alunoIdx}-${atIdx}`}
+                                  defaultValue={displayVal}
+                                  disabled={celulaOculta || atExpirada}
+                                  onBlur={(e) => {
+                                    if (!celulaOculta && !atExpirada) {
+                                      salvarNota(aluno.id, at.id, e.target.value);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      const proximoInput = document.getElementById(`input-nota-${alunoIdx + 1}-${atIdx}`);
+                                      if (proximoInput) {
+                                        (proximoInput as HTMLInputElement).focus();
+                                        (proximoInput as HTMLInputElement).select();
+                                      } else {
+                                        (e.target as HTMLInputElement).blur();
+                                      }
+                                    }
+                                  }}
+                                  placeholder={celulaOculta ? 'Oculto' : atExpirada ? '🔒 Expirado' : `0-${obterNotaMaxima(at.tipo)}`}
+                                  style={{ 
+                                    width: '100%', 
+                                    textAlign: 'center', 
+                                    padding: '6px', 
+                                    border: `1px solid ${atExpirada ? 'var(--border)' : notaColors.border}`,
+                                    borderRadius: '8px', 
+                                    fontSize: '13px', 
+                                    fontWeight: 700,
+                                    background: atExpirada ? '#f1f5f9' : notaColors.bg,
+                                    color: atExpirada ? '#94a3b8' : notaColors.text,
+                                    cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'text',
+                                    transition: 'background 160ms ease, border-color 160ms ease'
+                                  }}
+                                />
+                              )}
                               {isSaving && (
                                 <div style={{ position: 'absolute', top: '2px', right: '2px', fontSize: '9px' }}>⏳</div>
                               )}
