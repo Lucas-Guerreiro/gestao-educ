@@ -378,15 +378,13 @@ const NotasPage: React.FC<NotasPageProps> = ({
     let notaQualitativa = 0;
     if (qualitativas.length > 0) {
       let soma = 0;
-      let count = 0;
       qualitativas.forEach(at => {
         const notaStr = obterNotaValor(alunoId, at.id);
-        if (notaStr !== '' && notaStr !== 'faltou' && Number(notaStr) >= 0) {
+        if (notaStr !== '' && Number(notaStr) >= 0) {
           soma += Number(notaStr);
-          count++;
         }
       });
-      notaQualitativa = count > 0 ? soma / count : 0;
+      notaQualitativa = soma / qualitativas.length;
     }
 
     // Se o aluno não tem nota lançada em nenhuma atividade, exibe '—'
@@ -959,75 +957,43 @@ const NotasPage: React.FC<NotasPageProps> = ({
                         return (
                           <td key={at.id} style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
                             <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
-                              {at.tipo === 'qualitativa' ? (
-                                <select
-                                  id={`input-nota-${alunoIdx}-${atIdx}`}
-                                  value={notaVal}
-                                  disabled={celulaOculta || atExpirada}
-                                  onChange={(e) => {
-                                    if (!celulaOculta && !atExpirada) {
-                                      salvarNota(aluno.id, at.id, e.target.value);
+                              <input 
+                                key={celulaOculta ? 'oculto' : 'visivel'}
+                                id={`input-nota-${alunoIdx}-${atIdx}`}
+                                defaultValue={displayVal}
+                                disabled={celulaOculta || atExpirada}
+                                onBlur={(e) => {
+                                  if (!celulaOculta && !atExpirada) {
+                                    salvarNota(aluno.id, at.id, e.target.value);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const proximoInput = document.getElementById(`input-nota-${alunoIdx + 1}-${atIdx}`);
+                                    if (proximoInput) {
+                                      (proximoInput as HTMLInputElement).focus();
+                                      (proximoInput as HTMLInputElement).select();
+                                    } else {
+                                      (e.target as HTMLInputElement).blur();
                                     }
-                                  }}
-                                  style={{ 
-                                    width: '100%', 
-                                    textAlign: 'center', 
-                                    padding: '6px', 
-                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#fca5a5' : notaColors.border)}`,
-                                    borderRadius: '8px', 
-                                    fontSize: '11.5px', 
-                                    fontWeight: 700,
-                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#fee2e2' : (notaVal === '' ? '#fff' : '#dcfce7')),
-                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#991b1b' : (notaVal === '' ? '#64748b' : '#166534')),
-                                    cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'pointer',
-                                    transition: 'background 160ms ease, border-color 160ms ease'
-                                  }}
-                                >
-                                  <option value="">—</option>
-                                  <option value={String(at.peso)}>Sim ({at.peso})</option>
-                                  <option value={String(at.peso / 2)}>Parc ({at.peso / 2})</option>
-                                  <option value="0">Não (0)</option>
-                                  <option value="faltou">Faltou</option>
-                                </select>
-                              ) : (
-                                <input 
-                                  key={celulaOculta ? 'oculto' : 'visivel'}
-                                  id={`input-nota-${alunoIdx}-${atIdx}`}
-                                  defaultValue={displayVal}
-                                  disabled={celulaOculta || atExpirada}
-                                  onBlur={(e) => {
-                                    if (!celulaOculta && !atExpirada) {
-                                      salvarNota(aluno.id, at.id, e.target.value);
-                                    }
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      const proximoInput = document.getElementById(`input-nota-${alunoIdx + 1}-${atIdx}`);
-                                      if (proximoInput) {
-                                        (proximoInput as HTMLInputElement).focus();
-                                        (proximoInput as HTMLInputElement).select();
-                                      } else {
-                                        (e.target as HTMLInputElement).blur();
-                                      }
-                                    }
-                                  }}
-                                  placeholder={celulaOculta ? 'Oculto' : atExpirada ? '🔒 Expirado' : `0-${obterNotaMaxima(at.tipo)}`}
-                                  style={{ 
-                                    width: '100%', 
-                                    textAlign: 'center', 
-                                    padding: '6px', 
-                                    border: `1px solid ${atExpirada ? 'var(--border)' : notaColors.border}`,
-                                    borderRadius: '8px', 
-                                    fontSize: '13px', 
-                                    fontWeight: 700,
-                                    background: atExpirada ? '#f1f5f9' : notaColors.bg,
-                                    color: atExpirada ? '#94a3b8' : notaColors.text,
-                                    cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'text',
-                                    transition: 'background 160ms ease, border-color 160ms ease'
-                                  }}
-                                />
-                              )}
+                                  }
+                                }}
+                                placeholder={celulaOculta ? 'Oculto' : atExpirada ? '🔒 Expirado' : `0-${obterNotaMaxima(at.tipo)}`}
+                                style={{ 
+                                  width: '100%', 
+                                  textAlign: 'center', 
+                                  padding: '6px', 
+                                  border: `1px solid ${atExpirada ? 'var(--border)' : notaColors.border}`,
+                                  borderRadius: '8px', 
+                                  fontSize: '13px', 
+                                  fontWeight: 700,
+                                  background: atExpirada ? '#f1f5f9' : notaColors.bg,
+                                  color: atExpirada ? '#94a3b8' : notaColors.text,
+                                  cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'text',
+                                  transition: 'background 160ms ease, border-color 160ms ease'
+                                }}
+                              />
                               {isSaving && (
                                 <div style={{ position: 'absolute', top: '2px', right: '2px', fontSize: '9px' }}>⏳</div>
                               )}
