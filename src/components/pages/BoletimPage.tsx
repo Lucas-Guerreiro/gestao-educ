@@ -193,7 +193,7 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
       let count = 0;
       qualitativas.forEach(at => {
         const reg = notas.find(n => n.alunoId === selectedAlunoId && n.atividadeId === at.id);
-        if (reg && reg.nota !== undefined && reg.nota !== 'faltou' && reg.nota !== '') {
+        if (reg && reg.nota !== undefined && (reg.nota as any) !== 'faltou' && (reg.nota as any) !== '') {
           const num = Number(reg.nota);
           if (!isNaN(num) && num >= 0) {
             soma += num;
