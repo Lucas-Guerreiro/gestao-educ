@@ -1008,12 +1008,12 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                     width: '100%', 
                                     textAlign: 'center', 
                                     padding: '6px', 
-                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#fca5a5' : notaColors.border)}`,
+                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#fca5a5' : (notaVal === '2' ? '#fcd34d' : notaColors.border))}`,
                                     borderRadius: '8px', 
                                     fontSize: '11.5px', 
                                     fontWeight: 700,
-                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#fee2e2' : (notaVal === '' ? '#fff' : '#dcfce7')),
-                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#991b1b' : (notaVal === '' ? '#64748b' : '#166534')),
+                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#fee2e2' : (notaVal === '2' ? '#fef3c7' : (notaVal === '' ? '#fff' : '#dcfce7'))),
+                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#991b1b' : (notaVal === '2' ? '#92400e' : (notaVal === '' ? '#64748b' : '#166534'))),
                                     cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'pointer',
                                     transition: 'background 160ms ease, border-color 160ms ease'
                                   }}
@@ -1021,6 +1021,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                   <option value="">—</option>
                                   <option value={String(at.peso)}>Sim ({at.peso})</option>
                                   <option value={String(at.peso / 2)}>Parc ({at.peso / 2})</option>
+                                  <option value="2">Atrasado (2)</option>
                                   <option value="0">Não (0)</option>
                                   <option value="faltou">Faltou</option>
                                 </select>
