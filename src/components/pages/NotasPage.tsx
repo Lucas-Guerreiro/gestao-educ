@@ -856,6 +856,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                     const colors = badgeColor(at.tipo);
                     const hojeStr = new Date().toISOString().split('T')[0];
                     const atExpirada = !!(at.dataLimite && hojeStr > at.dataLimite && !at.liberadoVencido);
+                    const atDica = `Prazo: ${at.dataLimite ? at.dataLimite.split('-').reverse().join('/') : 'Sem prazo'}\nDescrição: ${at.descricao || 'Sem descrição'}`;
 
                     return (
                       <th 
@@ -877,7 +878,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                             <span 
                               onClick={() => handleEditarAtividade(at)}
                               style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
-                              title="Ajuste rápido: clique para editar esta atividade"
+                              title={atDica}
                             >
                               {at.nome}
                             </span>
