@@ -48,7 +48,7 @@ const App: React.FC = () => {
   const [adminConfig, setAdminConfig] = useState<AdminConfig>({ senha: 'admin123' });
 
   // Navigation state
-  const [currentSec, setCurrentSec] = useState('escola');
+  const [currentSec, setCurrentSec] = useState('visao-aulas');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [syncStatus, setSyncStatus] = useState<'ok' | 'saving' | 'err'>('ok');
 
@@ -176,7 +176,7 @@ const App: React.FC = () => {
           setIsBimestreChoiceModalOpen(true);
         }
       } else {
-        setCurrentSec('escola');
+        setCurrentSec('visao-aulas');
       }
     }
   }, []);
@@ -551,7 +551,7 @@ const App: React.FC = () => {
             setCurrentSec('visao-aulas'); // Ao abrir o sistema deve abrir na tela Grade semanal
             setIsBimestreChoiceModalOpen(true); // Abre o modal de escolha de bimestre
           } else {
-            setCurrentSec('escola');
+            setCurrentSec('visao-aulas');
           }
         }} 
       />
