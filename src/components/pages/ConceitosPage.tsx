@@ -124,18 +124,16 @@ const ConceitosPage: React.FC<ConceitosPageProps> = ({
     let notaQualitativa = 0;
     if (qualitativas.length > 0) {
       let soma = 0;
-      let count = 0;
       qualitativas.forEach(at => {
         const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === at.id);
         if (reg && reg.nota !== undefined && (reg.nota as any) !== 'faltou' && (reg.nota as any) !== '') {
           const num = Number(reg.nota);
           if (!isNaN(num) && num >= 0) {
             soma += num;
-            count++;
           }
         }
       });
-      notaQualitativa = count > 0 ? soma / count : 0;
+      notaQualitativa = soma / qualitativas.length;
     }
 
     // Se não houver notas lançadas para nenhuma atividade, retorna null

@@ -197,7 +197,7 @@ export interface Nota {
   materiaId: string;
   /** @fk Chave Estrangeira Redundante -> Bimestre.id | @cascade ON DELETE RESTRICT */
   bimestreId: string;
-  nota: number;
+  nota: number | string;
 }
 
 export interface AdminConfig {

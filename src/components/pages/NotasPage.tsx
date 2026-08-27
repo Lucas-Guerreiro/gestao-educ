@@ -286,7 +286,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
       return { bg: '#fff', border: '#cbd5e1', text: 'var(--text-main)' };
     }
     if (valorStr === 'faltou') {
-      return { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b' };
+      return { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' };
     }
 
     const valor = Number(valorStr.replace(',', '.'));
@@ -313,8 +313,9 @@ const NotasPage: React.FC<NotasPageProps> = ({
     const tipoAt = at ? at.tipo : '';
     const notaMax = obterNotaMaxima(tipoAt);
 
-    const valor = valorStr.trim() === '' ? null : Number(valorStr.replace(',', '.'));
-    if (valor !== null && (isNaN(valor) || valor < 0 || valor > notaMax)) {
+    const isFaltou = valorStr === 'faltou';
+    const valor = (valorStr.trim() === '' || isFaltou) ? null : Number(valorStr.replace(',', '.'));
+    if (!isFaltou && valor !== null && (isNaN(valor) || valor < 0 || valor > notaMax)) {
       alert(`Por favor, informe uma nota válida entre 0 e ${notaMax} para atividades do tipo ${tipoAt.toUpperCase()}.`);
       return;
     }
@@ -327,7 +328,16 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
     try {
       const docRef = doc(db, 'notas', docId);
-      if (valor === null) {
+      if (isFaltou) {
+        await setDoc(docRef, {
+          alunoId,
+          atividadeId,
+          turmaId,
+          materiaId,
+          bimestreId,
+          nota: 'faltou'
+        });
+      } else if (valor === null) {
         await setDoc(docRef, {
           alunoId,
           atividadeId,
@@ -392,15 +402,13 @@ const NotasPage: React.FC<NotasPageProps> = ({
     let notaQualitativa = 0;
     if (qualitativas.length > 0) {
       let soma = 0;
-      let count = 0;
       qualitativas.forEach(at => {
         const notaStr = obterNotaValor(alunoId, at.id);
         if (notaStr !== '' && notaStr !== 'faltou' && Number(notaStr) >= 0) {
           soma += Number(notaStr);
-          count++;
         }
       });
-      notaQualitativa = count > 0 ? soma / count : 0;
+      notaQualitativa = soma / qualitativas.length;
     }
 
     // Se o aluno não tem nota lançada em nenhuma atividade, exibe '—'
@@ -1009,12 +1017,12 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                     width: '100%', 
                                     textAlign: 'center', 
                                     padding: '6px', 
-                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#fca5a5' : (notaVal === '2' ? '#fcd34d' : notaColors.border))}`,
+                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#93c5fd' : (notaVal === '2' ? '#fcd34d' : notaColors.border))}`,
                                     borderRadius: '8px', 
                                     fontSize: '11.5px', 
                                     fontWeight: 700,
-                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#fee2e2' : (notaVal === '2' ? '#fef3c7' : (notaVal === '' ? '#fff' : '#dcfce7'))),
-                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#991b1b' : (notaVal === '2' ? '#92400e' : (notaVal === '' ? '#64748b' : '#166534'))),
+                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#dbeafe' : (notaVal === '2' ? '#fef3c7' : (notaVal === '' ? '#fff' : '#dcfce7'))),
+                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#1e40af' : (notaVal === '2' ? '#92400e' : (notaVal === '' ? '#64748b' : '#166534'))),
                                     cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'pointer',
                                     transition: 'background 160ms ease, border-color 160ms ease'
                                   }}
