@@ -4,7 +4,7 @@ import { db } from './firebase';
 import { 
   Escola, Turma, Aluno, Materia, Professor, 
   Bimestre, Atividade, Capitulo, Aula, 
-  SequenciaDidatica, Nota, AdminConfig, ExerciciosIA, Apontamento 
+  SequenciaDidatica, Nota, AdminConfig, ExerciciosIA, Apontamento, GradeHoraria
 } from '@/types';
 
 // Layout & Modals
@@ -40,6 +40,7 @@ import ApontamentosPage from './components/pages/ApontamentosPage';
 import SharedNotasPage from './components/pages/SharedNotasPage';
 import ProvasPage from './components/pages/ProvasPage';
 import AlunoProvaPage from './components/pages/AlunoProvaPage';
+import GradeHorariaPage from './components/pages/GradeHorariaPage';
 
 const App: React.FC = () => {
   // Authentication states
@@ -65,6 +66,7 @@ const App: React.FC = () => {
   const [sequencias, setSequencias] = useState<SequenciaDidatica[]>([]);
   const [notas, setNotas] = useState<Nota[]>([]);
   const [apontamentos, setApontamentos] = useState<Apontamento[]>([]);
+  const [gradeHoraria, setGradeHoraria] = useState<GradeHoraria[]>([]);
 
   // Active School Year State
   const [selectedAno, setSelectedAno] = useState<number>(() => {
@@ -281,6 +283,13 @@ const App: React.FC = () => {
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
 
+    const unsubGradeHoraria = onSnapshot(collection(db, 'grade_horaria'), (snapshot) => {
+      const items: GradeHoraria[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as any as GradeHoraria));
+      setGradeHoraria(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
     return () => {
       unsubAdmin();
       unsubEscolas();
@@ -295,6 +304,7 @@ const App: React.FC = () => {
       unsubSequencias();
       unsubNotas();
       unsubApontamentos();
+      unsubGradeHoraria();
     };
   }, []);
 
@@ -372,6 +382,15 @@ const App: React.FC = () => {
             materias={materias} 
             abrirAulaDetalheModal={(a) => { setAulaDetalhe(a); setIsAulaDetalheOpen(true); }}
             onAdicionarAula={() => setIsProgramarModalOpen(true)}
+          />
+        );
+      case 'grade-horaria':
+        return (
+          <GradeHorariaPage 
+            gradeHoraria={gradeHoraria}
+            turmas={turmas}
+            materias={materias}
+            perfil={perfil}
           />
         );
       case 'sd':

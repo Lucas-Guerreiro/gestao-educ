@@ -232,3 +232,14 @@ export interface Apontamento {
   observacao: string;
   presenca?: 'presente' | 'falta' | 'justificada' | '';
 }
+
+export interface GradeHoraria {
+  id: string;
+  turmaId: string;
+  materiaId: string;
+  diaSemana: number; // 1 = Segunda, 2 = Terça, etc.
+  tempo: string; // ex: "1º Tempo (Manhã)", "5º Tempo (Manhã)", etc.
+  horarioInicio: string; // ex: "10:20"
+  horarioFim: string; // ex: "11:05"
+  sala: string; // ex: "Sala 19"
+}

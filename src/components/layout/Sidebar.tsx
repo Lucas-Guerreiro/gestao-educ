@@ -19,6 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const menuItems = perfil === 'professor' ? [
     { sec: 'visao-aulas', label: 'Grade Semanal', icon: 'ti-layout-grid', cat: 'Professor' },
+    { sec: 'grade-horaria', label: 'Grade Horária', icon: 'ti-calendar-event', cat: 'Professor' },
     { sec: 'aulas', label: 'Aulas', icon: 'ti-clock-hour-4', cat: 'Professor' },
     { sec: 'capitulos', label: 'Capítulos', icon: 'ti-folder', cat: 'Professor' },
     { sec: 'ativ', label: 'Atividades', icon: 'ti-clipboard-list', cat: 'Professor' },
@@ -34,6 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { sec: 'aulas', label: 'Aulas', icon: 'ti-clock-hour-4', cat: 'Planejamentos' },
     { sec: 'ativ', label: 'Atividades', icon: 'ti-clipboard-list', cat: 'Planejamentos' },
     { sec: 'visao-aulas', label: 'Grade Semanal', icon: 'ti-layout-grid', cat: 'Planejamentos' },
+    { sec: 'grade-horaria', label: 'Grade Horária', icon: 'ti-calendar-event', cat: 'Planejamentos' },
     { sec: 'sd', label: 'Seq. Didática', icon: 'ti-notebook', cat: 'Planejamentos' },
     
     { sec: 'lan', label: 'Lançar Notas', icon: 'ti-pencil', cat: 'Notas & Resultados' },
