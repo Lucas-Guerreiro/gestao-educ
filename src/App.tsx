@@ -390,7 +390,6 @@ const App: React.FC = () => {
             gradeHoraria={gradeHoraria}
             turmas={turmas}
             materias={materias}
-            perfil={perfil}
           />
         );
       case 'sd':

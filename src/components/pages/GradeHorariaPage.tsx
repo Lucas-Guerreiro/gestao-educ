@@ -7,14 +7,12 @@ interface GradeHorariaPageProps {
   gradeHoraria: GradeHoraria[];
   turmas: Turma[];
   materias: Materia[];
-  perfil: 'admin' | 'professor';
 }
 
 const GradeHorariaPage: React.FC<GradeHorariaPageProps> = ({
   gradeHoraria,
   turmas,
   materias,
-  perfil,
 }) => {
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
