@@ -254,141 +254,156 @@ const GradePage: React.FC<GradePageProps> = ({
                     return (
                       <td key={idx} style={{ padding: '8px', verticalAlign: 'top', minHeight: '110px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '90px' }}>
-                          {aulasNaCelula.length > 0 ? (
-                            aulasNaCelula.map(aula => {
-                              const tur = turmas.find(t => t.id === aula.turmaId);
-                              const mat = materias.find(m => m.id === aula.materiaId);
+                          {/* 1. Aulas Ativas Planejadas */}
+                          {aulasNaCelula.map(aula => {
+                            const tur = turmas.find(t => t.id === aula.turmaId);
+                            const mat = materias.find(m => m.id === aula.materiaId);
 
+                            return (
+                              <div 
+                                key={aula.id} 
+                                onClick={() => abrirAulaDetalheModal(aula)}
+                                style={{ 
+                                  background: aula.realizada ? '#f0fdf4' : (aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '#faf5ff' : '#eff6ff'), 
+                                  border: aula.realizada ? '1px solid #bbf7d0' : (aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '1px solid #e9d5ff' : '1px solid #bfdbfe'), 
+                                  borderRadius: '10px', 
+                                  padding: '8px 10px', 
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '4px',
+                                  boxShadow: 'var(--shadow-sm)',
+                                  transition: 'all 0.15s ease'
+                                }}
+                                className="weekly-cell-card"
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', width: '100%' }}>
+                                  {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') ? (
+                                    <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
+                                      {aula.tipo.toUpperCase()}
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize: '8px', background: '#d8b4fe', color: '#581c87', padding: '1px 4px', borderRadius: '4px', fontWeight: 800 }}>
+                                      EVENTO
+                                    </span>
+                                  )}
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      try {
+                                        await updateDoc(doc(db, 'aulas', aula.id), { realizada: !aula.realizada });
+                                      } catch (err) {
+                                        console.error("Erro ao atualizar status da aula:", err);
+                                      }
+                                    }}
+                                    style={{
+                                      background: aula.realizada ? 'var(--success)' : 'transparent',
+                                      border: '1px solid var(--success)',
+                                      borderRadius: '50%',
+                                      width: '18px',
+                                      height: '18px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      cursor: 'pointer',
+                                      color: aula.realizada ? '#fff' : 'var(--success)',
+                                      padding: 0,
+                                      fontSize: '9px',
+                                      boxShadow: 'var(--shadow-sm)',
+                                      transition: 'all 0.2s',
+                                      flexShrink: 0
+                                    }}
+                                    title={aula.realizada ? "Desmarcar como realizada" : "Marcar como realizada (concluída)"}
+                                  >
+                                    <i className="ti ti-check" style={{ fontWeight: 'bold' }}></i>
+                                  </button>
+                                </div>
+                                <div style={{ fontSize: '12px', fontWeight: 800, color: aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '#6b21a8' : 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
+                                  {aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? aula.turmaId.toUpperCase() : (mat ? mat.nome : 'Matéria')}
+                                </div>
+                                {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
+                                  <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                    🏫 {tur ? tur.nome : '—'}
+                                  </div>
+                                )}
+                                {aula.descricao && (
+                                  <div style={{ 
+                                    fontSize: '9.5px', 
+                                    color: '#64748b', 
+                                    lineHeight: 1.3, 
+                                    marginTop: '4px',
+                                    borderTop: '1px solid rgba(0,0,0,0.04)',
+                                    paddingTop: '4px',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    fontStyle: 'italic',
+                                    whiteSpace: 'pre-wrap'
+                                  }} title={aula.descricao}>
+                                    📝 {aula.descricao}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+
+                          {/* 2. Sugestões de Grade Horária Pendentes (que não possuem aulas ativas criadas) */}
+                          {(() => {
+                            const diaSemanaValor = idx + 1;
+                            const sugestoesRaw = gradeHoraria.filter(item => 
+                              (selectedTurmaId ? item.turmaId === selectedTurmaId : true) && 
+                              item.diaSemana === diaSemanaValor && 
+                              item.tempo === h
+                            );
+                            
+                            const sugestoesExibidas = sugestoesRaw.filter(sug => 
+                              !aulasNaCelula.some(aula => aula.turmaId === sug.turmaId)
+                            );
+
+                            return sugestoesExibidas.map(sug => {
+                              const mat = materias.find(m => m.id === sug.materiaId);
+                              const tur = turmas.find(t => t.id === sug.turmaId);
                               return (
                                 <div 
-                                  key={aula.id} 
-                                  onClick={() => abrirAulaDetalheModal(aula)}
-                                  style={{ 
-                                    background: aula.realizada ? '#f0fdf4' : (aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '#faf5ff' : '#eff6ff'), 
-                                    border: aula.realizada ? '1px solid #bbf7d0' : (aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '1px solid #e9d5ff' : '1px solid #bfdbfe'), 
-                                    borderRadius: '10px', 
-                                    padding: '8px 10px', 
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '4px',
-                                    boxShadow: 'var(--shadow-sm)',
-                                    transition: 'all 0.15s ease'
-                                  }}
-                                  className="weekly-cell-card"
+                                  key={sug.id}
+                                  onClick={() => criarAulaRapida(dt, h, sug.turmaId, sug.materiaId)}
+                                  className="weekly-cell-card-sugestao"
+                                  title="Clique para programar esta aula rápida"
                                 >
-                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', width: '100%' }}>
-                                    {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') ? (
-                                      <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
-                                        {aula.tipo.toUpperCase()}
-                                      </span>
-                                    ) : (
-                                      <span style={{ fontSize: '8px', background: '#d8b4fe', color: '#581c87', padding: '1px 4px', borderRadius: '4px', fontWeight: 800 }}>
-                                        EVENTO
-                                      </span>
-                                    )}
-                                    <button
-                                      onClick={async (e) => {
-                                        e.stopPropagation();
-                                        try {
-                                          await updateDoc(doc(db, 'aulas', aula.id), { realizada: !aula.realizada });
-                                        } catch (err) {
-                                          console.error("Erro ao atualizar status da aula:", err);
-                                        }
-                                      }}
-                                      style={{
-                                        background: aula.realizada ? 'var(--success)' : 'transparent',
-                                        border: '1px solid var(--success)',
-                                        borderRadius: '50%',
-                                        width: '18px',
-                                        height: '18px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        cursor: 'pointer',
-                                        color: aula.realizada ? '#fff' : 'var(--success)',
-                                        padding: 0,
-                                        fontSize: '9px',
-                                        boxShadow: 'var(--shadow-sm)',
-                                        transition: 'all 0.2s',
-                                        flexShrink: 0
-                                      }}
-                                      title={aula.realizada ? "Desmarcar como realizada" : "Marcar como realizada (concluída)"}
-                                    >
-                                      <i className="ti ti-check" style={{ fontWeight: 'bold' }}></i>
-                                    </button>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                    <span style={{ fontSize: '7.5px', background: '#cbd5e1', color: '#475569', padding: '1px 3.5px', borderRadius: '4px', fontWeight: 800 }}>
+                                      SUGESTÃO
+                                    </span>
+                                    <i className="ti ti-plus" style={{ fontSize: '10px', color: '#94a3b8' }}></i>
                                   </div>
-                                  <div style={{ fontSize: '12px', fontWeight: 800, color: aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? '#6b21a8' : 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
-                                    {aula.turmaId === 'SOP' || aula.turmaId === 'Capela' ? aula.turmaId.toUpperCase() : (mat ? mat.nome : 'Matéria')}
+                                  <div style={{ fontSize: '12px', fontWeight: 800, color: '#475569', marginTop: '2px', lineHeight: 1.2 }}>
+                                    {mat ? mat.nome : 'Matéria'} {!selectedTurmaId && tur ? `(${tur.nome})` : ''}
                                   </div>
-                                  {!(aula.turmaId === 'SOP' || aula.turmaId === 'Capela') && (
-                                    <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                      🏫 {tur ? tur.nome : '—'}
-                                    </div>
-                                  )}
-                                  {aula.descricao && (
-                                    <div style={{ 
-                                      fontSize: '9.5px', 
-                                      color: '#64748b', 
-                                      lineHeight: 1.3, 
-                                      marginTop: '4px',
-                                      borderTop: '1px solid rgba(0,0,0,0.04)',
-                                      paddingTop: '4px',
-                                      display: '-webkit-box',
-                                      WebkitLineClamp: 2,
-                                      WebkitBoxOrient: 'vertical',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      fontStyle: 'italic',
-                                      whiteSpace: 'pre-wrap'
-                                    }} title={aula.descricao}>
-                                      📝 {aula.descricao}
-                                    </div>
-                                  )}
+                                  <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700 }}>
+                                    <span>🕒 {sug.horarioInicio} - {sug.horarioFim}</span>
+                                    {selectedTurmaId && <span style={{ marginLeft: '4px' }}>| 📍 {sug.sala}</span>}
+                                  </div>
                                 </div>
                               );
-                            })
-                          ) : (
+                            });
+                          })()}
+
+                          {/* 3. Box tracejado de "+" se não houver NADA nessa célula */}
+                          {aulasNaCelula.length === 0 && (() => {
+                            const diaSemanaValor = idx + 1;
+                            const sugestoesRaw = gradeHoraria.filter(item => 
+                              (selectedTurmaId ? item.turmaId === selectedTurmaId : true) && 
+                              item.diaSemana === diaSemanaValor && 
+                              item.tempo === h
+                            );
+                            return sugestoesRaw.length === 0;
+                          })() && (
                             selectedTurmaId ? (
-                              (() => {
-                                const diaSemanaValor = idx + 1;
-                                const sugestoes = gradeHoraria.filter(item => 
-                                  item.turmaId === selectedTurmaId && 
-                                  item.diaSemana === diaSemanaValor && 
-                                  item.tempo === h
-                                );
-                                if (sugestoes.length > 0) {
-                                  return sugestoes.map(sug => {
-                                    const mat = materias.find(m => m.id === sug.materiaId);
-                                    return (
-                                      <div 
-                                        key={sug.id}
-                                        onClick={() => criarAulaRapida(dt, h, selectedTurmaId, sug.materiaId)}
-                                        className="weekly-cell-card-sugestao"
-                                        title="Clique para programar esta aula rápida"
-                                      >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                          <span style={{ fontSize: '7.5px', background: '#cbd5e1', color: '#475569', padding: '1px 3.5px', borderRadius: '4px', fontWeight: 800 }}>
-                                            SUGESTÃO
-                                          </span>
-                                          <i className="ti ti-plus" style={{ fontSize: '10px', color: '#94a3b8' }}></i>
-                                        </div>
-                                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#475569', marginTop: '2px', lineHeight: 1.2 }}>
-                                          {mat ? mat.nome : 'Matéria'}
-                                        </div>
-                                        <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700 }}>
-                                          🕒 {sug.horarioInicio} - {sug.horarioFim} | 📍 {sug.sala}
-                                        </div>
-                                      </div>
-                                    );
-                                  });
-                                }
-                                return (
-                                  <div style={{ border: '2px dashed #f1f5f9', borderRadius: '10px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: '20px', fontWeight: 300, minHeight: '90px' }}>
-                                    +
-                                  </div>
-                                );
-                              })()
+                              <div style={{ border: '2px dashed #f1f5f9', borderRadius: '10px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: '20px', fontWeight: 300, minHeight: '90px' }}>
+                                +
+                              </div>
                             ) : (
                               <div style={{ flex: 1 }} />
                             )
@@ -523,48 +538,64 @@ const GradePage: React.FC<GradePageProps> = ({
                         </div>
                       );
                     })
-                  ) : (
-                    selectedTurmaId ? (
-                      (() => {
-                        const diaSemanaValor = diaAtivoIdx + 1;
-                        const sugestoes = gradeHoraria.filter(item => 
-                          item.turmaId === selectedTurmaId && 
-                          item.diaSemana === diaSemanaValor && 
-                          item.tempo === h
-                        );
-                        if (sugestoes.length > 0) {
-                          return sugestoes.map(sug => {
-                            const mat = materias.find(m => m.id === sug.materiaId);
-                            return (
-                              <div 
-                                key={sug.id}
-                                onClick={() => criarAulaRapida(dt, h, selectedTurmaId, sug.materiaId)}
-                                className="weekly-cell-card-sugestao"
-                                style={{ padding: '10px 12px' }}
-                                title="Clique para programar esta aula rápida"
-                              >
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                  <span style={{ fontSize: '7.5px', background: '#cbd5e1', color: '#475569', padding: '1px 3.5px', borderRadius: '4px', fontWeight: 800 }}>
-                                    SUGESTÃO
-                                  </span>
-                                  <i className="ti ti-plus" style={{ fontSize: '10px', color: '#94a3b8' }}></i>
-                                </div>
-                                <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#475569', marginTop: '2px', lineHeight: 1.2 }}>
-                                  {mat ? mat.nome : 'Matéria'}
-                                </div>
-                                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700 }}>
-                                  🕒 {sug.horarioInicio} - {sug.horarioFim} | 📍 {sug.sala}
-                                </div>
-                              </div>
-                            );
-                          });
-                        }
-                        return (
-                          <div style={{ border: '2px dashed #e2e8f0', borderRadius: '10px', padding: '12px', textAlign: 'center', color: '#cbd5e1', fontSize: '12px', fontWeight: 600 }}>
-                            + Agendar Aula
+                  )}
+
+                  {/* 2. Sugestões de Grade Horária Pendentes (que não possuem aulas ativas criadas) */}
+                  {(() => {
+                    const diaSemanaValor = diaAtivoIdx + 1;
+                    const sugestoesRaw = gradeHoraria.filter(item => 
+                      (selectedTurmaId ? item.turmaId === selectedTurmaId : true) && 
+                      item.diaSemana === diaSemanaValor && 
+                      item.tempo === h
+                    );
+                    
+                    const sugestoesExibidas = sugestoesRaw.filter(sug => 
+                      !aulasNaCelula.some(aula => aula.turmaId === sug.turmaId)
+                    );
+
+                    return sugestoesExibidas.map(sug => {
+                      const mat = materias.find(m => m.id === sug.materiaId);
+                      const tur = turmas.find(t => t.id === sug.turmaId);
+                      return (
+                        <div 
+                          key={sug.id}
+                          onClick={() => criarAulaRapida(dt, h, sug.turmaId, sug.materiaId)}
+                          className="weekly-cell-card-sugestao"
+                          style={{ padding: '10px 12px' }}
+                          title="Clique para programar esta aula rápida"
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                            <span style={{ fontSize: '7.5px', background: '#cbd5e1', color: '#475569', padding: '1px 3.5px', borderRadius: '4px', fontWeight: 800 }}>
+                              SUGESTÃO
+                            </span>
+                            <i className="ti ti-plus" style={{ fontSize: '10px', color: '#94a3b8' }}></i>
                           </div>
-                        );
-                      })()
+                          <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#475569', marginTop: '2px', lineHeight: 1.2 }}>
+                            {mat ? mat.nome : 'Matéria'} {!selectedTurmaId && tur ? `(${tur.nome})` : ''}
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700 }}>
+                            <span>🕒 {sug.horarioInicio} - {sug.horarioFim}</span>
+                            {selectedTurmaId && <span style={{ marginLeft: '4px' }}>| 📍 {sug.sala}</span>}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+
+                  {/* 3. Box de status de vazio/instrução se não houver NADA nessa célula no mobile */}
+                  {aulasNaCelula.length === 0 && (() => {
+                    const diaSemanaValor = diaAtivoIdx + 1;
+                    const sugestoesRaw = gradeHoraria.filter(item => 
+                      (selectedTurmaId ? item.turmaId === selectedTurmaId : true) && 
+                      item.diaSemana === diaSemanaValor && 
+                      item.tempo === h
+                    );
+                    return sugestoesRaw.length === 0;
+                  })() && (
+                    selectedTurmaId ? (
+                      <div style={{ border: '2px dashed #e2e8f0', borderRadius: '10px', padding: '12px', textAlign: 'center', color: '#cbd5e1', fontSize: '12px', fontWeight: 600 }}>
+                        + Agendar Aula
+                      </div>
                     ) : (
                       <div style={{ fontStyle: 'italic', color: '#cbd5e1', fontSize: '11px', textAlign: 'center', padding: '6px' }}>
                         Sem aulas planejadas
