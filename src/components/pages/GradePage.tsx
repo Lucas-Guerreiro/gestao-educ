@@ -454,91 +454,89 @@ const GradePage: React.FC<GradePageProps> = ({
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {aulasNaCelula.length > 0 ? (
-                    aulasNaCelula.map(aula => {
-                      const tur = turmas.find(t => t.id === aula.turmaId);
-                      const mat = materias.find(m => m.id === aula.materiaId);
+                  {aulasNaCelula.map(aula => {
+                    const tur = turmas.find(t => t.id === aula.turmaId);
+                    const mat = materias.find(m => m.id === aula.materiaId);
 
-                      return (
-                        <div 
-                          key={aula.id} 
-                          onClick={() => abrirAulaDetalheModal(aula)}
-                          style={{ 
-                            background: aula.realizada ? '#f0fdf4' : '#eff6ff', 
-                            border: aula.realizada ? '1px solid #bbf7d0' : '1px solid #bfdbfe', 
-                            borderRadius: '10px', 
-                            padding: '10px 12px', 
-                            cursor: 'pointer',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '4px',
-                            boxShadow: 'var(--shadow-sm)'
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
-                            <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
-                              {aula.tipo.toUpperCase()}
-                            </span>
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                try {
-                                  await updateDoc(doc(db, 'aulas', aula.id), { realizada: !aula.realizada });
-                                } catch (err) {
-                                  console.error("Erro ao atualizar status da aula:", err);
-                                }
-                              }}
-                              style={{
-                                background: aula.realizada ? 'var(--success)' : 'transparent',
-                                border: '1px solid var(--success)',
-                                borderRadius: '50%',
-                                width: '18px',
-                                height: '18px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                color: aula.realizada ? '#fff' : 'var(--success)',
-                                padding: 0,
-                                fontSize: '9px',
-                                boxShadow: 'var(--shadow-sm)',
-                                transition: 'all 0.2s',
-                                flexShrink: 0
-                              }}
-                              title={aula.realizada ? "Desmarcar como realizada" : "Marcar como realizada (concluída)"}
-                            >
-                              <i className="ti ti-check" style={{ fontWeight: 'bold' }}></i>
-                            </button>
-                          </div>
-                          <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
-                            {mat ? mat.nome : 'Matéria'}
-                          </div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>
-                            🏫 {tur ? tur.nome : '—'}
-                          </div>
-                          {aula.descricao && (
-                            <div style={{ 
-                              fontSize: '10px', 
-                              color: '#64748b', 
-                              lineHeight: 1.3, 
-                              marginTop: '4px',
-                              borderTop: '1px solid rgba(0,0,0,0.04)',
-                              paddingTop: '4px',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              fontStyle: 'italic',
-                              whiteSpace: 'pre-wrap'
-                            }} title={aula.descricao}>
-                              📝 {aula.descricao}
-                            </div>
-                          )}
+                    return (
+                      <div 
+                        key={aula.id} 
+                        onClick={() => abrirAulaDetalheModal(aula)}
+                        style={{ 
+                          background: aula.realizada ? '#f0fdf4' : '#eff6ff', 
+                          border: aula.realizada ? '1px solid #bbf7d0' : '1px solid #bfdbfe', 
+                          borderRadius: '10px', 
+                          padding: '10px 12px', 
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px',
+                          boxShadow: 'var(--shadow-sm)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                          <span className={`ali-badge-tipo tipo-aula-${aula.tipo}`} style={{ fontSize: '7.5px', padding: '1px 3.5px' }}>
+                            {aula.tipo.toUpperCase()}
+                          </span>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                await updateDoc(doc(db, 'aulas', aula.id), { realizada: !aula.realizada });
+                              } catch (err) {
+                                console.error("Erro ao atualizar status da aula:", err);
+                              }
+                            }}
+                            style={{
+                              background: aula.realizada ? 'var(--success)' : 'transparent',
+                              border: '1px solid var(--success)',
+                              borderRadius: '50%',
+                              width: '18px',
+                              height: '18px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              color: aula.realizada ? '#fff' : 'var(--success)',
+                              padding: 0,
+                              fontSize: '9px',
+                              boxShadow: 'var(--shadow-sm)',
+                              transition: 'all 0.2s',
+                              flexShrink: 0
+                            }}
+                            title={aula.realizada ? "Desmarcar como realizada" : "Marcar como realizada (concluída)"}
+                          >
+                            <i className="ti ti-check" style={{ fontWeight: 'bold' }}></i>
+                          </button>
                         </div>
-                      );
-                    })
-                  )}
+                        <div style={{ fontSize: '12.5px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', lineHeight: 1.2 }}>
+                          {mat ? mat.nome : 'Matéria'}
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>
+                          🏫 {tur ? tur.nome : '—'}
+                        </div>
+                        {aula.descricao && (
+                          <div style={{ 
+                            fontSize: '10px', 
+                            color: '#64748b', 
+                            lineHeight: 1.3, 
+                            marginTop: '4px',
+                            borderTop: '1px solid rgba(0,0,0,0.04)',
+                            paddingTop: '4px',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            fontStyle: 'italic',
+                            whiteSpace: 'pre-wrap'
+                          }} title={aula.descricao}>
+                            📝 {aula.descricao}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
 
                   {/* 2. Sugestões de Grade Horária Pendentes (que não possuem aulas ativas criadas) */}
                   {(() => {
