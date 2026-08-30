@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Aula, Turma, Materia } from '@/types';
+import { Aula, Turma, Materia, GradeHoraria } from '@/types';
 import { db } from '../../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection } from 'firebase/firestore';
 
 
 interface GradePageProps {
   aulas: Aula[];
   turmas: Turma[];
   materias: Materia[];
+  gradeHoraria: GradeHoraria[];
   abrirAulaDetalheModal: (aula: Aula) => void;
   onAdicionarAula?: () => void;
 }
@@ -16,12 +17,29 @@ const GradePage: React.FC<GradePageProps> = ({
   aulas,
   turmas,
   materias,
+  gradeHoraria,
   abrirAulaDetalheModal,
   onAdicionarAula,
 }) => {
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
   const [semanaOffset, setSemanaOffset] = useState(0); // 0 = semana atual, -1 = anterior, 1 = seguinte
   const [diaAtivoIdx, setDiaAtivoIdx] = useState(0); // 0 = Segunda, 1 = Terça, etc.
+
+  const criarAulaRapida = async (data: string, horario: string, turmaId: string, materiaId: string) => {
+    try {
+      await addDoc(collection(db, 'aulas'), {
+        data,
+        horario,
+        turmaId,
+        materiaId,
+        tipo: 'teorica',
+        realizada: false
+      });
+    } catch (err) {
+      console.error("Erro ao programar aula rápida:", err);
+      alert("Ocorreu um erro ao programar a aula.");
+    }
+  };
 
   const diasSemana = [
     { nome: 'Segunda-feira', valor: 1 },
@@ -94,6 +112,26 @@ const GradePage: React.FC<GradePageProps> = ({
       <style>{`
         .grade-desktop {
           display: block;
+        }
+        .weekly-cell-card-sugestao {
+          background: #f8fafc;
+          border: 1.5px dashed #cbd5e1; 
+          border-radius: 10px; 
+          padding: 8px 10px; 
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          transition: all 0.15s ease;
+          opacity: 0.7;
+        }
+        .weekly-cell-card-sugestao:hover {
+          background: #eff6ff !important;
+          border-color: #bfdbfe !important;
+          opacity: 1 !important;
+        }
+        .weekly-cell-card-sugestao:hover .ti-plus {
+          color: #1e40af !important;
         }
         .grade-mobile {
           display: none;
@@ -312,9 +350,45 @@ const GradePage: React.FC<GradePageProps> = ({
                             })
                           ) : (
                             selectedTurmaId ? (
-                              <div style={{ border: '2px dashed #f1f5f9', borderRadius: '10px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: '20px', fontWeight: 300, minHeight: '90px' }}>
-                                +
-                              </div>
+                              (() => {
+                                const diaSemanaValor = idx + 1;
+                                const sugestoes = gradeHoraria.filter(item => 
+                                  item.turmaId === selectedTurmaId && 
+                                  item.diaSemana === diaSemanaValor && 
+                                  item.tempo === h
+                                );
+                                if (sugestoes.length > 0) {
+                                  return sugestoes.map(sug => {
+                                    const mat = materias.find(m => m.id === sug.materiaId);
+                                    return (
+                                      <div 
+                                        key={sug.id}
+                                        onClick={() => criarAulaRapida(dt, h, selectedTurmaId, sug.materiaId)}
+                                        className="weekly-cell-card-sugestao"
+                                        title="Clique para programar esta aula rápida"
+                                      >
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                          <span style={{ fontSize: '7.5px', background: '#cbd5e1', color: '#475569', padding: '1px 3.5px', borderRadius: '4px', fontWeight: 800 }}>
+                                            SUGESTÃO
+                                          </span>
+                                          <i className="ti ti-plus" style={{ fontSize: '10px', color: '#94a3b8' }}></i>
+                                        </div>
+                                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#475569', marginTop: '2px', lineHeight: 1.2 }}>
+                                          {mat ? mat.nome : 'Matéria'}
+                                        </div>
+                                        <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700 }}>
+                                          🕒 {sug.horarioInicio} - {sug.horarioFim} | 📍 {sug.sala}
+                                        </div>
+                                      </div>
+                                    );
+                                  });
+                                }
+                                return (
+                                  <div style={{ border: '2px dashed #f1f5f9', borderRadius: '10px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: '20px', fontWeight: 300, minHeight: '90px' }}>
+                                    +
+                                  </div>
+                                );
+                              })()
                             ) : (
                               <div style={{ flex: 1 }} />
                             )
@@ -451,9 +525,46 @@ const GradePage: React.FC<GradePageProps> = ({
                     })
                   ) : (
                     selectedTurmaId ? (
-                      <div style={{ border: '2px dashed #e2e8f0', borderRadius: '10px', padding: '12px', textAlign: 'center', color: '#cbd5e1', fontSize: '12px', fontWeight: 600 }}>
-                        + Agendar Aula
-                      </div>
+                      (() => {
+                        const diaSemanaValor = diaAtivoIdx + 1;
+                        const sugestoes = gradeHoraria.filter(item => 
+                          item.turmaId === selectedTurmaId && 
+                          item.diaSemana === diaSemanaValor && 
+                          item.tempo === h
+                        );
+                        if (sugestoes.length > 0) {
+                          return sugestoes.map(sug => {
+                            const mat = materias.find(m => m.id === sug.materiaId);
+                            return (
+                              <div 
+                                key={sug.id}
+                                onClick={() => criarAulaRapida(dt, h, selectedTurmaId, sug.materiaId)}
+                                className="weekly-cell-card-sugestao"
+                                style={{ padding: '10px 12px' }}
+                                title="Clique para programar esta aula rápida"
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                  <span style={{ fontSize: '7.5px', background: '#cbd5e1', color: '#475569', padding: '1px 3.5px', borderRadius: '4px', fontWeight: 800 }}>
+                                    SUGESTÃO
+                                  </span>
+                                  <i className="ti ti-plus" style={{ fontSize: '10px', color: '#94a3b8' }}></i>
+                                </div>
+                                <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#475569', marginTop: '2px', lineHeight: 1.2 }}>
+                                  {mat ? mat.nome : 'Matéria'}
+                                </div>
+                                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700 }}>
+                                  🕒 {sug.horarioInicio} - {sug.horarioFim} | 📍 {sug.sala}
+                                </div>
+                              </div>
+                            );
+                          });
+                        }
+                        return (
+                          <div style={{ border: '2px dashed #e2e8f0', borderRadius: '10px', padding: '12px', textAlign: 'center', color: '#cbd5e1', fontSize: '12px', fontWeight: 600 }}>
+                            + Agendar Aula
+                          </div>
+                        );
+                      })()
                     ) : (
                       <div style={{ fontStyle: 'italic', color: '#cbd5e1', fontSize: '11px', textAlign: 'center', padding: '6px' }}>
                         Sem aulas planejadas

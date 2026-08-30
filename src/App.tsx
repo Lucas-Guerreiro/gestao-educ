@@ -380,6 +380,7 @@ const App: React.FC = () => {
             aulas={aulasAtivas} 
             turmas={turmas} 
             materias={materias} 
+            gradeHoraria={gradeHoraria}
             abrirAulaDetalheModal={(a) => { setAulaDetalhe(a); setIsAulaDetalheOpen(true); }}
             onAdicionarAula={() => setIsProgramarModalOpen(true)}
           />
