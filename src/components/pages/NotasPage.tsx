@@ -1029,6 +1029,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                 >
                                   <option value="">—</option>
                                   <option value={String(at.peso)}>Sim ({at.peso})</option>
+                                  <option value="2.5">Ajuda (2,5)</option>
                                   <option value={String(at.peso / 2)}>Parc ({at.peso / 2})</option>
                                   <option value="2">Atrasado (2)</option>
                                   <option value="0">Não (0)</option>
