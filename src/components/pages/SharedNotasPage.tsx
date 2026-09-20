@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
+import React, { useState, useMemo, useEffect } from 'react';
+import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola } from '@/types';
+import SharedPlanilhaModal from '../modals/SharedPlanilhaModal';
 
 interface SharedNotasPageProps {
   sharedMap: Record<string, string>;
@@ -31,6 +32,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
   const [savingCells, setSavingCells] = useState<Record<string, boolean>>({});
   const [edicaoBloqueada, setEdicaoBloqueada] = useState(true);
+  const [isPlanilhaModalOpen, setIsPlanilhaModalOpen] = useState(false);
 
   // Obter o ID da atividade correspondente à turma selecionada
   const currentAtividadeId = useMemo(() => {
@@ -76,6 +78,17 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
     if (!escola) return [];
     return turmas.filter(t => t.escolaId === escola.id && turmasPermitidas.includes(t.id));
   }, [turmas, escola, sharedMap]);
+
+  // Pré-selecionar a turma automaticamente se houver apenas uma vinculada ao link
+  useEffect(() => {
+    if (turmasDisponiveis.length === 1 && !selectedTurmaId) {
+      setSelectedTurmaId(turmasDisponiveis[0].id);
+    }
+  }, [turmasDisponiveis, selectedTurmaId]);
+
+  const selectedTurmaObj = useMemo(() => {
+    return turmas.find(t => t.id === selectedTurmaId) || null;
+  }, [turmas, selectedTurmaId]);
 
   // Filtrar alunos ativos da turma selecionada
   const alunosFiltrados = useMemo(() => {
@@ -170,6 +183,82 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
     } finally {
       setSavingCells(prev => ({ ...prev, [cellKey]: false }));
     }
+  };
+
+  // Salvar lote completo de notas via WriteBatch (usado pela Planilha Simples)
+  const salvarNotasEmLote = async (notasMap: Record<string, number | null>) => {
+    if (!atividade || !selectedTurmaId) return;
+
+    setSyncStatus('saving');
+    try {
+      const batch = writeBatch(db);
+
+      for (const alunoId in notasMap) {
+        const valor = notasMap[alunoId];
+        const docId = `${alunoId}_${currentAtividadeId}`;
+        const docRef = doc(db, 'notas', docId);
+
+        if (valor === null) {
+          batch.set(docRef, {
+            alunoId,
+            atividadeId: currentAtividadeId,
+            turmaId: selectedTurmaId,
+            materiaId: atividade.materiaId,
+            bimestreId: atividade.bimestreId,
+            nota: -1
+          });
+        } else {
+          batch.set(docRef, {
+            alunoId,
+            atividadeId: currentAtividadeId,
+            turmaId: selectedTurmaId,
+            materiaId: atividade.materiaId,
+            bimestreId: atividade.bimestreId,
+            nota: valor
+          });
+        }
+      }
+
+      await batch.commit();
+      setSyncStatus('ok');
+    } catch (err) {
+      setSyncStatus('err');
+      console.error('Erro ao salvar notas em lote:', err);
+      throw err;
+    }
+  };
+
+  // Suporte a colar (Ctrl+V) em sequência direta nos campos da tabela
+  const handleTablePaste = (e: React.ClipboardEvent<HTMLInputElement>, startIndex: number) => {
+    const pasteData = e.clipboardData.getData('text');
+    if (!pasteData || (!pasteData.includes('\n') && !pasteData.includes('\t'))) {
+      return;
+    }
+
+    e.preventDefault();
+    const linhas = pasteData
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+
+    linhas.forEach((linha, i) => {
+      const alunoIdx = startIndex + i;
+      if (alunoIdx < alunosFiltrados.length) {
+        const targetAluno = alunosFiltrados[alunoIdx];
+        const partes = linha.split('\t').map(p => p.trim());
+        let valorStr = partes[partes.length - 1];
+        if (partes.length > 1) {
+          const candidato = partes.find(p => !isNaN(Number(p.replace(',', '.'))) && p !== '');
+          if (candidato) valorStr = candidato;
+        }
+
+        const inputElem = document.getElementById(`shared-input-nota-${alunoIdx}`) as HTMLInputElement;
+        if (inputElem) {
+          inputElem.value = valorStr;
+        }
+        salvarNota(targetAluno.id, valorStr);
+      }
+    });
   };
 
   if (!atividade) {
@@ -287,30 +376,58 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                     )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setEdicaoBloqueada(prev => !prev)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '8px 16px',
-                      borderRadius: '10px',
-                      fontSize: '12.5px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      border: '1px solid',
-                      borderColor: edicaoBloqueada ? 'var(--primary)' : '#cbd5e1',
-                      background: edicaoBloqueada ? 'var(--primary)' : '#fff',
-                      color: edicaoBloqueada ? '#fff' : 'var(--text-main)',
-                      boxShadow: 'var(--shadow-sm)',
-                      transition: 'all 0.15s ease',
-                      userSelect: 'none'
-                    }}
-                  >
-                    <i className={edicaoBloqueada ? "ti ti-lock-open" : "ti ti-lock"}></i>
-                    {edicaoBloqueada ? 'Habilitar Edição' : 'Bloquear Edição'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsPlanilhaModalOpen(true)}
+                      disabled={atividadeExpirada}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 16px',
+                        borderRadius: '10px',
+                        fontSize: '12.5px',
+                        fontWeight: 700,
+                        cursor: atividadeExpirada ? 'not-allowed' : 'pointer',
+                        border: '1px solid #16a34a',
+                        background: '#16a34a',
+                        color: '#fff',
+                        boxShadow: 'var(--shadow-sm)',
+                        transition: 'all 0.15s ease',
+                        userSelect: 'none'
+                      }}
+                      title="Abrir planilha simples para lançar, colar do Excel ou importar notas em lote"
+                    >
+                      <i className="ti ti-file-spreadsheet" style={{ fontSize: '15px' }}></i>
+                      Lançar por Planilha
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEdicaoBloqueada(prev => !prev)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 16px',
+                        borderRadius: '10px',
+                        fontSize: '12.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        border: '1px solid',
+                        borderColor: edicaoBloqueada ? 'var(--primary)' : '#cbd5e1',
+                        background: edicaoBloqueada ? 'var(--primary)' : '#fff',
+                        color: edicaoBloqueada ? '#fff' : 'var(--text-main)',
+                        boxShadow: 'var(--shadow-sm)',
+                        transition: 'all 0.15s ease',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <i className={edicaoBloqueada ? "ti ti-lock-open" : "ti ti-lock"}></i>
+                      {edicaoBloqueada ? 'Habilitar Edição' : 'Bloquear Edição'}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -342,9 +459,11 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                         <td style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
                           <div style={{ position: 'relative', display: 'inline-block', width: '85px' }}>
                             <input 
+                              key={`${aluno.id}_${notaVal}`}
                               id={`shared-input-nota-${idx}`}
                               defaultValue={notaVal}
                               disabled={edicaoBloqueada || atividadeExpirada}
+                              onPaste={(e) => handleTablePaste(e, idx)}
                               onBlur={(e) => {
                                 if (!atividadeExpirada) {
                                   salvarNota(aluno.id, e.target.value);
@@ -394,6 +513,20 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
         )}
 
       </div>
+
+      {/* Modal de Lançamento por Planilha Simples */}
+      {isPlanilhaModalOpen && atividade && selectedTurmaObj && (
+        <SharedPlanilhaModal
+          atividade={atividade}
+          turma={selectedTurmaObj}
+          alunos={alunosFiltrados}
+          obterNotaValor={obterNotaValor}
+          obterNotaMaxima={obterNotaMaxima}
+          fecharModal={() => setIsPlanilhaModalOpen(false)}
+          onSalvarLote={salvarNotasEmLote}
+          atividadeExpirada={atividadeExpirada}
+        />
+      )}
     </div>
   );
 };
