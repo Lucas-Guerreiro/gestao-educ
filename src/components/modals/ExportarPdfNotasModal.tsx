@@ -49,6 +49,7 @@ const ExportarPdfNotasModal: React.FC<ExportarPdfNotasModalProps> = ({
   // Estado dos alunos selecionados para o PDF (por padrão todos)
   const [selectedAlunoIds, setSelectedAlunoIds] = useState<string[]>(() => alunosOrdenados.map(a => a.id));
   const [tituloRelatorio, setTituloRelatorio] = useState(`Relatório de Notas - ${atividadeAtual.nome}`);
+  const [incluirSituacao, setIncluirSituacao] = useState(true);
   const [incluirEstatisticas, setIncluirEstatisticas] = useState(true);
   const [incluirAssinatura, setIncluirAssinatura] = useState(true);
   const [observacoes, setObservacoes] = useState('');
@@ -332,11 +333,53 @@ const ExportarPdfNotasModal: React.FC<ExportarPdfNotasModalProps> = ({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '12px'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '10px'
             }}
           >
-            {/* Opção 1: Estatísticas */}
+            {/* Opção 1: Coluna de Situação */}
+            <div
+              onClick={() => setIncluirSituacao(!incluirSituacao)}
+              style={{
+                background: incluirSituacao ? '#eff6ff' : '#ffffff',
+                border: incluirSituacao ? '1.5px solid #3b82f6' : '1px solid #e2e8f0',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={incluirSituacao}
+                onChange={(e) => setIncluirSituacao(e.target.checked)}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  minWidth: '16px',
+                  minHeight: '16px',
+                  margin: 0,
+                  padding: 0,
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                  accentColor: '#2563eb'
+                }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#1e293b' }}>
+                  Coluna de Situação
+                </div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                  Aprovado / Abaixo da média
+                </div>
+              </div>
+            </div>
+
+            {/* Opção 2: Estatísticas */}
             <div
               onClick={() => setIncluirEstatisticas(!incluirEstatisticas)}
               style={{
@@ -373,12 +416,12 @@ const ExportarPdfNotasModal: React.FC<ExportarPdfNotasModalProps> = ({
                   Estatísticas da Turma
                 </div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>
-                  Inclui média geral, maior e menor nota
+                  Média geral, maior e menor nota
                 </div>
               </div>
             </div>
 
-            {/* Opção 2: Linha de Assinatura */}
+            {/* Opção 3: Linha de Assinatura */}
             <div
               onClick={() => setIncluirAssinatura(!incluirAssinatura)}
               style={{
@@ -764,8 +807,12 @@ const ExportarPdfNotasModal: React.FC<ExportarPdfNotasModalProps> = ({
             <tr style={{ background: '#0f172a', color: '#fff', textAlign: 'left' }}>
               <th style={{ padding: '8px', width: '36px', textAlign: 'center' }}>#</th>
               <th style={{ padding: '8px 12px' }}>Nome do Aluno</th>
-              <th style={{ padding: '8px', width: '90px', textAlign: 'center' }}>Nota (0 - {notaMaxima.toFixed(1)})</th>
-              <th style={{ padding: '8px', width: '110px', textAlign: 'center' }}>Situação</th>
+              <th style={{ padding: '8px', width: incluirSituacao ? '90px' : '130px', textAlign: 'center' }}>
+                Nota (0 - {notaMaxima.toFixed(1)})
+              </th>
+              {incluirSituacao && (
+                <th style={{ padding: '8px', width: '110px', textAlign: 'center' }}>Situação</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -801,19 +848,21 @@ const ExportarPdfNotasModal: React.FC<ExportarPdfNotasModalProps> = ({
                       <span style={{ color: '#94a3b8' }}>—</span>
                     )}
                   </td>
-                  <td style={{ padding: '7px 8px', textAlign: 'center', fontSize: '10.5px', fontWeight: 700 }}>
-                    {isFalta ? (
-                      <span style={{ color: '#1d4ed8' }}>Falta Justificada</span>
-                    ) : isPreenchida && !isNaN(num) ? (
-                      num >= mediaCorte ? (
-                        <span style={{ color: '#166534' }}>Aprovado</span>
+                  {incluirSituacao && (
+                    <td style={{ padding: '7px 8px', textAlign: 'center', fontSize: '10.5px', fontWeight: 700 }}>
+                      {isFalta ? (
+                        <span style={{ color: '#1d4ed8' }}>Falta Justificada</span>
+                      ) : isPreenchida && !isNaN(num) ? (
+                        num >= mediaCorte ? (
+                          <span style={{ color: '#166534' }}>Aprovado</span>
+                        ) : (
+                          <span style={{ color: '#dc2626' }}>Abaixo da Média</span>
+                        )
                       ) : (
-                        <span style={{ color: '#dc2626' }}>Abaixo da Média</span>
-                      )
-                    ) : (
-                      <span style={{ color: '#64748b' }}>Pendente</span>
-                    )}
-                  </td>
+                        <span style={{ color: '#64748b' }}>Pendente</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
