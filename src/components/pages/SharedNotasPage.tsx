@@ -92,9 +92,11 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
     return turmas.find(t => t.id === selectedTurmaId) || null;
   }, [turmas, selectedTurmaId]);
 
-  // Filtrar alunos ativos da turma selecionada
+  // Filtrar alunos ativos da turma selecionada ordenados alfabeticamente
   const alunosFiltrados = useMemo(() => {
-    return alunos.filter(a => String(a.turmaId) === selectedTurmaId && a.ativo !== false);
+    return alunos
+      .filter(a => String(a.turmaId) === selectedTurmaId && a.ativo !== false)
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }, [alunos, selectedTurmaId]);
 
   // Obter nota do aluno para a atividade específica
@@ -299,54 +301,53 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
       </div>
 
       {/* Main Container */}
-      <div style={{ padding: '24px', maxWidth: '800px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+      <div style={{ padding: '16px 20px', maxWidth: '860px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
         
         {/* Card Informativo do Trabalho */}
-        <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.25rem', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '12px' }}>
+        <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '14px 18px', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span>{atividade.nome}</span>
-                <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '2.5px 7px', borderRadius: '6px', fontWeight: 800 }}>
+                <span style={{ fontSize: '9.5px', background: colors.bg, color: colors.text, padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>
                   {atividade.tipo.toUpperCase()}
                 </span>
               </div>
-              {atividade.descricao && (
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  📝 {atividade.descricao}
-                </div>
-              )}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                <span style={{ fontSize: '10.5px', background: '#eff6ff', color: '#1e40af', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                  📖 {materia ? materia.nome : '—'}
+                </span>
+                <span style={{ fontSize: '10.5px', background: '#eff6ff', color: '#1e40af', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                  📅 {bimestre ? `${bimestre.nome}${bimestre.ano ? ` (${bimestre.ano})` : ''}` : '—'}
+                </span>
+                <span style={{ fontSize: '10.5px', background: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                  ⚖️ Peso: {atividade.peso}
+                </span>
+              </div>
             </div>
-            
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '10px', background: '#eff6ff', color: '#1e40af', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
-                📖 {materia ? materia.nome : '—'}
-              </span>
-              <span style={{ fontSize: '10px', background: '#eff6ff', color: '#1e40af', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
-                📅 {bimestre ? `${bimestre.nome}${bimestre.ano ? ` (${bimestre.ano})` : ''}` : '—'}
-              </span>
-              <span style={{ fontSize: '10px', background: '#fef3c7', color: '#d97706', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
-                ⚖️ Peso: {atividade.peso}
-              </span>
-            </div>
-          </div>
 
-          {/* Seleção de Turma Participante */}
-          <div className="f" style={{ maxWidth: '300px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>
-              Selecione a Turma para Lançar Notas *
-            </label>
-            <select 
-              value={selectedTurmaId} 
-              onChange={(e) => setSelectedTurmaId(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid var(--border)', fontSize: '13px', width: '100%' }}
-            >
-              <option value="">— selecione a turma —</option>
-              {turmasDisponiveis.map(t => (
-                <option key={t.id} value={t.id}>{t.nome}</option>
-              ))}
-            </select>
+            {/* Seleção de Turma Participante */}
+            <div style={{ minWidth: '220px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>
+                Turma para Lançar Notas *
+              </label>
+              <select 
+                value={selectedTurmaId} 
+                onChange={(e) => setSelectedTurmaId(e.target.value)}
+                style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', width: '100%', height: '36px', fontWeight: 600, background: '#fff' }}
+              >
+                <option value="">— selecione a turma —</option>
+                {turmasDisponiveis.map(t => (
+                  <option key={t.id} value={t.id}>{t.nome}</option>
+                ))}
+              </select>
+            </div>
           </div>
+          {atividade.descricao && (
+            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '8px', borderTop: '1px dashed var(--border)', paddingTop: '6px' }}>
+              📝 {atividade.descricao}
+            </div>
+          )}
         </div>
 
         {/* Tabela de Lançamento */}
@@ -359,22 +360,22 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
             Nenhum aluno ativo matriculado nesta turma.
           </div>
         ) : (
-          <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '14px 18px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               {atividadeExpirada ? (
-                <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '10px', padding: '10px 14px', fontSize: '11.5px', color: '#e11d48', lineHeight: 1.5, flex: 1 }}>
+                <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '10px', padding: '8px 12px', fontSize: '11.5px', color: '#e11d48', lineHeight: 1.5, flex: 1 }}>
                   <i className="ti ti-lock" style={{ marginRight: '6px' }}></i>
                   <span>⚠️ <b>Lançamento Expirado:</b> O prazo para digitação destas notas terminou em <b>{atividade.dataLimite ? atividade.dataLimite.split('-').reverse().join('/') : '—'}</b>. O lançamento está temporariamente bloqueado.</span>
                 </div>
               ) : (
                 <>
-                  <div style={{ background: edicaoBloqueada ? '#f8fafc' : '#eff6ff', border: edicaoBloqueada ? '1px solid var(--border)' : '1px solid #bfdbfe', borderRadius: '10px', padding: '10px 14px', fontSize: '11.5px', color: edicaoBloqueada ? 'var(--text-muted)' : '#1e40af', lineHeight: 1.5, flex: 1 }}>
+                  <div style={{ background: edicaoBloqueada ? '#f8fafc' : '#eff6ff', border: edicaoBloqueada ? '1px solid var(--border)' : '1px solid #bfdbfe', borderRadius: '10px', padding: '8px 12px', fontSize: '11.5px', color: edicaoBloqueada ? 'var(--text-muted)' : '#1e40af', lineHeight: 1.4, flex: 1 }}>
                     <i className={edicaoBloqueada ? "ti ti-lock" : "ti ti-info-circle"}></i>
                     {edicaoBloqueada ? (
-                      <span> <b>Visualização Protegida:</b> A digitação de notas está temporariamente bloqueada. Clique em <b>"Habilitar Edição"</b> ao lado para preencher ou alterar notas.</span>
+                      <span> <b>Visualização Protegida:</b> Digitação bloqueada. Clique em <b>"Habilitar Edição"</b> para alterar.</span>
                     ) : (
-                      <span> <b>Lançamento Ativo:</b> As notas digitadas são salvas automaticamente na nuvem ao perder o foco (Tab) ou pressionar Enter (para pular de linha).</span>
+                      <span> <b>Lançamento Ativo:</b> Notas salvas automaticamente. Pressione <b>Enter</b> para avançar ao próximo aluno.</span>
                     )}
                   </div>
 
@@ -386,9 +387,9 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '6px',
-                        padding: '8px 16px',
-                        borderRadius: '10px',
-                        fontSize: '12.5px',
+                        padding: '7px 14px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
                         fontWeight: 700,
                         cursor: 'pointer',
                         border: '1px solid #dc2626',
@@ -412,9 +413,9 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '6px',
-                        padding: '8px 16px',
-                        borderRadius: '10px',
-                        fontSize: '12.5px',
+                        padding: '7px 14px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
                         fontWeight: 700,
                         cursor: atividadeExpirada ? 'not-allowed' : 'pointer',
                         border: '1px solid #16a34a',
@@ -437,9 +438,9 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '6px',
-                        padding: '8px 16px',
-                        borderRadius: '10px',
-                        fontSize: '12.5px',
+                        padding: '7px 14px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
                         fontWeight: 700,
                         cursor: 'pointer',
                         border: '1px solid',
@@ -459,14 +460,26 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
               )}
             </div>
 
-            <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 360px)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
+            {/* Container da Tabela com Altura Expandida para Exibir Mais de 10 Alunos */}
+            <div style={{
+              overflowY: 'auto',
+              minHeight: '460px',
+              maxHeight: 'min(72vh, 650px)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              boxShadow: 'var(--shadow-sm)',
+              background: '#fff'
+            }}>
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' }}>
                 <thead>
                   <tr style={{ color: 'var(--text-muted)', fontWeight: 800 }}>
-                    <th style={{ padding: '12px 10px', textAlign: 'left', minWidth: '220px', position: 'sticky', top: 0, zIndex: 10, background: '#fff', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
-                      Nome do Aluno
+                    <th style={{ padding: '9px 10px', textAlign: 'center', width: '50px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                      #
                     </th>
-                    <th style={{ padding: '12px 10px', textAlign: 'center', width: '150px', position: 'sticky', top: 0, zIndex: 10, background: '#fff', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                    <th style={{ padding: '9px 14px', textAlign: 'left', minWidth: '220px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                      Nome do Aluno ({alunosFiltrados.length})
+                    </th>
+                    <th style={{ padding: '9px 12px', textAlign: 'center', width: '160px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
                       Nota (Máx: {obterNotaMaxima(atividade.tipo).toFixed(1)})
                     </th>
                   </tr>
@@ -478,13 +491,21 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                     const notaColors = getNotaCellColors(notaVal);
 
                     return (
-                      <tr key={aluno.id} className="table-row-hover">
-                        <td style={{ padding: '12px 10px', fontWeight: 700, color: 'var(--text-main)', borderBottom: '1px solid var(--border)' }}>
+                      <tr
+                        key={aluno.id}
+                        className="table-row-hover"
+                        style={{ background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}
+                      >
+                        <td style={{ padding: '6px 10px', textAlign: 'center', color: '#94a3b8', fontSize: '11px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>
+                          #{String(idx + 1).padStart(2, '0')}
+                        </td>
+
+                        <td style={{ padding: '6px 14px', fontWeight: 600, color: 'var(--text-main)', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
                           {aluno.nome}
                         </td>
                         
-                        <td style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
-                          <div style={{ position: 'relative', display: 'inline-block', width: '85px' }}>
+                        <td style={{ padding: '4px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
+                          <div style={{ position: 'relative', display: 'inline-block', width: '90px' }}>
                             <input 
                               key={`${aluno.id}_${notaVal}`}
                               id={`shared-input-nota-${idx}`}
@@ -512,7 +533,8 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                               style={{ 
                                 width: '100%', 
                                 textAlign: 'center', 
-                                padding: '6px', 
+                                padding: '4px 8px', 
+                                height: '32px',
                                 border: `1px solid ${atividadeExpirada ? '#fca5a5' : (edicaoBloqueada ? 'var(--border)' : notaColors.border)}`,
                                 borderRadius: '8px', 
                                 fontSize: '13px', 

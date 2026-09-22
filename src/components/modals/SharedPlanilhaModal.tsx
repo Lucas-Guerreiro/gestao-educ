@@ -618,19 +618,20 @@ const SharedPlanilhaModal: React.FC<SharedPlanilhaModalProps> = ({
                   border: '1px solid #e2e8f0',
                   borderRadius: '12px',
                   overflow: 'hidden',
-                  maxHeight: '48vh',
+                  minHeight: '440px',
+                  maxHeight: '62vh',
                   overflowY: 'auto'
                 }}
               >
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', color: '#475569', fontWeight: 800, borderBottom: '2px solid #e2e8f0' }}>
-                      <th style={{ padding: '10px', textAlign: 'center', width: '50px' }}>#</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left' }}>Nome do Aluno</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'center', width: '160px' }}>
+                      <th style={{ padding: '9px 10px', textAlign: 'center', width: '50px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc' }}>#</th>
+                      <th style={{ padding: '9px 12px', textAlign: 'left', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc' }}>Nome do Aluno ({alunosOrdenados.length})</th>
+                      <th style={{ padding: '9px 12px', textAlign: 'center', width: '160px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc' }}>
                         Nota (0 a {notaMaxima.toFixed(1)})
                       </th>
-                      <th style={{ padding: '10px 12px', textAlign: 'center', width: '130px' }}>Status</th>
+                      <th style={{ padding: '9px 12px', textAlign: 'center', width: '130px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc' }}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -648,13 +649,13 @@ const SharedPlanilhaModal: React.FC<SharedPlanilhaModalProps> = ({
                             background: index % 2 === 0 ? '#fff' : '#fafafa'
                           }}
                         >
-                          <td style={{ padding: '8px', textAlign: 'center', color: '#94a3b8', fontWeight: 700, fontSize: '11px' }}>
-                            {index + 1}
+                          <td style={{ padding: '6px 10px', textAlign: 'center', color: '#94a3b8', fontWeight: 700, fontSize: '11px' }}>
+                            #{String(index + 1).padStart(2, '0')}
                           </td>
-                          <td style={{ padding: '8px 12px', fontWeight: 700, color: '#1e293b' }}>
+                          <td style={{ padding: '6px 12px', fontWeight: 700, color: '#1e293b' }}>
                             {aluno.nome}
                           </td>
-                          <td style={{ padding: '6px 12px', textAlign: 'center' }}>
+                          <td style={{ padding: '4px 12px', textAlign: 'center' }}>
                             <input
                               id={`planilha-input-nota-${index}`}
                               type="text"
@@ -673,16 +674,17 @@ const SharedPlanilhaModal: React.FC<SharedPlanilhaModalProps> = ({
                               }}
                               placeholder="—"
                               style={{
-                                width: '100px',
+                                width: '90px',
+                                height: '32px',
                                 textAlign: 'center',
-                                padding: '6px',
+                                padding: '4px 8px',
                                 borderRadius: '8px',
                                 border: '1.5px solid',
                                 borderColor: isExcedido ? '#ef4444' : isVazio ? '#cbd5e1' : '#3b82f6',
                                 background: isExcedido ? '#fef2f2' : isVazio ? '#fff' : '#f0fdf4',
                                 color: isExcedido ? '#b91c1c' : '#1e293b',
                                 fontWeight: 800,
-                                fontSize: '13.5px',
+                                fontSize: '13px',
                                 outline: 'none'
                               }}
                             />
