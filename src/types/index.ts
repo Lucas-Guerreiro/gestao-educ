@@ -243,3 +243,16 @@ export interface GradeHoraria {
   horarioFim: string; // ex: "11:05"
   sala: string; // ex: "Sala 19"
 }
+
+/**
+ * @entity LinkCompartilhado
+ * @description Agrupamento persistente de atividades gravadas sob um mesmo link de acesso compartilhado.
+ */
+export interface LinkCompartilhado {
+  id: string;
+  nome: string;
+  atividadesIds: string[];
+  criadoEm?: string;
+  atualizadoEm?: string;
+}
+

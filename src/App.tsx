@@ -4,7 +4,7 @@ import { db } from './firebase';
 import { 
   Escola, Turma, Aluno, Materia, Professor, 
   Bimestre, Atividade, Capitulo, Aula, 
-  SequenciaDidatica, Nota, AdminConfig, ExerciciosIA, Apontamento, GradeHoraria
+  SequenciaDidatica, Nota, AdminConfig, ExerciciosIA, Apontamento, GradeHoraria, LinkCompartilhado
 } from '@/types';
 
 // Layout & Modals
@@ -67,6 +67,7 @@ const App: React.FC = () => {
   const [notas, setNotas] = useState<Nota[]>([]);
   const [apontamentos, setApontamentos] = useState<Apontamento[]>([]);
   const [gradeHoraria, setGradeHoraria] = useState<GradeHoraria[]>([]);
+  const [linksCompartilhados, setLinksCompartilhados] = useState<LinkCompartilhado[]>([]);
 
   // Active School Year State
   const [selectedAno, setSelectedAno] = useState<number>(() => {
@@ -290,6 +291,14 @@ const App: React.FC = () => {
       setSyncStatus('ok');
     }, () => setSyncStatus('err'));
 
+    const unsubLinks = onSnapshot(collection(db, 'links_compartilhados'), (snapshot) => {
+      const items: LinkCompartilhado[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as LinkCompartilhado));
+      items.sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || ''));
+      setLinksCompartilhados(items);
+      setSyncStatus('ok');
+    }, () => setSyncStatus('err'));
+
     return () => {
       unsubAdmin();
       unsubEscolas();
@@ -305,6 +314,7 @@ const App: React.FC = () => {
       unsubNotas();
       unsubApontamentos();
       unsubGradeHoraria();
+      unsubLinks();
     };
   }, []);
 
@@ -349,6 +359,7 @@ const App: React.FC = () => {
             setSyncStatus={setSyncStatus}
             selectedBimestreId={selectedBimestreId}
             onNavegarSeccao={(sec) => setCurrentSec(sec)}
+            linksCompartilhados={linksCompartilhados}
           />
         );
       case 'capitulos':
@@ -511,16 +522,31 @@ const App: React.FC = () => {
   }
 
   const isCompartilhado = queryParams.get('compartilhado') === 'true';
+  const sharedLinkId = queryParams.get('linkId') || '';
   const sharedMapStr = queryParams.get('map') || '';
   const sharedAtividadeId = queryParams.get('atividadeId') || '';
   const sharedTurmas = queryParams.get('turmas') ? queryParams.get('turmas')!.split(',') : [];
 
   const sharedMap: Record<string, string> = {};
-  if (sharedMapStr) {
+  let linkAtividadesIds: string[] = [];
+
+  if (sharedLinkId) {
+    const linkObj = linksCompartilhados.find(l => l.id === sharedLinkId);
+    if (linkObj && linkObj.atividadesIds) {
+      linkAtividadesIds = linkObj.atividadesIds;
+      const ativsDoLink = atividades.filter(a => linkObj.atividadesIds.includes(a.id));
+      ativsDoLink.forEach(a => {
+        sharedMap[a.turmaId] = a.id;
+      });
+    }
+  } else if (sharedMapStr) {
     sharedMapStr.split(',').forEach(entry => {
       const [tId, aId] = entry.split(':');
       if (tId && aId) {
         sharedMap[tId] = aId;
+        if (!linkAtividadesIds.includes(aId)) {
+          linkAtividadesIds.push(aId);
+        }
       }
     });
   } else if (sharedAtividadeId) {
@@ -535,14 +561,17 @@ const App: React.FC = () => {
         sharedMap[ativ.turmaId] = sharedAtividadeId;
       }
     }
+    linkAtividadesIds = [sharedAtividadeId];
   }
 
-  if (isCompartilhado && Object.keys(sharedMap).length > 0) {
-    const fallbackAtividadeId = Object.values(sharedMap)[0] || sharedAtividadeId;
+  if (isCompartilhado && (Object.keys(sharedMap).length > 0 || linkAtividadesIds.length > 0 || sharedLinkId)) {
+    const fallbackAtividadeId = Object.values(sharedMap)[0] || sharedAtividadeId || linkAtividadesIds[0] || '';
     return (
       <SharedNotasPage
         sharedMap={sharedMap}
         sharedAtividadeId={fallbackAtividadeId}
+        sharedLinkId={sharedLinkId}
+        linkAtividadesIds={linkAtividadesIds}
         alunos={alunos}
         turmas={turmas}
         materias={materias}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { doc, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola } from '@/types';
 import SharedPlanilhaModal from '../modals/SharedPlanilhaModal';
@@ -8,6 +8,8 @@ import ExportarPdfNotasModal from '../modals/ExportarPdfNotasModal';
 interface SharedNotasPageProps {
   sharedMap: Record<string, string>;
   sharedAtividadeId: string;
+  sharedLinkId?: string;
+  linkAtividadesIds?: string[];
   alunos: Aluno[];
   turmas: Turma[];
   materias: Materia[];
@@ -21,6 +23,8 @@ interface SharedNotasPageProps {
 const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
   sharedMap,
   sharedAtividadeId,
+  sharedLinkId,
+  linkAtividadesIds,
   alunos,
   turmas,
   materias,
@@ -31,66 +35,121 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
   setSyncStatus,
 }) => {
   const [selectedTurmaId, setSelectedTurmaId] = useState('');
+  const [selectedAtividadeId, setSelectedAtividadeId] = useState('');
   const [savingCells, setSavingCells] = useState<Record<string, boolean>>({});
   const [edicaoBloqueada, setEdicaoBloqueada] = useState(true);
   const [isPlanilhaModalOpen, setIsPlanilhaModalOpen] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
-  // Obter o ID da atividade correspondente à turma selecionada
-  const currentAtividadeId = useMemo(() => {
-    return selectedTurmaId ? (sharedMap[selectedTurmaId] || sharedAtividadeId) : sharedAtividadeId;
-  }, [selectedTurmaId, sharedMap, sharedAtividadeId]);
+  // Escuta em tempo real do link compartilhado caso seja acessado via linkId
+  const [linkDocAtivIds, setLinkDocAtivIds] = useState<string[]>([]);
+  const [linkNome, setLinkNome] = useState('');
 
-  // Detalhes da atividade compartilhada
-  const atividade = useMemo(() => {
-    return atividades.find(a => a.id === currentAtividadeId) || null;
-  }, [atividades, currentAtividadeId]);
+  useEffect(() => {
+    if (!sharedLinkId) return undefined;
+    const docRef = doc(db, 'links_compartilhados', sharedLinkId);
+    const unsub = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (Array.isArray(data?.atividadesIds)) {
+          setLinkDocAtivIds(data.atividadesIds);
+        }
+        if (data?.nome) {
+          setLinkNome(data.nome);
+        }
+      }
+    });
+    return () => unsub();
+  }, [sharedLinkId]);
 
-  // Verificar se o prazo limite da atividade expirou
-  const hojeStr = useMemo(() => new Date().toISOString().split('T')[0], []);
-  const atividadeExpirada = useMemo(() => {
-    if (!atividade || !atividade.dataLimite) return false;
-    return hojeStr > atividade.dataLimite && !atividade.liberadoVencido;
-  }, [atividade, hojeStr]);
+  // Consolidar todos os IDs de atividades pertencentes ao link
+  const todasAtividadesIdsDoLink = useMemo(() => {
+    if (linkDocAtivIds.length > 0) return linkDocAtivIds;
+    if (linkAtividadesIds && linkAtividadesIds.length > 0) return linkAtividadesIds;
+    return Object.values(sharedMap);
+  }, [linkDocAtivIds, linkAtividadesIds, sharedMap]);
 
+  // Lista de objetos de atividades vinculadas ao link
+  const atividadesDoLink = useMemo(() => {
+    if (todasAtividadesIdsDoLink.length > 0) {
+      return atividades.filter(a => todasAtividadesIdsDoLink.includes(a.id));
+    }
+    return atividades.filter(a => a.id === sharedAtividadeId);
+  }, [atividades, todasAtividadesIdsDoLink, sharedAtividadeId]);
 
-  // Escola da atividade
-  const escola = useMemo(() => {
-    if (!atividade) return null;
-    const tur = turmas.find(t => t.id === atividade.turmaId);
-    if (!tur) return null;
-    return escolas.find(e => e.id === tur.escolaId) || null;
-  }, [atividade, turmas, escolas]);
-
-  // Matéria da atividade
-  const materia = useMemo(() => {
-    if (!atividade) return null;
-    return materias.find(m => m.id === atividade.materiaId) || null;
-  }, [atividade, materias]);
-
-  // Bimestre da atividade
-  const bimestre = useMemo(() => {
-    if (!atividade) return null;
-    return bimestres.find(b => b.id === atividade.bimestreId) || null;
-  }, [atividade, bimestres]);
-
-  // Filtrar turmas que o professor pode escolher (devem estar no link e pertencerem à mesma escola da atividade original)
+  // Turmas permitidas / presentes no link
   const turmasDisponiveis = useMemo(() => {
-    const turmasPermitidas = Object.keys(sharedMap);
-    if (!escola) return [];
-    return turmas.filter(t => t.escolaId === escola.id && turmasPermitidas.includes(t.id));
-  }, [turmas, escola, sharedMap]);
+    const tIds = Array.from(new Set(atividadesDoLink.map(a => a.turmaId)));
+    if (tIds.length === 0 && Object.keys(sharedMap).length > 0) {
+      return turmas.filter(t => Object.keys(sharedMap).includes(t.id));
+    }
+    return turmas.filter(t => tIds.includes(t.id));
+  }, [turmas, atividadesDoLink, sharedMap]);
 
-  // Pré-selecionar a turma automaticamente se houver apenas uma vinculada ao link
+  // Pré-selecionar turma se houver apenas uma
   useEffect(() => {
     if (turmasDisponiveis.length === 1 && !selectedTurmaId) {
       setSelectedTurmaId(turmasDisponiveis[0].id);
     }
   }, [turmasDisponiveis, selectedTurmaId]);
 
+  // Atividades da turma selecionada
+  const atividadesDaTurma = useMemo(() => {
+    if (!selectedTurmaId) return [];
+    const list = atividadesDoLink.filter(a => a.turmaId === selectedTurmaId);
+    if (list.length === 0) {
+      const ativ = atividades.find(a => a.id === sharedMap[selectedTurmaId] || a.id === sharedAtividadeId);
+      return ativ ? [ativ] : [];
+    }
+    return list;
+  }, [selectedTurmaId, atividadesDoLink, atividades, sharedMap, sharedAtividadeId]);
+
+  // Auto-selecionar a atividade da turma
+  useEffect(() => {
+    if (atividadesDaTurma.length > 0) {
+      const existe = atividadesDaTurma.some(a => a.id === selectedAtividadeId);
+      if (!existe) {
+        setSelectedAtividadeId(atividadesDaTurma[0].id);
+      }
+    } else {
+      setSelectedAtividadeId('');
+    }
+  }, [atividadesDaTurma, selectedAtividadeId]);
+
+  // ID da atividade atualmente selecionada
+  const currentAtividadeId = useMemo(() => {
+    return selectedAtividadeId || (atividadesDaTurma[0]?.id) || sharedAtividadeId;
+  }, [selectedAtividadeId, atividadesDaTurma, sharedAtividadeId]);
+
+  // Detalhes da atividade compartilhada
+  const atividade = useMemo(() => {
+    return atividades.find(a => a.id === currentAtividadeId) || null;
+  }, [atividades, currentAtividadeId]);
+
   const selectedTurmaObj = useMemo(() => {
     return turmas.find(t => t.id === selectedTurmaId) || null;
   }, [turmas, selectedTurmaId]);
+
+  const escola = useMemo(() => {
+    if (!selectedTurmaObj) return null;
+    return escolas.find(e => e.id === selectedTurmaObj.escolaId) || null;
+  }, [escolas, selectedTurmaObj]);
+
+  const materia = useMemo(() => {
+    if (!atividade) return null;
+    return materias.find(m => m.id === atividade.materiaId) || null;
+  }, [materias, atividade]);
+
+  const bimestre = useMemo(() => {
+    if (!atividade) return null;
+    return bimestres.find(b => b.id === atividade.bimestreId) || null;
+  }, [bimestres, atividade]);
+
+  const atividadeExpirada = useMemo(() => {
+    if (!atividade || !atividade.dataLimite) return false;
+    const hoje = new Date().toISOString().split('T')[0];
+    return hoje > atividade.dataLimite && !atividade.liberadoVencido;
+  }, [atividade]);
 
   // Filtrar alunos ativos da turma selecionada ordenados alfabeticamente
   const alunosFiltrados = useMemo(() => {
@@ -294,6 +353,11 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
           <span style={{ fontSize: '11px', background: '#f1f5f9', color: '#475569', padding: '3px 8px', borderRadius: '20px', fontWeight: 700 }}>
             Lançamento Compartilhado
           </span>
+          {linkNome && (
+            <span style={{ fontSize: '11px', background: '#e0e7ff', color: '#3730a3', padding: '3px 9px', borderRadius: '20px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              🔗 {linkNome}
+            </span>
+          )}
         </div>
         <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
           🏫 {escola ? escola.nome : 'Escola'}
@@ -326,21 +390,42 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
               </div>
             </div>
 
-            {/* Seleção de Turma Participante */}
-            <div style={{ minWidth: '220px' }}>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>
-                Turma para Lançar Notas *
-              </label>
-              <select 
-                value={selectedTurmaId} 
-                onChange={(e) => setSelectedTurmaId(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', width: '100%', height: '36px', fontWeight: 600, background: '#fff' }}
-              >
-                <option value="">— selecione a turma —</option>
-                {turmasDisponiveis.map(t => (
-                  <option key={t.id} value={t.id}>{t.nome}</option>
-                ))}
-              </select>
+            {/* Seleção de Turma e Atividade (quando houver mais de uma vinculada) */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ minWidth: '180px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>
+                  Turma para Lançar Notas *
+                </label>
+                <select 
+                  value={selectedTurmaId} 
+                  onChange={(e) => setSelectedTurmaId(e.target.value)}
+                  style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', width: '100%', height: '36px', fontWeight: 600, background: '#fff' }}
+                >
+                  <option value="">— selecione a turma —</option>
+                  {turmasDisponiveis.map(t => (
+                    <option key={t.id} value={t.id}>{t.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedTurmaId && atividadesDaTurma.length > 1 && (
+                <div style={{ minWidth: '220px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', marginBottom: '4px', display: 'block' }}>
+                    Atividade desta Turma ({atividadesDaTurma.length}) *
+                  </label>
+                  <select 
+                    value={selectedAtividadeId} 
+                    onChange={(e) => setSelectedAtividadeId(e.target.value)}
+                    style={{ padding: '6px 10px', borderRadius: '8px', border: '1.5px solid #3b82f6', fontSize: '13px', width: '100%', height: '36px', fontWeight: 700, background: '#eff6ff', color: '#1e40af' }}
+                  >
+                    {atividadesDaTurma.map(a => (
+                      <option key={a.id} value={a.id}>
+                        {a.nome} ({a.tipo.toUpperCase()} - Peso {a.peso})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
           {atividade.descricao && (
@@ -587,8 +672,14 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
           materiaNome={materia ? materia.nome : '—'}
           bimestreNome={bimestre ? `${bimestre.nome}${bimestre.ano ? ` (${bimestre.ano})` : ''}` : '—'}
           atividade={atividade}
+          todasAtividades={atividadesDaTurma}
           alunos={alunosFiltrados}
-          obterNotaValor={(alunoId) => obterNotaValor(alunoId)}
+          obterNotaValor={(alunoId, ativId) => {
+            const idParaBuscar = ativId || atividade.id;
+            const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === idParaBuscar);
+            if (!reg || reg.nota === undefined || reg.nota === -1) return '';
+            return String(reg.nota);
+          }}
           obterNotaMaxima={obterNotaMaxima}
         />
       )}
