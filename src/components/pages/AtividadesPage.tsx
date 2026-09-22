@@ -45,6 +45,50 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
   // Filters state
   const [filtroTurma, setFiltroTurma] = useState('');
   const [filtroBimestre, setFiltroBimestre] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState('');
+
+  // Estados para Compartilhamento de Atividades em Lote por Link
+  const [selectedAtivs, setSelectedAtivs] = useState<string[]>([]);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [copiadoFeedback, setCopiadoFeedback] = useState(false);
+
+  const toggleAtividadeSelecao = (ativId: string) => {
+    setSelectedAtivs(prev =>
+      prev.includes(ativId) ? prev.filter(id => id !== ativId) : [...prev, ativId]
+    );
+  };
+
+  const selecionarTodasFiltradas = (listaIds: string[]) => {
+    setSelectedAtivs(listaIds);
+  };
+
+  const limparSelecao = () => {
+    setSelectedAtivs([]);
+  };
+
+  const obterLinkCompartilhadoGeral = () => {
+    const base = window.location.origin + window.location.pathname;
+    const mapEntries = selectedAtivs.map(ativId => {
+      const ativ = atividades.find(a => a.id === ativId);
+      if (!ativ) return '';
+      return `${ativ.turmaId}:${ativ.id}`;
+    })
+    .filter(Boolean)
+    .join(',');
+
+    return `${base}?compartilhado=true&map=${mapEntries}`;
+  };
+
+  const copiarLink = () => {
+    const link = obterLinkCompartilhadoGeral();
+    if (!link) return;
+    navigator.clipboard.writeText(link)
+      .then(() => {
+        setCopiadoFeedback(true);
+        setTimeout(() => setCopiadoFeedback(false), 2500);
+      })
+      .catch(err => console.error('Erro ao copiar link:', err));
+  };
 
   // Sincronizar com o bimestre global
   useEffect(() => {
@@ -398,14 +442,118 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
               {bimestres.map(b => <option key={b.id} value={b.id}>{b.nome}{b.ano ? ` (${b.ano})` : ''}</option>)}
             </select>
           </div>
+          <div className="f" style={{ flex: 1, minWidth: '120px' }}>
+            <label style={{ fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Filtrar por Tipo</label>
+            <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)} style={{ height: '34px', fontSize: '12px' }}>
+              <option value="">— Todos os Tipos —</option>
+              <option value="prova">📝 Prova / Exame</option>
+              <option value="trabalho">📚 Trabalho / Seminário</option>
+              <option value="pluraal">💜 Atividade PLURAAL</option>
+              <option value="qualitativa">🌟 Avaliação Qualitativa</option>
+              <option value="bonus">🎁 Ponto Bônus</option>
+            </select>
+          </div>
         </div>
+
+        {/* Barra de Ações de Compartilhamento / Seleção em Lote */}
+        {(() => {
+          const atividadesFiltradas = atividades.filter(a => {
+            const atendeTurma = filtroTurma ? a.turmaId === filtroTurma : true;
+            const atendeBimestre = filtroBimestre ? a.bimestreId === filtroBimestre : true;
+            const atendeTipo = filtroTipo ? a.tipo === filtroTipo : true;
+            return atendeTurma && atendeBimestre && atendeTipo;
+          });
+
+          const todasFiltradasSelecionadas = atividadesFiltradas.length > 0 && atividadesFiltradas.every(a => selectedAtivs.includes(a.id));
+
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: selectedAtivs.length > 0 ? '#eff6ff' : '#f8fafc', borderRadius: '10px', border: selectedAtivs.length > 0 ? '1px solid #bfdbfe' : '1px solid var(--border)', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: selectedAtivs.length > 0 ? '#1e40af' : 'var(--text-muted)' }}>
+                  {selectedAtivs.length > 0 ? (
+                    <>🔗 <b>{selectedAtivs.length}</b> atividade(s) selecionada(s)</>
+                  ) : (
+                    <>Selecione uma ou mais atividades para compartilhar o link</>
+                  )}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {atividadesFiltradas.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (todasFiltradasSelecionadas) {
+                        limparSelecao();
+                      } else {
+                        selecionarTodasFiltradas(atividadesFiltradas.map(a => a.id));
+                      }
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--primary)',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      padding: '4px 6px'
+                    }}
+                  >
+                    {todasFiltradasSelecionadas ? 'Desmarcar Todas' : 'Selecionar Todas'}
+                  </button>
+                )}
+
+                {selectedAtivs.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={limparSelecao}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#dc2626',
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '4px 6px'
+                      }}
+                    >
+                      Limpar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsShareModalOpen(true)}
+                      style={{
+                        background: 'var(--primary)',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '6px 14px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: 'var(--shadow-sm)'
+                      }}
+                    >
+                      <i className="ti ti-link"></i> Compartilhar Link ({selectedAtivs.length})
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '500px', overflowY: 'auto' }}>
           {(() => {
             const atividadesFiltradas = atividades.filter(a => {
               const atendeTurma = filtroTurma ? a.turmaId === filtroTurma : true;
               const atendeBimestre = filtroBimestre ? a.bimestreId === filtroBimestre : true;
-              return atendeTurma && atendeBimestre;
+              const atendeTipo = filtroTipo ? a.tipo === filtroTipo : true;
+              return atendeTurma && atendeBimestre && atendeTipo;
             });
 
             if (atividadesFiltradas.length === 0) {
@@ -417,55 +565,92 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
               const mat = materias.find(m => m.id === ativ.materiaId);
               const bim = bimestres.find(b => b.id === ativ.bimestreId);
               const colors = badgeColor(ativ.tipo);
+              const isSelecionada = selectedAtivs.includes(ativ.id);
 
               return (
                 <div 
                   key={ativ.id} 
                   className="flex-row-mobile-stack"
-                  style={{ padding: '10px 14px' }}
+                  style={{ 
+                    padding: '10px 14px',
+                    border: isSelecionada ? '1px solid #93c5fd' : '1px solid var(--border)',
+                    background: isSelecionada ? '#f0f7ff' : '#fff'
+                  }}
                 >
-                  <div style={{ flex: 1, paddingRight: '8px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{ativ.nome}</span>
-                    {ativ.descricao && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>📝 {ativ.descricao}</div>}
-                    <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>
-                        {ativ.tipo.toUpperCase()}
-                      </span>
-                      <span style={{ fontSize: '9px', background: '#e2e8f0', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>
-                        🏫 {tur ? tur.nome : '—'}
-                      </span>
-                      <span style={{ fontSize: '9px', background: '#e2e8f0', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>
-                        📖 {mat ? mat.nome : '—'}
-                      </span>
-                      <span style={{ fontSize: '9px', background: '#eff6ff', color: '#1e40af', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                        📅 {bim ? `${bim.nome}${bim.ano ? ` (${bim.ano})` : ''}` : '—'}
-                      </span>
-                      <span style={{ fontSize: '9px', background: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                        ⚖️ Peso: {ativ.peso}
-                      </span>
-                      {ativ.dataLimite && (() => {
-                        const hoje = new Date().toISOString().split('T')[0];
-                        const estaExpirado = hoje > ativ.dataLimite && !ativ.liberadoVencido;
-                        return (
-                          <span style={{ 
-                            fontSize: '9px', 
-                            background: estaExpirado ? '#fee2e2' : '#f0fdf4', 
-                            color: estaExpirado ? '#dc2626' : '#16a34a', 
-                            padding: '2px 6px', 
-                            borderRadius: '4px', 
-                            fontWeight: 700,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '3px'
-                          }}>
-                            <i className={estaExpirado ? "ti ti-lock" : "ti ti-lock-open"}></i>
-                            Prazo: {ativ.dataLimite.split('-').reverse().join('/')} {estaExpirado && '(Expirado)'}
-                          </span>
-                        );
-                      })()}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, paddingRight: '8px' }}>
+                    <input
+                      type="checkbox"
+                      checked={isSelecionada}
+                      onChange={() => toggleAtividadeSelecao(ativ.id)}
+                      style={{ marginTop: '3px', cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary)' }}
+                      title="Selecionar esta atividade para compartilhar link"
+                    />
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>{ativ.nome}</span>
+                      {ativ.descricao && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>📝 {ativ.descricao}</div>}
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                          {ativ.tipo.toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: '9px', background: '#e2e8f0', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>
+                          🏫 {tur ? tur.nome : '—'}
+                        </span>
+                        <span style={{ fontSize: '9px', background: '#e2e8f0', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>
+                          📖 {mat ? mat.nome : '—'}
+                        </span>
+                        <span style={{ fontSize: '9px', background: '#eff6ff', color: '#1e40af', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          📅 {bim ? `${bim.nome}${bim.ano ? ` (${bim.ano})` : ''}` : '—'}
+                        </span>
+                        <span style={{ fontSize: '9px', background: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          ⚖️ Peso: {ativ.peso}
+                        </span>
+                        {ativ.dataLimite && (() => {
+                          const hoje = new Date().toISOString().split('T')[0];
+                          const estaExpirado = hoje > ativ.dataLimite && !ativ.liberadoVencido;
+                          return (
+                            <span style={{ 
+                              fontSize: '9px', 
+                              background: estaExpirado ? '#fee2e2' : '#f0fdf4', 
+                              color: estaExpirado ? '#dc2626' : '#16a34a', 
+                              padding: '2px 6px', 
+                              borderRadius: '4px', 
+                              fontWeight: 700,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px'
+                            }}>
+                              <i className={estaExpirado ? "ti ti-lock" : "ti ti-lock-open"}></i>
+                              Prazo: {ativ.dataLimite.split('-').reverse().join('/')} {estaExpirado && '(Expirado)'}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button 
+                      type="button"
+                      className="btn" 
+                      style={{ 
+                        padding: '4px 8px', 
+                        fontSize: '11px', 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '4px',
+                        background: isSelecionada ? '#dcfce7' : '#fff',
+                        borderColor: isSelecionada ? '#86efac' : '#cbd5e1',
+                        color: isSelecionada ? '#166534' : 'var(--primary)'
+                      }} 
+                      onClick={() => {
+                        if (!isSelecionada) {
+                          setSelectedAtivs(prev => [...prev, ativ.id]);
+                        }
+                        setIsShareModalOpen(true);
+                      }}
+                      title="Compartilhar link desta atividade"
+                    >
+                      <i className="ti ti-link"></i> Link
+                    </button>
                     <button className="btn" style={{ padding: '4px 8px', fontSize: '11px', borderColor: '#bae6fd', color: '#0284c7', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => abrirDuplicarModal(ativ)}>
                       <i className="ti ti-copy"></i> Duplicar
                     </button>
@@ -615,6 +800,182 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
           </div>
         );
       })()}
+
+      {/* MODAL DE COMPARTILHAMENTO DE ATIVIDADES */}
+      {isShareModalOpen && selectedAtivs.length > 0 && (
+        <div 
+          id="compartilhar-atividades-modal" 
+          style={{ 
+            display: 'flex', 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(15,23,42,.6)', 
+            zIndex: 9000, 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '1rem', 
+            backdropFilter: 'blur(4px)' 
+          }}
+        >
+          <div 
+            style={{ 
+              background: '#fff', 
+              borderRadius: '16px', 
+              width: '100%', 
+              maxWidth: '560px', 
+              boxShadow: 'var(--shadow-lg)', 
+              overflow: 'hidden', 
+              border: '1px solid var(--border)'
+            }}
+          >
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, var(--primary), #3b82f6)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <i className="ti ti-link" style={{ fontSize: '20px', color: '#fff' }}></i>
+                <div style={{ color: '#fff', fontSize: '14.5px', fontWeight: 800 }}>Link de Lançamento Geral Compartilhado</div>
+              </div>
+              <button 
+                onClick={() => setIsShareModalOpen(false)} 
+                style={{ border: 'none', background: 'rgba(255,255,255,.15)', cursor: 'pointer', color: '#fff', fontSize: '16px', borderRadius: '8px', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Conteúdo */}
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                Você selecionou <b>{selectedAtivs.length} atividade(s)</b> para compartilhamento unificado de notas. Quem acessar o link poderá alternar entre as turmas e digitar ou importar as notas correspondentes pela planilha simples.
+              </div>
+
+              {/* Lista de Atividades Selecionadas */}
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>
+                  Atividades Incluídas no Link ({selectedAtivs.length})
+                </label>
+
+                <div style={{ border: '1px solid var(--border)', borderRadius: '12px', maxHeight: '180px', overflowY: 'auto', padding: '6px', background: '#f8fafc' }}>
+                  {selectedAtivs.map(ativId => {
+                    const ativ = atividades.find(a => a.id === ativId);
+                    if (!ativ) return null;
+                    const tur = turmas.find(t => t.id === ativ.turmaId);
+                    const mat = materias.find(m => m.id === ativ.materiaId);
+                    const colors = badgeColor(ativ.tipo);
+
+                    return (
+                      <div 
+                        key={ativ.id} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'space-between', 
+                          padding: '10px 12px', 
+                          borderRadius: '8px', 
+                          background: '#fff', 
+                          border: '1px solid var(--border)',
+                          marginBottom: '6px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
+                            {ativ.nome}
+                          </span>
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '9px', background: colors.bg, color: colors.text, padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>
+                              {ativ.tipo.toUpperCase()}
+                            </span>
+                            <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                              🏫 {tur ? tur.nome : '—'} • 📖 {mat ? mat.nome : '—'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button 
+                          type="button" 
+                          onClick={() => toggleAtividadeSelecao(ativ.id)}
+                          style={{ border: 'none', background: '#fee2e2', color: '#dc2626', width: '26px', height: '26px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}
+                          title="Remover do link compartilhado"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Link Box */}
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px', display: 'block' }}>
+                  Link Compartilhado Unificado
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    readOnly 
+                    value={obterLinkCompartilhadoGeral()} 
+                    style={{ 
+                      flex: 1, 
+                      padding: '8px 12px', 
+                      borderRadius: '10px', 
+                      border: '1px solid var(--border)', 
+                      background: '#f8fafc', 
+                      fontSize: '11.5px', 
+                      color: 'var(--text-muted)', 
+                      outline: 'none',
+                      fontFamily: 'monospace'
+                    }} 
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button 
+                    type="button"
+                    onClick={copiarLink} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px', 
+                      padding: '8px 14px', 
+                      background: copiadoFeedback ? '#16a34a' : 'var(--primary)', 
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: '10px', 
+                      fontSize: '12px', 
+                      fontWeight: 700, 
+                      cursor: 'pointer',
+                      transition: 'background 0.2s ease',
+                      flexShrink: 0
+                    }}
+                  >
+                    <i className={copiadoFeedback ? "ti ti-check" : "ti ti-copy"}></i>
+                    {copiadoFeedback ? 'Copiado!' : 'Copiar'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Botão de Abertura Externa */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '14px', marginTop: '4px' }}>
+                <a 
+                  href={obterLinkCompartilhadoGeral()} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ fontSize: '12px', color: 'var(--primary)', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <i className="ti ti-external-link"></i> Abrir link em nova aba para testar
+                </a>
+
+                <button 
+                  type="button"
+                  className="btn pri" 
+                  onClick={() => setIsShareModalOpen(false)}
+                  style={{ padding: '6px 18px', fontSize: '12px', fontWeight: 700 }}
+                >
+                  Concluir
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

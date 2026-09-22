@@ -4,6 +4,7 @@ import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
 import ApontamentoSalaModal from '../modals/ApontamentoSalaModal';
 import CriarAtividadeModal from '../modals/CriarAtividadeModal';
+import ExportarPdfNotasModal from '../modals/ExportarPdfNotasModal';
 
 interface NotasPageProps {
   alunos: Aluno[];
@@ -21,18 +22,6 @@ interface NotasPageProps {
   defaultTurmaId?: string;
   defaultMateriaId?: string;
 }
-
-export const OPCOES_QUALITATIVA = [
-  { key: 'sim', label: 'Sim (3.0)', nota: 3 },
-  { key: 'parcial_2.5', label: 'Parcial (2.5)', nota: 2.5 },
-  { key: 'parcial_2.0', label: 'Parcial (2.0)', nota: 2 },
-  { key: 'parcial_1.5', label: 'Parcial (1.5)', nota: 1.5 },
-  { key: 'ajudou_2.0', label: 'Ajudou (2.0)', nota: 2 },
-  { key: 'atrasado_1.5', label: 'Atrasado (1.5)', nota: 1.5 },
-  { key: 'atrasado_ajudado_1.0', label: 'Atrasado e Ajudado (1.0)', nota: 1 },
-  { key: 'nao_0', label: 'Não (0)', nota: 0 },
-  { key: 'faltou', label: 'Faltou', nota: 'faltou' as const },
-];
 
 const NotasPage: React.FC<NotasPageProps> = ({
   alunos,
@@ -77,6 +66,12 @@ const NotasPage: React.FC<NotasPageProps> = ({
   const [atividadeParaEditar, setAtividadeParaEditar] = useState<Atividade | null>(null);
   const [isApontamentoModalOpen, setIsApontamentoModalOpen] = useState(false);
   const [copiadoFeedback, setCopiadoFeedback] = useState(false);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+
+  const turmaObj = useMemo(() => turmas.find(t => t.id === turmaId) || null, [turmas, turmaId]);
+  const escolaObj = useMemo(() => turmaObj ? escolas.find(e => e.id === turmaObj.escolaId) || null : null, [turmaObj, escolas]);
+  const materiaObj = useMemo(() => materias.find(m => m.id === materiaId) || null, [materias, materiaId]);
+  const bimestreObj = useMemo(() => bimestres.find(b => b.id === bimestreId) || null, [bimestres, bimestreId]);
   const [modoQualitativa, setModoQualitativa] = useState<'select' | 'input'>(() => {
     return (localStorage.getItem('es_modo_qualitativa') as 'select' | 'input') || 'select';
   });
@@ -262,21 +257,6 @@ const NotasPage: React.FC<NotasPageProps> = ({
     return String(registro.nota);
   };
 
-  const obterChaveQualitativa = (alunoId: string, atividadeId: string): string => {
-    const reg = notas.find(n => n.alunoId === alunoId && n.atividadeId === atividadeId);
-    if (!reg || reg.nota === undefined || (reg.nota as any) === -1 || (reg.nota as any) === '') return '';
-    if (reg.opcaoQualitativa) return reg.opcaoQualitativa;
-    if ((reg.nota as any) === 'faltou') return 'faltou';
-    const num = Number(reg.nota);
-    if (num === 3) return 'sim';
-    if (num === 2.5) return 'parcial_2.5';
-    if (num === 2) return 'parcial_2.0';
-    if (num === 1.5) return 'parcial_1.5';
-    if (num === 1) return 'atrasado_ajudado_1.0';
-    if (num === 0) return 'nao_0';
-    return '';
-  };
-
   const obterMediaQualitativa = (alunoId: string): string => {
     if (qualitativas.length === 0) return '—';
     
@@ -340,26 +320,11 @@ const NotasPage: React.FC<NotasPageProps> = ({
     const tipoAt = at ? at.tipo : '';
     const notaMax = obterNotaMaxima(tipoAt);
 
-    // Verificar se valorStr corresponde a uma opção qualitativa cadastrada
-    const opcQual = OPCOES_QUALITATIVA.find(o => o.key === valorStr);
-    let valor: number | null = null;
-    let isFaltou = false;
-    let opcaoQualitativa: string | undefined = undefined;
-
-    if (opcQual) {
-      opcaoQualitativa = opcQual.key;
-      if (opcQual.nota === 'faltou') {
-        isFaltou = true;
-      } else {
-        valor = opcQual.nota;
-      }
-    } else {
-      isFaltou = valorStr === 'faltou';
-      valor = (valorStr.trim() === '' || isFaltou) ? null : Number(valorStr.replace(',', '.'));
-      if (!isFaltou && valor !== null && (isNaN(valor) || valor < 0 || valor > notaMax)) {
-        alert(`Por favor, informe uma nota válida entre 0 e ${notaMax} para atividades do tipo ${tipoAt.toUpperCase()}.`);
-        return;
-      }
+    const isFaltou = valorStr === 'faltou';
+    const valor = (valorStr.trim() === '' || isFaltou) ? null : Number(valorStr.replace(',', '.'));
+    if (!isFaltou && valor !== null && (isNaN(valor) || valor < 0 || valor > notaMax)) {
+      alert(`Por favor, informe uma nota válida entre 0 e ${notaMax} para atividades do tipo ${tipoAt.toUpperCase()}.`);
+      return;
     }
 
     const docId = `${alunoId}_${atividadeId}`;
@@ -377,8 +342,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
           turmaId,
           materiaId,
           bimestreId,
-          nota: 'faltou',
-          opcaoQualitativa: 'faltou'
+          nota: 'faltou'
         });
       } else if (valor === null) {
         await setDoc(docRef, {
@@ -390,18 +354,14 @@ const NotasPage: React.FC<NotasPageProps> = ({
           nota: -1 // -1 representa apagado
         });
       } else {
-        const payload: any = {
+        await setDoc(docRef, {
           alunoId,
           atividadeId,
           turmaId,
           materiaId,
           bimestreId,
           nota: valor
-        };
-        if (opcaoQualitativa) {
-          payload.opcaoQualitativa = opcaoQualitativa;
-        }
-        await setDoc(docRef, payload);
+        });
       }
       setSyncStatus('ok');
     } catch (err) {
@@ -778,6 +738,29 @@ const NotasPage: React.FC<NotasPageProps> = ({
               <i className="ti ti-arrow-left"></i>
               Voltar para Atividades
             </button>
+
+            <button 
+              type="button" 
+              className="btn" 
+              onClick={() => setIsPdfModalOpen(true)}
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '6px', 
+                fontSize: '12.5px', 
+                fontWeight: 700,
+                borderColor: '#dc2626',
+                color: '#fff',
+                background: '#dc2626',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+              title="Exportar uma ou mais notas em arquivo PDF formatado para impressão"
+            >
+              <i className="ti ti-file-text"></i>
+              Exportar PDF
+            </button>
             <button 
               type="button" 
               className="btn" 
@@ -1049,11 +1032,11 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
                         return (
                           <td key={at.id} style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
-                            <div style={{ position: 'relative', display: 'inline-block', width: at.tipo === 'qualitativa' && modoQualitativa === 'select' ? '120px' : '75px' }}>
+                            <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
                               {at.tipo === 'qualitativa' && modoQualitativa === 'select' ? (
                                 <select
                                   id={`input-nota-${alunoIdx}-${atIdx}`}
-                                  value={obterChaveQualitativa(aluno.id, at.id)}
+                                  value={notaVal}
                                   disabled={celulaOculta || atExpirada}
                                   onChange={(e) => {
                                     if (!celulaOculta && !atExpirada) {
@@ -1063,21 +1046,23 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                   style={{ 
                                     width: '100%', 
                                     textAlign: 'center', 
-                                    padding: '6px 4px', 
-                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#93c5fd' : notaColors.border)}`,
+                                    padding: '6px', 
+                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#93c5fd' : (notaVal === '2' ? '#fcd34d' : notaColors.border))}`,
                                     borderRadius: '8px', 
-                                    fontSize: '11px', 
+                                    fontSize: '11.5px', 
                                     fontWeight: 700,
-                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#dbeafe' : (notaVal === '' || notaVal === '-1' ? '#fff' : notaColors.bg)),
-                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#1e40af' : (notaVal === '' || notaVal === '-1' ? '#64748b' : notaColors.text)),
+                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#dbeafe' : (notaVal === '2' ? '#fef3c7' : (notaVal === '' ? '#fff' : '#dcfce7'))),
+                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#1e40af' : (notaVal === '2' ? '#92400e' : (notaVal === '' ? '#64748b' : '#166534'))),
                                     cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'pointer',
                                     transition: 'background 160ms ease, border-color 160ms ease'
                                   }}
                                 >
                                   <option value="">—</option>
-                                  {OPCOES_QUALITATIVA.map(op => (
-                                    <option key={op.key} value={op.key}>{op.label}</option>
-                                  ))}
+                                  <option value={String(at.peso)}>Sim ({at.peso})</option>
+                                  <option value={String(at.peso / 2)}>Parc ({at.peso / 2})</option>
+                                  <option value="2">Atrasado (2)</option>
+                                  <option value="0">Não (0)</option>
+                                  <option value="faltou">Faltou</option>
                                 </select>
                               ) : (
                                 <input 
@@ -1452,6 +1437,22 @@ const NotasPage: React.FC<NotasPageProps> = ({
           fecharModal={() => { setIsCriarAtivModalOpen(false); setAtividadeParaEditar(null); }}
           setSyncStatus={setSyncStatus}
           atividadeEdicao={atividadeParaEditar || undefined}
+        />
+      )}
+
+      {isPdfModalOpen && atividadesFiltradas.length > 0 && turmaObj && (
+        <ExportarPdfNotasModal
+          isOpen={isPdfModalOpen}
+          onClose={() => setIsPdfModalOpen(false)}
+          escolaNome={escolaObj ? escolaObj.nome : 'Escola'}
+          turmaNome={turmaObj.nome}
+          materiaNome={materiaObj ? materiaObj.nome : '—'}
+          bimestreNome={bimestreObj ? `${bimestreObj.nome}${bimestreObj.ano ? ` (${bimestreObj.ano})` : ''}` : '—'}
+          atividade={atividadesFiltradas[0]}
+          todasAtividades={atividadesFiltradas}
+          alunos={alunosFiltrados}
+          obterNotaValor={obterNotaValor}
+          obterNotaMaxima={obterNotaMaxima}
         />
       )}
     </div>

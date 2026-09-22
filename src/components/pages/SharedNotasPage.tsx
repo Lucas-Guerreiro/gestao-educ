@@ -3,6 +3,7 @@ import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola } from '@/types';
 import SharedPlanilhaModal from '../modals/SharedPlanilhaModal';
+import ExportarPdfNotasModal from '../modals/ExportarPdfNotasModal';
 
 interface SharedNotasPageProps {
   sharedMap: Record<string, string>;
@@ -33,6 +34,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
   const [savingCells, setSavingCells] = useState<Record<string, boolean>>({});
   const [edicaoBloqueada, setEdicaoBloqueada] = useState(true);
   const [isPlanilhaModalOpen, setIsPlanilhaModalOpen] = useState(false);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   // Obter o ID da atividade correspondente à turma selecionada
   const currentAtividadeId = useMemo(() => {
@@ -379,6 +381,31 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <button
                       type="button"
+                      onClick={() => setIsPdfModalOpen(true)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 16px',
+                        borderRadius: '10px',
+                        fontSize: '12.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        border: '1px solid #dc2626',
+                        background: '#dc2626',
+                        color: '#fff',
+                        boxShadow: 'var(--shadow-sm)',
+                        transition: 'all 0.15s ease',
+                        userSelect: 'none'
+                      }}
+                      title="Exportar uma ou mais notas em arquivo PDF formatado para impressão"
+                    >
+                      <i className="ti ti-file-text" style={{ fontSize: '15px' }}></i>
+                      Exportar PDF
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => setIsPlanilhaModalOpen(true)}
                       disabled={atividadeExpirada}
                       style={{
@@ -525,6 +552,22 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
           fecharModal={() => setIsPlanilhaModalOpen(false)}
           onSalvarLote={salvarNotasEmLote}
           atividadeExpirada={atividadeExpirada}
+        />
+      )}
+
+      {/* Modal de Exportação de Notas em PDF */}
+      {isPdfModalOpen && atividade && selectedTurmaObj && (
+        <ExportarPdfNotasModal
+          isOpen={isPdfModalOpen}
+          onClose={() => setIsPdfModalOpen(false)}
+          escolaNome={escola ? escola.nome : 'Escola'}
+          turmaNome={selectedTurmaObj.nome}
+          materiaNome={materia ? materia.nome : '—'}
+          bimestreNome={bimestre ? `${bimestre.nome}${bimestre.ano ? ` (${bimestre.ano})` : ''}` : '—'}
+          atividade={atividade}
+          alunos={alunosFiltrados}
+          obterNotaValor={(alunoId) => obterNotaValor(alunoId)}
+          obterNotaMaxima={obterNotaMaxima}
         />
       )}
     </div>
