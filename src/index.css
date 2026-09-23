@@ -1614,6 +1614,7 @@ tr.table-row-hover:focus-within td:last-child {
   border: 1px solid var(--border);
   border-radius: 12px;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .filters-flex-wrap {
@@ -1712,8 +1713,18 @@ tr:nth-child(even) td.sticky-col-aluno {
   max-height: min(72vh, 650px);
 }
 
+.shared-actions-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
 .shared-actions-bar button {
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
 }
 
 /* Barra de ferramentas de botões na Tela de Notas */
@@ -1723,6 +1734,62 @@ tr:nth-child(even) td.sticky-col-aluno {
   margin-bottom: 16px;
   flex-wrap: wrap;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.notas-toolbar-btns button {
+  flex: 1 1 auto;
+  min-width: 120px;
+  max-width: 100%;
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: center !important;
+  justify-content: center !important;
+  line-height: 1.25 !important;
+  box-sizing: border-box !important;
+  height: auto !important;
+  min-height: 36px !important;
+  padding: 8px 10px !important;
+}
+
+/* Header responsivo da página de notas */
+.notas-header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+}
+
+.notas-header-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.notas-header-btns button {
+  white-space: nowrap;
+}
+
+/* Ações dos itens da lista de atividades em notas */
+.ativ-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ativ-item-actions button {
+  white-space: nowrap;
+}
+
+/* Barra flutuante de compartilhamento */
+.notas-floating-bar {
+  box-sizing: border-box;
+  max-width: calc(100% - 24px) !important;
 }
 
 /* Card responsivo com preenchimento adaptável */
@@ -1778,6 +1845,22 @@ tr:nth-child(even) td.sticky-col-aluno {
   font-size: 13px !important;
 }
 
+@media (max-width: 900px) {
+  .notas-toolbar-btns {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .notas-toolbar-btns button {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 11.5px !important;
+    padding: 8px 6px !important;
+  }
+}
+
 /* Media Queries Globais para Telas Médias e Pequenas (Tablets e Smartphones) */
 @media (max-width: 768px) {
   .topbar {
@@ -1800,13 +1883,17 @@ tr:nth-child(even) td.sticky-col-aluno {
 
   .tb-btns {
     width: 100% !important;
-    justify-content: flex-end !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
   }
 
   .tb-btn {
     padding: 0 10px !important;
     font-size: 11.5px !important;
     height: 32px !important;
+    flex: 1 1 auto !important;
+    justify-content: center !important;
   }
 
   .notas-page-container {
@@ -1824,17 +1911,62 @@ tr:nth-child(even) td.sticky-col-aluno {
     gap: 10px !important;
   }
 
+  .notas-header-wrapper {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .notas-header-btns {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .notas-header-btns button {
+    flex: 1 1 0 !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .flex-row-mobile-stack > div:last-child,
+  .flex-row-mobile-stack > div.flex-shrink-0,
+  .ativ-item-actions {
+    justify-content: flex-start !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-top: 8px !important;
+  }
+
+  .ativ-item-actions button {
+    flex: 1 1 calc(50% - 4px) !important;
+    justify-content: center !important;
+    text-align: center !important;
+    min-height: 36px !important;
+  }
+
   .notas-toolbar-btns {
-    gap: 6px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
   }
 
   .notas-toolbar-btns button {
-    flex: 1 1 calc(50% - 6px) !important;
-    justify-content: center !important;
-    text-align: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
     font-size: 11.5px !important;
     padding: 8px 6px !important;
-    min-height: 36px !important;
+    min-height: 38px !important;
+    height: auto !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    text-align: center !important;
+    justify-content: center !important;
   }
 
   .notas-table-scroll-wrapper {
@@ -1860,12 +1992,41 @@ tr:nth-child(even) td.sticky-col-aluno {
     max-height: 62vh !important;
   }
 
+  .shared-actions-bar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
   .shared-actions-bar button {
     flex: 1 1 calc(50% - 4px) !important;
     justify-content: center !important;
     text-align: center !important;
     font-size: 11.5px !important;
     padding: 8px 8px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  .notas-floating-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    bottom: 12px !important;
+    padding: 10px 14px !important;
+    gap: 8px !important;
+    width: calc(100% - 24px) !important;
+  }
+
+  .notas-floating-bar > div:last-child {
+    display: flex !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .notas-floating-bar > div:last-child button {
+    flex: 1 !important;
+    justify-content: center !important;
   }
 
   .main-content-container {
@@ -1884,8 +2045,19 @@ tr:nth-child(even) td.sticky-col-aluno {
     flex: 1 1 100% !important;
   }
 
-  .notas-toolbar-btns button {
+  .ativ-item-actions button {
     flex: 1 1 100% !important;
+  }
+
+  .notas-toolbar-btns {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .notas-toolbar-btns button {
+    font-size: 11px !important;
+    padding: 6px 4px !important;
+    min-height: 36px !important;
   }
 
   .card-box {
@@ -1901,6 +2073,18 @@ tr:nth-child(even) td.sticky-col-aluno {
   .shared-table-scroll-container {
     min-height: 280px !important;
     max-height: 58vh !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .notas-toolbar-btns {
+    grid-template-columns: 1fr !important;
+  }
+  .notas-header-btns {
+    flex-direction: column !important;
+  }
+  .notas-header-btns button {
+    width: 100% !important;
   }
 }
 

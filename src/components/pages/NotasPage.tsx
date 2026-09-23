@@ -532,11 +532,11 @@ const NotasPage: React.FC<NotasPageProps> = ({
   return (
     <div className="notas-page-container">
       
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+      <div className="notas-header-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', width: '100%' }}>
         <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
           <i className="ti ti-notes" style={{ color: 'var(--primary)', marginRight: '4px' }}></i> Lançamento de Notas
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="notas-header-btns" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button 
             onClick={() => {
               if (!turmaId || !materiaId || !selectedBimestreId) {
@@ -668,7 +668,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                         cursor: 'default'
                       }}
                     >
-                      <div style={{ flex: 1, paddingRight: '12px' }}>
+                      <div style={{ flex: 1, minWidth: 0, paddingRight: '12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)' }}>{ativ.nome}</span>
                           {ativ.descricao && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>— {ativ.descricao}</span>}
@@ -707,7 +707,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                         </div>
                       </div>
 
-                      <div style={{ flexShrink: 0, display: 'flex', gap: '8px' }}>
+                      <div className="ativ-item-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <button 
                           type="button"
                           className="btn" 
@@ -1216,6 +1216,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
       {/* BARRA FLUTUANTE DE COMPARTILHAMENTO GERAL */}
       {selectedAtivs.length > 0 && (
         <div 
+          className="notas-floating-bar"
           style={{ 
             position: 'fixed', 
             bottom: '24px', 
@@ -1227,22 +1228,25 @@ const NotasPage: React.FC<NotasPageProps> = ({
             boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3), 0 8px 10px -6px rgba(0,0,0,0.3)', 
             display: 'flex', 
             alignItems: 'center', 
-            gap: '20px', 
-            padding: '12px 24px', 
+            gap: '16px', 
+            padding: '10px 20px', 
             zIndex: 8000, 
-            border: '1px solid rgba(255,255,255,0.1)'
+            border: '1px solid rgba(255,255,255,0.1)',
+            maxWidth: 'calc(100% - 24px)',
+            width: 'max-content',
+            boxSizing: 'border-box'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <div style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <i className="ti ti-link" style={{ fontSize: '15px' }}></i>
             </div>
-            <span style={{ fontSize: '13.5px', fontWeight: 600 }}>
+            <span style={{ fontSize: '13px', fontWeight: 600 }}>
               <b>{selectedAtivs.length}</b> {selectedAtivs.length === 1 ? 'atividade selecionada' : 'atividades selecionadas'} para compartilhamento
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             <button 
               type="button" 
               className="btn pri" 
@@ -1403,13 +1407,14 @@ const NotasPage: React.FC<NotasPageProps> = ({
                 <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px', display: 'block' }}>
                   Link Compartilhado Unificado
                 </label>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <input 
                     type="text" 
                     readOnly 
                     value={obterLinkCompartilhadoGeral()} 
                     style={{ 
-                      flex: 1, 
+                      flex: '1 1 200px', 
+                      minWidth: 0,
                       padding: '10px 12px', 
                       borderRadius: '10px', 
                       border: '1px solid var(--border)', 
