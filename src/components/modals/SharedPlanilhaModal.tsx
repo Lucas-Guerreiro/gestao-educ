@@ -634,7 +634,7 @@ const SharedPlanilhaModal: React.FC<SharedPlanilhaModalProps> = ({
                   WebkitOverflowScrolling: 'touch'
                 }}
               >
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <table style={{ minWidth: '100%', width: 'max-content', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', color: '#475569', fontWeight: 800, borderBottom: '2px solid #e2e8f0' }}>
                       <th style={{ padding: '9px 10px', textAlign: 'center', width: '50px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc' }}>#</th>

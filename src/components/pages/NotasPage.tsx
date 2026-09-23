@@ -530,7 +530,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
   };
 
   return (
-    <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div className="notas-page-container">
       
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
@@ -580,8 +580,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
       </div>
       
       {/* Filtros da Grade */}
-      <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.25rem', border: '1px solid var(--border)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+      <div className="responsive-card-box">
+        <div className="notas-filtros-grid">
           <div className="f">
             <label>Selecione a Turma *</label>
             <select value={turmaId} onChange={(e) => handleTurmaChange(e.target.value)}>
@@ -627,7 +627,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
       {!turmaId || !materiaId || !bimestreId ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          <div className="card-box" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="responsive-card-box" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#1e40af', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <i className="ti ti-info-circle"></i>
               Selecione os Filtros ou Escolha uma Atividade Abaixo
@@ -637,7 +637,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
             </div>
           </div>
 
-          <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)' }}>
+          <div className="responsive-card-box">
             <div style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <i className="ti ti-clipboard-list" style={{ color: 'var(--primary)' }}></i>
               Atividades Cadastradas ({atividadesFiltradasParaLista.length})
@@ -770,7 +770,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
           Nenhum aluno cadastrado nesta turma de aplicação.
         </div>
       ) : (
-        <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid var(--border)' }}>
+        <div className="responsive-card-box">
           
           <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', fontSize: '11.5px', color: '#1e40af', lineHeight: 1.5 }}>
             <i className="ti ti-info-circle"></i>
@@ -918,8 +918,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
           </div>
 
           {/* Container de Rolagem da Tabela com Cabeçalho e Coluna de Aluno Fixos */}
-          <div className="table-scroll-touch" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 290px)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)', position: 'relative' }}>
-            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' }}>
+          <div className="notas-table-scroll-wrapper table-scroll-touch">
+            <table className="notas-grid-table">
               <thead>
                 <tr style={{ color: 'var(--text-muted)', fontWeight: 800 }}>
                   <th 
@@ -927,7 +927,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
                     style={{ 
                       padding: '12px 10px', 
                       textAlign: 'left', 
-                      minWidth: '180px',
+                      minWidth: '150px',
+                      maxWidth: '220px',
                       position: 'sticky',
                       top: 0,
                       left: 0,
@@ -1058,7 +1059,10 @@ const NotasPage: React.FC<NotasPageProps> = ({
                           zIndex: 8,
                           background: alunoIdx % 2 === 0 ? '#ffffff' : '#f8fafc',
                           boxShadow: '3px 0 6px -2px rgba(0, 0, 0, 0.08)',
-                          minWidth: '160px'
+                          minWidth: '150px',
+                          maxWidth: '220px',
+                          wordBreak: 'break-word',
+                          whiteSpace: 'normal'
                         }}
                         title={aluno.especificidade ? "Clique para ver informações pedagógicas especiais deste aluno" : undefined}
                       >

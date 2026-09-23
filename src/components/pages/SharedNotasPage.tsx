@@ -469,7 +469,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
       >
         
         {/* Card Informativo do Trabalho */}
-        <div className="card-box" style={{ background: '#fff', borderRadius: '14px', padding: '14px 16px', border: '1px solid var(--border)' }}>
+        <div className="responsive-card-box">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ flex: '1 1 240px' }}>
               <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -546,7 +546,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
             Nenhum aluno ativo matriculado nesta turma.
           </div>
         ) : (
-          <div className="card-box" style={{ background: '#fff', borderRadius: '14px', padding: '14px 16px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="responsive-card-box" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               {atividadeExpirada ? (
@@ -660,13 +660,13 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                 position: 'relative'
               }}
             >
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' }}>
+              <table style={{ minWidth: '100%', width: 'max-content', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' }}>
                 <thead>
                   <tr style={{ color: 'var(--text-muted)', fontWeight: 800 }}>
-                    <th style={{ padding: '9px 10px', textAlign: 'center', width: '45px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                    <th style={{ padding: '9px 10px', textAlign: 'center', width: '40px', minWidth: '40px', position: 'sticky', top: 0, left: 0, zIndex: 25, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
                       #
                     </th>
-                    <th style={{ padding: '9px 14px', textAlign: 'left', minWidth: '170px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                    <th style={{ padding: '9px 14px', textAlign: 'left', minWidth: '150px', maxWidth: '220px', position: 'sticky', top: 0, left: '40px', zIndex: 25, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border), 3px 0 6px -2px rgba(0,0,0,0.1)' }}>
                       Nome do Aluno ({alunosFiltrados.length})
                     </th>
                     <th style={{ padding: '9px 12px', textAlign: 'center', width: atividade.tipo === 'qualitativa' ? '165px' : '100px', minWidth: atividade.tipo === 'qualitativa' ? '165px' : '100px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
@@ -686,11 +686,11 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                         className="table-row-hover"
                         style={{ background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}
                       >
-                        <td style={{ padding: '6px 10px', textAlign: 'center', color: '#94a3b8', fontSize: '11px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '6px 10px', textAlign: 'center', color: '#94a3b8', fontSize: '11px', fontWeight: 600, borderBottom: '1px solid var(--border)', position: 'sticky', left: 0, zIndex: 8, background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
                           #{String(idx + 1).padStart(2, '0')}
                         </td>
 
-                        <td style={{ padding: '6px 14px', fontWeight: 600, color: 'var(--text-main)', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
+                        <td style={{ padding: '6px 14px', fontWeight: 600, color: 'var(--text-main)', borderBottom: '1px solid var(--border)', fontSize: '13px', position: 'sticky', left: '40px', zIndex: 8, background: idx % 2 === 0 ? '#ffffff' : '#f8fafc', boxShadow: '3px 0 6px -2px rgba(0,0,0,0.08)', minWidth: '150px', maxWidth: '220px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
                           {aluno.nome}
                         </td>
                         

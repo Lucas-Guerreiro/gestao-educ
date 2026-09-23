@@ -1725,6 +1725,59 @@ tr:nth-child(even) td.sticky-col-aluno {
   align-items: center;
 }
 
+/* Card responsivo com preenchimento adaptável */
+.responsive-card-box {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.notas-page-container {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+  padding: 1rem;
+}
+
+.notas-filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.notas-table-scroll-wrapper {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative !important;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  background: #fff;
+  min-height: 350px;
+  max-height: calc(100vh - 260px);
+}
+
+.notas-grid-table {
+  min-width: 100% !important;
+  width: max-content !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: 13px !important;
+}
+
 /* Media Queries Globais para Telas Médias e Pequenas (Tablets e Smartphones) */
 @media (max-width: 768px) {
   .topbar {
@@ -1756,6 +1809,21 @@ tr:nth-child(even) td.sticky-col-aluno {
     height: 32px !important;
   }
 
+  .notas-page-container {
+    padding: 4px 2px !important;
+    gap: 10px !important;
+  }
+
+  .responsive-card-box {
+    padding: 12px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .notas-filtros-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
   .notas-toolbar-btns {
     gap: 6px !important;
   }
@@ -1765,15 +1833,26 @@ tr:nth-child(even) td.sticky-col-aluno {
     justify-content: center !important;
     text-align: center !important;
     font-size: 11.5px !important;
-    padding: 8px 10px !important;
+    padding: 8px 6px !important;
+    min-height: 36px !important;
+  }
+
+  .notas-table-scroll-wrapper {
+    min-height: 300px !important;
+    max-height: 62vh !important;
+    border-radius: 8px !important;
+  }
+
+  .notas-grid-table {
+    font-size: 12px !important;
   }
 
   .shared-main-container {
-    padding: 10px !important;
+    padding: 8px 6px !important;
   }
 
   .shared-topbar {
-    padding: 10px 14px !important;
+    padding: 10px 12px !important;
   }
 
   .shared-table-scroll-container {
@@ -1787,6 +1866,10 @@ tr:nth-child(even) td.sticky-col-aluno {
     text-align: center !important;
     font-size: 11.5px !important;
     padding: 8px 8px !important;
+  }
+
+  .main-content-container {
+    padding: 6px 4px !important;
   }
 }
 
@@ -1806,8 +1889,13 @@ tr:nth-child(even) td.sticky-col-aluno {
   }
 
   .card-box {
-    padding: 12px 14px !important;
-    border-radius: 12px !important;
+    padding: 12px 8px !important;
+    border-radius: 10px !important;
+  }
+
+  .responsive-card-box {
+    padding: 10px 8px !important;
+    border-radius: 10px !important;
   }
 
   .shared-table-scroll-container {
@@ -1815,4 +1903,5 @@ tr:nth-child(even) td.sticky-col-aluno {
     max-height: 58vh !important;
   }
 }
+
 
