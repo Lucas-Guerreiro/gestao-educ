@@ -451,7 +451,7 @@ const SharedPlanilhaModal: React.FC<SharedPlanilhaModalProps> = ({
           }}
         >
           {/* Abas */}
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={() => setAbaAtiva('grid')}
@@ -623,13 +623,15 @@ const SharedPlanilhaModal: React.FC<SharedPlanilhaModalProps> = ({
               </div>
 
               <div
+                className="table-scroll-touch"
                 style={{
                   border: '1px solid #e2e8f0',
                   borderRadius: '12px',
-                  overflow: 'hidden',
-                  minHeight: '440px',
+                  minHeight: '320px',
                   maxHeight: '62vh',
-                  overflowY: 'auto'
+                  overflowX: 'auto',
+                  overflowY: 'auto',
+                  WebkitOverflowScrolling: 'touch'
                 }}
               >
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>

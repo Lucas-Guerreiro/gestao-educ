@@ -778,7 +778,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
           </div>
 
           {/* Controles de Visibilidade das Notas */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="notas-toolbar-btns">
             <button 
               type="button" 
               className="btn" 
@@ -844,7 +844,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
               }}
             >
               <i className={notasOcultas ? "ti ti-eye" : "ti ti-eye-off"}></i>
-              {notasOcultas ? '👁️ Revelar Notas (Trabalho/PLURAAL)' : '🙈 Ocultar Notas (Trabalho/PLURAAL)'}
+              {notasOcultas ? '👁️ Revelar Notas' : '🙈 Ocultar Notas'}
             </button>
 
             <button 
@@ -865,7 +865,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
               }}
             >
               <i className={visibilidadePermanente ? "ti ti-lock-open" : "ti ti-lock"}></i>
-              {visibilidadePermanente ? '🔓 Visibilidade Permanente: ATIVADA' : '🔒 Tornar Visibilidade Permanente'}
+              {visibilidadePermanente ? '🔓 Visibilidade Perm.' : '🔒 Tornar Permanente'}
             </button>
 
             <button 
@@ -892,7 +892,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
               }}
             >
               <i className={qualitativasColapsadas ? "ti ti-layout-columns" : "ti ti-columns"}></i>
-              {qualitativasColapsadas ? '📂 Mostrar Notas Qualitativas' : '📁 Colapsar Notas Qualitativas'}
+              {qualitativasColapsadas ? '📂 Mostrar Qualitativas' : '📁 Colapsar Qualitativas'}
             </button>
 
             <button 
@@ -913,25 +913,29 @@ const NotasPage: React.FC<NotasPageProps> = ({
               }}
             >
               <i className={modoQualitativa === 'select' ? "ti ti-list" : "ti ti-keyboard"}></i>
-              {modoQualitativa === 'select' ? '📝 Modo Qualitativa: Seleção' : '✍️ Modo Qualitativa: Digitar Nota'}
+              {modoQualitativa === 'select' ? '📝 Modo: Seleção' : '✍️ Modo: Digitar'}
             </button>
           </div>
 
-          {/* Container de Rolagem da Tabela com Cabeçalho Congelado */}
-          <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 290px)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
+          {/* Container de Rolagem da Tabela com Cabeçalho e Coluna de Aluno Fixos */}
+          <div className="table-scroll-touch" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 290px)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)', position: 'relative' }}>
             <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' }}>
               <thead>
                 <tr style={{ color: 'var(--text-muted)', fontWeight: 800 }}>
-                  <th style={{ 
-                    padding: '12px 10px', 
-                    textAlign: 'left', 
-                    minWidth: '200px',
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 10,
-                    background: '#fff',
-                    boxShadow: 'inset 0 -2px 0 var(--border)'
-                  }}>
+                  <th 
+                    className="sticky-col-aluno"
+                    style={{ 
+                      padding: '12px 10px', 
+                      textAlign: 'left', 
+                      minWidth: '180px',
+                      position: 'sticky',
+                      top: 0,
+                      left: 0,
+                      zIndex: 25,
+                      background: '#f8fafc',
+                      boxShadow: 'inset 0 -2px 0 var(--border), 3px 0 6px -2px rgba(0,0,0,0.1)'
+                    }}
+                  >
                     Aluno
                   </th>
                   {qualitativasColapsadas && qualitativas.length > 0 && (
@@ -1036,6 +1040,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                   return (
                     <tr key={aluno.id} className="table-row-hover">
                       <td 
+                        className="sticky-col-aluno"
                         onClick={(e) => {
                           if (aluno.especificidade) {
                             e.stopPropagation();
@@ -1047,7 +1052,13 @@ const NotasPage: React.FC<NotasPageProps> = ({
                           fontWeight: 700, 
                           color: aluno.especificidade ? '#1e40af' : 'var(--text-main)', 
                           cursor: aluno.especificidade ? 'pointer' : 'default',
-                          borderBottom: '1px solid var(--border)' 
+                          borderBottom: '1px solid var(--border)',
+                          position: 'sticky',
+                          left: 0,
+                          zIndex: 8,
+                          background: alunoIdx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                          boxShadow: '3px 0 6px -2px rgba(0, 0, 0, 0.08)',
+                          minWidth: '160px'
                         }}
                         title={aluno.especificidade ? "Clique para ver informações pedagógicas especiais deste aluno" : undefined}
                       >

@@ -84,7 +84,7 @@ const Topbar: React.FC<TopbarProps> = ({
       </div>
 
       {/* Seletores Globais (Ano Letivo e Bimestre) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', marginRight: '16px' }}>
+      <div className="topbar-selectors" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginRight: '12px', flexWrap: 'wrap' }}>
         {/* Seletor Global de Ano Letivo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid var(--border)', padding: '6px 12px', borderRadius: '10px' }}>
           <i className="ti ti-calendar" style={{ color: 'var(--primary)', fontWeight: 'bold' }}></i>

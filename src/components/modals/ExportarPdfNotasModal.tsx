@@ -250,7 +250,7 @@ const ExportarPdfNotasModal: React.FC<ExportarPdfNotasModalProps> = ({
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
             }}
           >
-            <div style={{ display: 'grid', gridTemplateColumns: todasAtividades && todasAtividades.length > 1 ? '1fr 1fr' : '1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: todasAtividades && todasAtividades.length > 1 ? 'repeat(auto-fit, minmax(240px, 1fr))' : '1fr', gap: '12px' }}>
               {/* Seletor de Atividade */}
               {todasAtividades && todasAtividades.length > 1 && (
                 <div>
@@ -680,15 +680,16 @@ const ExportarPdfNotasModal: React.FC<ExportarPdfNotasModalProps> = ({
           style={{
             background: '#ffffff',
             borderTop: '1px solid #e2e8f0',
-            padding: '12px 22px',
+            padding: '12px 18px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
             gap: '12px'
           }}
         >
           {/* Resumo Rápido */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: '1 1 auto' }}>
             <span
               style={{
                 fontSize: '11.5px',
@@ -718,7 +719,7 @@ const ExportarPdfNotasModal: React.FC<ExportarPdfNotasModalProps> = ({
           </div>
 
           {/* Botões de Ação */}
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px', flex: '1 1 auto', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={onClose}

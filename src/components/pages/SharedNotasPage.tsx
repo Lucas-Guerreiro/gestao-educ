@@ -417,35 +417,62 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', width: '100%', display: 'flex', flexDirection: 'column' }}>
       
-      {/* Topbar Simplificada */}
-      <div style={{ background: '#fff', borderBottom: '1px solid var(--border)', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: 'var(--shadow-sm)', zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ background: 'var(--primary)', color: '#fff', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <i className="ti ti-school" style={{ fontSize: '18px' }}></i>
+      {/* Topbar Simplificada e Responsiva */}
+      <div 
+        className="shared-topbar"
+        style={{ 
+          background: '#fff', 
+          borderBottom: '1px solid var(--border)', 
+          padding: '12px 20px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          flexWrap: 'wrap', 
+          gap: '10px', 
+          boxShadow: 'var(--shadow-sm)', 
+          zIndex: 100 
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ background: 'var(--primary)', color: '#fff', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <i className="ti ti-school" style={{ fontSize: '17px' }}></i>
           </div>
-          <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>EscolaSystem</span>
-          <span style={{ fontSize: '11px', background: '#f1f5f9', color: '#475569', padding: '3px 8px', borderRadius: '20px', fontWeight: 700 }}>
+          <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>EscolaSystem</span>
+          <span style={{ fontSize: '10.5px', background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: '20px', fontWeight: 700, whiteSpace: 'nowrap' }}>
             Lançamento Compartilhado
           </span>
           {linkNome && (
-            <span style={{ fontSize: '11px', background: '#e0e7ff', color: '#3730a3', padding: '3px 9px', borderRadius: '20px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '10.5px', background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '20px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               🔗 {linkNome}
             </span>
           )}
         </div>
-        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
+        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
           🏫 {escola ? escola.nome : 'Escola'}
         </div>
       </div>
 
-      {/* Main Container */}
-      <div style={{ padding: '16px 20px', maxWidth: '860px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+      {/* Main Container Responsivo */}
+      <div 
+        className="shared-main-container"
+        style={{ 
+          padding: '14px 16px', 
+          maxWidth: '880px', 
+          width: '100%', 
+          margin: '0 auto', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '12px', 
+          flex: 1,
+          boxSizing: 'border-box'
+        }}
+      >
         
         {/* Card Informativo do Trabalho */}
-        <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '14px 18px', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-            <div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="card-box" style={{ background: '#fff', borderRadius: '14px', padding: '14px 16px', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ flex: '1 1 240px' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span>{atividade.nome}</span>
                 <span style={{ fontSize: '9.5px', background: colors.bg, color: colors.text, padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>
                   {atividade.tipo.toUpperCase()}
@@ -465,8 +492,8 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
             </div>
 
             {/* Seleção de Turma e Atividade (quando houver mais de uma vinculada) */}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-              <div style={{ minWidth: '180px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end', flex: '1 1 260px' }}>
+              <div style={{ flex: '1 1 130px', minWidth: '130px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>
                   Turma para Lançar Notas *
                 </label>
@@ -483,7 +510,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
               </div>
 
               {selectedTurmaId && atividadesDaTurma.length > 1 && (
-                <div style={{ minWidth: '220px' }}>
+                <div style={{ flex: '1 1 150px', minWidth: '150px' }}>
                   <label style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', marginBottom: '4px', display: 'block' }}>
                     Atividade desta Turma ({atividadesDaTurma.length}) *
                   </label>
@@ -511,25 +538,25 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
 
         {/* Tabela de Lançamento */}
         {!selectedTurmaId ? (
-          <div className="card-box" style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '16px', padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          <div className="card-box" style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '14px', padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
             👋 Escolha uma das turmas vinculadas ao link acima para carregar a planilha e digitar as notas dos alunos.
           </div>
         ) : alunosFiltrados.length === 0 ? (
-          <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic', border: '1px solid var(--border)' }}>
+          <div className="card-box" style={{ background: '#fff', borderRadius: '14px', padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic', border: '1px solid var(--border)' }}>
             Nenhum aluno ativo matriculado nesta turma.
           </div>
         ) : (
-          <div className="card-box" style={{ background: '#fff', borderRadius: '16px', padding: '14px 18px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="card-box" style={{ background: '#fff', borderRadius: '14px', padding: '14px 16px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               {atividadeExpirada ? (
-                <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '10px', padding: '8px 12px', fontSize: '11.5px', color: '#e11d48', lineHeight: 1.5, flex: 1 }}>
+                <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '10px', padding: '8px 12px', fontSize: '11.5px', color: '#e11d48', lineHeight: 1.5, width: '100%' }}>
                   <i className="ti ti-lock" style={{ marginRight: '6px' }}></i>
                   <span>⚠️ <b>Lançamento Expirado:</b> O prazo para digitação destas notas terminou em <b>{atividade.dataLimite ? atividade.dataLimite.split('-').reverse().join('/') : '—'}</b>. O lançamento está temporariamente bloqueado.</span>
                 </div>
               ) : (
                 <>
-                  <div style={{ background: edicaoBloqueada ? '#f8fafc' : '#eff6ff', border: edicaoBloqueada ? '1px solid var(--border)' : '1px solid #bfdbfe', borderRadius: '10px', padding: '8px 12px', fontSize: '11.5px', color: edicaoBloqueada ? 'var(--text-muted)' : '#1e40af', lineHeight: 1.4, flex: 1 }}>
+                  <div style={{ background: edicaoBloqueada ? '#f8fafc' : '#eff6ff', border: edicaoBloqueada ? '1px solid var(--border)' : '1px solid #bfdbfe', borderRadius: '10px', padding: '8px 12px', fontSize: '11.5px', color: edicaoBloqueada ? 'var(--text-muted)' : '#1e40af', lineHeight: 1.4, width: '100%' }}>
                     <i className={edicaoBloqueada ? "ti ti-lock" : "ti ti-info-circle"}></i>
                     {edicaoBloqueada ? (
                       <span> <b>Visualização Protegida:</b> Digitação bloqueada. Clique em <b>"Habilitar Edição"</b> para alterar.</span>
@@ -538,13 +565,14 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div className="shared-actions-bar" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
                     <button
                       type="button"
                       onClick={() => setIsPdfModalOpen(true)}
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: '6px',
                         padding: '7px 14px',
                         borderRadius: '8px',
@@ -571,6 +599,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: '6px',
                         padding: '7px 14px',
                         borderRadius: '8px',
@@ -596,6 +625,7 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: '6px',
                         padding: '7px 14px',
                         borderRadius: '8px',
@@ -619,26 +649,27 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
               )}
             </div>
 
-            {/* Container da Tabela com Altura Expandida para Exibir Mais de 10 Alunos */}
-            <div style={{
-              overflowY: 'auto',
-              minHeight: '460px',
-              maxHeight: 'min(72vh, 650px)',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              boxShadow: 'var(--shadow-sm)',
-              background: '#fff'
-            }}>
+            {/* Container da Tabela Responsiva com Altura Adaptativa */}
+            <div 
+              className="shared-table-scroll-container table-scroll-touch"
+              style={{
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                boxShadow: 'var(--shadow-sm)',
+                background: '#fff',
+                position: 'relative'
+              }}
+            >
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' }}>
                 <thead>
                   <tr style={{ color: 'var(--text-muted)', fontWeight: 800 }}>
-                    <th style={{ padding: '9px 10px', textAlign: 'center', width: '50px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                    <th style={{ padding: '9px 10px', textAlign: 'center', width: '45px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
                       #
                     </th>
-                    <th style={{ padding: '9px 14px', textAlign: 'left', minWidth: '220px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                    <th style={{ padding: '9px 14px', textAlign: 'left', minWidth: '170px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
                       Nome do Aluno ({alunosFiltrados.length})
                     </th>
-                    <th style={{ padding: '9px 12px', textAlign: 'center', width: '160px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
+                    <th style={{ padding: '9px 12px', textAlign: 'center', width: atividade.tipo === 'qualitativa' ? '165px' : '100px', minWidth: atividade.tipo === 'qualitativa' ? '165px' : '100px', position: 'sticky', top: 0, zIndex: 10, background: '#f8fafc', boxShadow: 'inset 0 -2px 0 var(--border)' }}>
                       Nota (Máx: {obterNotaMaxima(atividade.tipo).toFixed(1)})
                     </th>
                   </tr>

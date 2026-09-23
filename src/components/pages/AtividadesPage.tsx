@@ -641,7 +641,7 @@ const AtividadesPage: React.FC<AtividadesPageProps> = ({
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                 {atividadesFiltradas.length > 0 && (
                   <button
                     type="button"
