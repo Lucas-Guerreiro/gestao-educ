@@ -607,7 +607,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', width: '100%' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', width: '100%', maxWidth: '100%', minWidth: 0, overflowX: 'hidden' }}>
       {/* Sidebar Navigation */}
       <Sidebar 
         currentSec={currentSec} 
@@ -642,7 +642,7 @@ const App: React.FC = () => {
       )}
 
       {/* Main Workspace Column */}
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, width: '100%', overflowX: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
         <Topbar 
           currentSec={currentSec} 
           abrirSenhaModal={() => setIsSenhaModalOpen(true)}
@@ -659,7 +659,7 @@ const App: React.FC = () => {
           perfil={perfil}
         />
 
-        <div className="main-content-container" style={{ flex: 1, minWidth: 0, width: '100%', padding: '12px', boxSizing: 'border-box' }}>
+        <div className="main-content-container" style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '100%', padding: '12px', boxSizing: 'border-box' }}>
           {renderActiveSection()}
         </div>
       </div>

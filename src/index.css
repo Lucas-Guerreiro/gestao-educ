@@ -48,11 +48,30 @@
   font-family: var(--font-family);
 }
 
+html {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   background: #f1f5f9;
   color: var(--text-main);
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   display: flex;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   overflow-x: hidden;
 }
 
@@ -285,6 +304,9 @@ body {
   box-shadow: var(--shadow-sm);
   z-index: 50;
   flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .topbar-title {
   font-size: 16px;
@@ -1711,6 +1733,12 @@ tr:nth-child(even) td.sticky-col-aluno {
 .shared-table-scroll-container {
   min-height: 460px;
   max-height: min(72vh, 650px);
+  min-width: 0 !important;
+  max-width: 100% !important;
+  display: block !important;
+  contain: inline-size;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
 }
 
 .shared-actions-bar {
@@ -1803,10 +1831,12 @@ tr:nth-child(even) td.sticky-col-aluno {
   max-width: 100%;
   min-width: 0;
   box-shadow: var(--shadow-sm);
+  contain: inline-size;
 }
 
 .notas-page-container {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -1828,6 +1858,9 @@ tr:nth-child(even) td.sticky-col-aluno {
   -webkit-overflow-scrolling: touch !important;
   width: 100% !important;
   max-width: 100% !important;
+  min-width: 0 !important;
+  display: block !important;
+  contain: inline-size;
   position: relative !important;
   border: 1px solid var(--border);
   border-radius: 12px;
