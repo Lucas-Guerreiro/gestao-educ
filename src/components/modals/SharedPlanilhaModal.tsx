@@ -56,12 +56,12 @@ const SharedPlanilhaModal: React.FC<SharedPlanilhaModalProps> = ({
 
   // Normalizar valor numérico ou qualitativo
   const parseValor = (valStr: string): number | null => {
-    if (!valStr || valStr.trim() === '' || valStr.trim() === '-') return null;
+    if (!valStr || valStr.trim() === '' || valStr.trim() === '-' || valStr.trim() === '—' || valStr.trim() === '-1') return null;
     const trimmed = valStr.trim().toLowerCase();
     const optMatch = OPCOES_QUALITATIVA.find(o => 
       o.key.toLowerCase() === trimmed || 
       o.label.toLowerCase() === trimmed ||
-      o.label.toLowerCase().startsWith(trimmed)
+      (trimmed.length >= 2 && o.label.toLowerCase().startsWith(trimmed))
     );
     if (optMatch && optMatch.valor !== null) {
       return optMatch.valor;

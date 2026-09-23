@@ -253,14 +253,14 @@ const NotasPage: React.FC<NotasPageProps> = ({
   // Obter nota do aluno para a atividade específica
   const obterNotaValor = (alunoId: string, atividadeId: string): string => {
     const registro = notas.find(n => n.alunoId === alunoId && n.atividadeId === atividadeId);
-    if (!registro || registro.nota === undefined) return '';
+    if (!registro || registro.nota === undefined || (registro.nota as any) === -1 || String(registro.nota) === '-1') return '';
     return String(registro.nota);
   };
 
   // Obter a opção qualitativa selecionada para o dropdown
   const obterOpcaoSelecionada = (alunoId: string, atividadeId: string): string => {
     const registro = notas.find(n => n.alunoId === alunoId && n.atividadeId === atividadeId);
-    if (!registro || registro.nota === undefined || (registro.nota as any) === -1) return '';
+    if (!registro || registro.nota === undefined || (registro.nota as any) === -1 || String(registro.nota) === '-1' || (registro.nota as any) === '') return '';
     if ((registro.nota as any) === 'faltou') return 'faltou';
     
     // Se a chave da opção foi gravada explicitamente
@@ -316,7 +316,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
   };
 
   const getNotaCellColors = (valorStr: string, celulaOculta: boolean) => {
-    if (celulaOculta || !valorStr || valorStr === '-1') {
+    if (celulaOculta || !valorStr || valorStr === '-1' || valorStr === '-' || valorStr === '—') {
       return { bg: '#fff', border: '#cbd5e1', text: 'var(--text-main)' };
     }
     if (valorStr === 'faltou') {
@@ -347,20 +347,29 @@ const NotasPage: React.FC<NotasPageProps> = ({
     const tipoAt = at ? at.tipo : '';
     const notaMax = obterNotaMaxima(tipoAt);
 
-    // Identificar se veio de uma opção qualitativa pré-definida
+    // Identificar se o usuário selecionou em branco / traço para limpar nota
     const trimmedVal = valorStr.trim().toLowerCase();
-    const optPredefinida = OPCOES_QUALITATIVA.find(o => 
-      o.key === valorStr || 
-      o.key.toLowerCase() === trimmedVal ||
-      o.label.toLowerCase() === trimmedVal ||
-      o.label.toLowerCase().startsWith(trimmedVal)
-    );
+    const isVazioOuLimpar = trimmedVal === '' || trimmedVal === '-' || trimmedVal === '—' || trimmedVal === '-1';
 
-    let isFaltou = valorStr === 'faltou' || !!optPredefinida?.isFaltou;
+    let optPredefinida = undefined;
+    if (!isVazioOuLimpar) {
+      optPredefinida = OPCOES_QUALITATIVA.find(o => 
+        o.key === valorStr || 
+        o.key.toLowerCase() === trimmedVal ||
+        o.label.toLowerCase() === trimmedVal ||
+        (trimmedVal.length >= 2 && o.label.toLowerCase().startsWith(trimmedVal))
+      );
+    }
+
+    let isFaltou = !isVazioOuLimpar && (valorStr === 'faltou' || !!optPredefinida?.isFaltou);
     let valor: number | null = null;
     let opcaoSalva: string | undefined = undefined;
 
-    if (optPredefinida) {
+    if (isVazioOuLimpar) {
+      valor = null;
+      opcaoSalva = '';
+      isFaltou = false;
+    } else if (optPredefinida) {
       if (optPredefinida.isFaltou) {
         isFaltou = true;
         valor = null;
@@ -372,9 +381,6 @@ const NotasPage: React.FC<NotasPageProps> = ({
     } else if (isFaltou) {
       valor = null;
       opcaoSalva = 'faltou';
-    } else if (valorStr.trim() === '') {
-      valor = null;
-      opcaoSalva = '';
     } else {
       valor = Number(valorStr.replace(',', '.'));
       // Se informou número manual, tenta associar à opção correspondente
@@ -1138,7 +1144,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                     transition: 'background 160ms ease, border-color 160ms ease'
                                   }}
                                 >
-                                  <option value="">—</option>
+                                  <option value="">-</option>
                                   {OPCOES_QUALITATIVA.map(opt => (
                                     <option key={opt.key} value={opt.key}>
                                       {opt.label}
