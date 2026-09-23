@@ -157,6 +157,12 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
 
     if (ativs.length === 0) return null;
 
+    const extrairNotaValida = (notaVal: number | string | undefined): number | null => {
+      if (notaVal === undefined || notaVal === 'faltou' || notaVal === '') return null;
+      const num = typeof notaVal === 'number' ? notaVal : Number(String(notaVal).replace(',', '.'));
+      return (!isNaN(num) && num >= 0) ? num : null;
+    };
+
     // 1. Trabalho (máx. 6)
     const trabalhos = ativs.filter(at => at.tipo === 'trabalho');
     let notaTrabalho = 0;
@@ -164,8 +170,9 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
       let soma = 0;
       trabalhos.forEach(at => {
         const reg = notas.find(n => n.alunoId === selectedAlunoId && n.atividadeId === at.id);
-        if (reg && reg.nota !== undefined && reg.nota >= 0) {
-          soma += reg.nota;
+        const valorNum = reg ? extrairNotaValida(reg.nota) : null;
+        if (valorNum !== null) {
+          soma += valorNum;
         }
       });
       notaTrabalho = soma / trabalhos.length;
@@ -178,8 +185,9 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
       let soma = 0;
       pluraals.forEach(at => {
         const reg = notas.find(n => n.alunoId === selectedAlunoId && n.atividadeId === at.id);
-        if (reg && reg.nota !== undefined && reg.nota >= 0) {
-          soma += reg.nota;
+        const valorNum = reg ? extrairNotaValida(reg.nota) : null;
+        if (valorNum !== null) {
+          soma += valorNum;
         }
       });
       notaPluraal = soma / pluraals.length;
@@ -192,11 +200,9 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
       let soma = 0;
       qualitativas.forEach(at => {
         const reg = notas.find(n => n.alunoId === selectedAlunoId && n.atividadeId === at.id);
-        if (reg && reg.nota !== undefined && (reg.nota as any) !== 'faltou' && (reg.nota as any) !== '') {
-          const num = Number(reg.nota);
-          if (!isNaN(num) && num >= 0) {
-            soma += num;
-          }
+        const valorNum = reg ? extrairNotaValida(reg.nota) : null;
+        if (valorNum !== null) {
+          soma += valorNum;
         }
       });
       notaQualitativa = soma / qualitativas.length;
@@ -206,7 +212,7 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
     let temAlgumaNota = false;
     ativs.forEach(at => {
       const reg = notas.find(n => n.alunoId === selectedAlunoId && n.atividadeId === at.id);
-      if (reg && reg.nota !== undefined && reg.nota >= 0) {
+      if (reg && extrairNotaValida(reg.nota) !== null) {
         temAlgumaNota = true;
       }
     });
@@ -238,8 +244,9 @@ const BoletimPage: React.FC<BoletimPageProps> = ({
     let totalBonus = 0;
     bonusAtivs.forEach(at => {
       const reg = notas.find(n => n.alunoId === selectedAlunoId && n.atividadeId === at.id);
-      if (reg && reg.nota !== undefined && reg.nota >= 0) {
-        totalBonus += reg.nota;
+      const valorNum = reg ? extrairNotaValida(reg.nota) : null;
+      if (valorNum !== null) {
+        totalBonus += valorNum;
       }
     });
 

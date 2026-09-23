@@ -20,12 +20,14 @@ const RelatorioPage: React.FC<RelatorioPageProps> = ({
   const totalAlunos = alunos.filter(a => a.ativo !== false).length;
 
   // Filtrar notas válidas (maiores ou iguais a zero)
-  const notasValidas = notas.filter(n => n.nota !== undefined && n.nota >= 0);
+  const notasValidas = notas
+    .map(n => typeof n.nota === 'number' ? n.nota : Number(n.nota))
+    .filter((n): n is number => !isNaN(n) && n >= 0);
   const totalNotasLancadas = notasValidas.length;
 
   const obterMediaGeral = () => {
     if (totalNotasLancadas === 0) return '—';
-    const soma = notasValidas.reduce((acc, curr) => acc + curr.nota, 0);
+    const soma = notasValidas.reduce((acc, curr) => acc + curr, 0);
     return (soma / totalNotasLancadas).toFixed(1);
   };
 
@@ -37,9 +39,9 @@ const RelatorioPage: React.FC<RelatorioPageProps> = ({
     let regulares = 0;
     let recuperacao = 0;
 
-    notasValidas.forEach(n => {
-      if (n.nota >= 7.0) aprovados++;
-      else if (n.nota >= 5.0) regulares++;
+    notasValidas.forEach(nota => {
+      if (nota >= 7.0) aprovados++;
+      else if (nota >= 5.0) regulares++;
       else recuperacao++;
     });
 

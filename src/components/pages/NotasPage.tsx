@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, Apontamento, Professor, OPCOES_QUALITATIVA } from '@/types';
 import ApontamentoSalaModal from '../modals/ApontamentoSalaModal';
 import CriarAtividadeModal from '../modals/CriarAtividadeModal';
 import ExportarPdfNotasModal from '../modals/ExportarPdfNotasModal';
@@ -257,6 +257,33 @@ const NotasPage: React.FC<NotasPageProps> = ({
     return String(registro.nota);
   };
 
+  // Obter a opção qualitativa selecionada para o dropdown
+  const obterOpcaoSelecionada = (alunoId: string, atividadeId: string): string => {
+    const registro = notas.find(n => n.alunoId === alunoId && n.atividadeId === atividadeId);
+    if (!registro || registro.nota === undefined || (registro.nota as any) === -1) return '';
+    if ((registro.nota as any) === 'faltou') return 'faltou';
+    
+    // Se a chave da opção foi gravada explicitamente
+    if (registro.opcao) {
+      return registro.opcao;
+    }
+    
+    const numNota = Number(registro.nota);
+    if (!isNaN(numNota)) {
+      if (numNota === 3) return '3';
+      if (numNota === 2.5) return '2.5';
+      if (numNota === 2) return '2';
+      if (numNota === 1.8) return '1.8';
+      if (numNota === 1.5) return '1.5';
+      if (numNota === 1) return '1';
+      if (numNota === 0.5) return '0.5';
+      if (numNota === 0) return '0';
+      return String(numNota);
+    }
+    
+    return String(registro.nota);
+  };
+
   const obterMediaQualitativa = (alunoId: string): string => {
     if (qualitativas.length === 0) return '—';
     
@@ -320,8 +347,43 @@ const NotasPage: React.FC<NotasPageProps> = ({
     const tipoAt = at ? at.tipo : '';
     const notaMax = obterNotaMaxima(tipoAt);
 
-    const isFaltou = valorStr === 'faltou';
-    const valor = (valorStr.trim() === '' || isFaltou) ? null : Number(valorStr.replace(',', '.'));
+    // Identificar se veio de uma opção qualitativa pré-definida
+    const trimmedVal = valorStr.trim().toLowerCase();
+    const optPredefinida = OPCOES_QUALITATIVA.find(o => 
+      o.key === valorStr || 
+      o.key.toLowerCase() === trimmedVal ||
+      o.label.toLowerCase() === trimmedVal ||
+      o.label.toLowerCase().startsWith(trimmedVal)
+    );
+
+    let isFaltou = valorStr === 'faltou' || !!optPredefinida?.isFaltou;
+    let valor: number | null = null;
+    let opcaoSalva: string | undefined = undefined;
+
+    if (optPredefinida) {
+      if (optPredefinida.isFaltou) {
+        isFaltou = true;
+        valor = null;
+        opcaoSalva = 'faltou';
+      } else {
+        valor = optPredefinida.valor;
+        opcaoSalva = optPredefinida.key;
+      }
+    } else if (isFaltou) {
+      valor = null;
+      opcaoSalva = 'faltou';
+    } else if (valorStr.trim() === '') {
+      valor = null;
+      opcaoSalva = '';
+    } else {
+      valor = Number(valorStr.replace(',', '.'));
+      // Se informou número manual, tenta associar à opção correspondente
+      const optMatch = OPCOES_QUALITATIVA.find(o => o.valor !== null && o.valor === valor && !o.key.includes('_'));
+      if (optMatch) {
+        opcaoSalva = optMatch.key;
+      }
+    }
+
     if (!isFaltou && valor !== null && (isNaN(valor) || valor < 0 || valor > notaMax)) {
       alert(`Por favor, informe uma nota válida entre 0 e ${notaMax} para atividades do tipo ${tipoAt.toUpperCase()}.`);
       return;
@@ -342,7 +404,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
           turmaId,
           materiaId,
           bimestreId,
-          nota: 'faltou'
+          nota: 'faltou',
+          opcao: 'faltou'
         });
       } else if (valor === null) {
         await setDoc(docRef, {
@@ -351,7 +414,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
           turmaId,
           materiaId,
           bimestreId,
-          nota: -1 // -1 representa apagado
+          nota: -1, // -1 representa apagado
+          opcao: ''
         });
       } else {
         await setDoc(docRef, {
@@ -360,7 +424,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
           turmaId,
           materiaId,
           bimestreId,
-          nota: valor
+          nota: valor,
+          opcao: opcaoSalva || ''
         });
       }
       setSyncStatus('ok');
@@ -591,7 +656,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
                   const colors = badgeColor(ativ.tipo);
                   
                   const totalAlunos = alunos.filter(a => String(a.turmaId) === ativ.turmaId && a.ativo !== false).length;
-                  const notasLancadas = notas.filter(n => n.atividadeId === ativ.id && n.nota !== undefined && n.nota >= 0).length;
+                  const notasLancadas = notas.filter(n => n.atividadeId === ativ.id && n.nota !== undefined && (n.nota === 'faltou' || (typeof n.nota === 'number' ? n.nota >= 0 : Number(n.nota) >= 0))).length;
                   const progressoPorcentagem = totalAlunos > 0 ? Math.round((notasLancadas / totalAlunos) * 100) : 0;
 
                   return (
@@ -902,7 +967,8 @@ const NotasPage: React.FC<NotasPageProps> = ({
                         style={{ 
                           padding: '12px 10px', 
                           textAlign: 'center', 
-                          width: '120px',
+                          width: at.tipo === 'qualitativa' && modoQualitativa === 'select' ? '160px' : '120px',
+                          minWidth: at.tipo === 'qualitativa' && modoQualitativa === 'select' ? '160px' : '120px',
                           position: 'sticky',
                           top: 0,
                           zIndex: 10,
@@ -1032,11 +1098,11 @@ const NotasPage: React.FC<NotasPageProps> = ({
 
                         return (
                           <td key={at.id} style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
-                            <div style={{ position: 'relative', display: 'inline-block', width: '75px' }}>
+                            <div style={{ position: 'relative', display: 'inline-block', width: at.tipo === 'qualitativa' && modoQualitativa === 'select' ? '150px' : '75px' }}>
                               {at.tipo === 'qualitativa' && modoQualitativa === 'select' ? (
                                 <select
                                   id={`input-nota-${alunoIdx}-${atIdx}`}
-                                  value={notaVal}
+                                  value={obterOpcaoSelecionada(aluno.id, at.id)}
                                   disabled={celulaOculta || atExpirada}
                                   onChange={(e) => {
                                     if (!celulaOculta && !atExpirada) {
@@ -1046,23 +1112,23 @@ const NotasPage: React.FC<NotasPageProps> = ({
                                   style={{ 
                                     width: '100%', 
                                     textAlign: 'center', 
-                                    padding: '6px', 
-                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#93c5fd' : (notaVal === '2' ? '#fcd34d' : notaColors.border))}`,
+                                    padding: '6px 4px', 
+                                    border: `1px solid ${atExpirada ? 'var(--border)' : (notaVal === 'faltou' ? '#93c5fd' : notaColors.border)}`,
                                     borderRadius: '8px', 
-                                    fontSize: '11.5px', 
+                                    fontSize: '11px', 
                                     fontWeight: 700,
-                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#dbeafe' : (notaVal === '2' ? '#fef3c7' : (notaVal === '' ? '#fff' : '#dcfce7'))),
-                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#1e40af' : (notaVal === '2' ? '#92400e' : (notaVal === '' ? '#64748b' : '#166534'))),
+                                    background: atExpirada ? '#f1f5f9' : (notaVal === 'faltou' ? '#dbeafe' : (notaVal === '' ? '#fff' : notaColors.bg)),
+                                    color: atExpirada ? '#94a3b8' : (notaVal === 'faltou' ? '#1e40af' : (notaVal === '' ? '#64748b' : notaColors.text)),
                                     cursor: (celulaOculta || atExpirada) ? 'not-allowed' : 'pointer',
                                     transition: 'background 160ms ease, border-color 160ms ease'
                                   }}
                                 >
                                   <option value="">—</option>
-                                  <option value={String(at.peso)}>Sim ({at.peso})</option>
-                                  <option value={String(at.peso / 2)}>Parc ({at.peso / 2})</option>
-                                  <option value="2">Atrasado (2)</option>
-                                  <option value="0">Não (0)</option>
-                                  <option value="faltou">Faltou</option>
+                                  {OPCOES_QUALITATIVA.map(opt => (
+                                    <option key={opt.key} value={opt.key}>
+                                      {opt.label}
+                                    </option>
+                                  ))}
                                 </select>
                               ) : (
                                 <input 

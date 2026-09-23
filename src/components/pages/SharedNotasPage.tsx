@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { doc, setDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola } from '@/types';
+import { Aluno, Turma, Materia, Bimestre, Atividade, Nota, Escola, OPCOES_QUALITATIVA } from '@/types';
 import SharedPlanilhaModal from '../modals/SharedPlanilhaModal';
 import ExportarPdfNotasModal from '../modals/ExportarPdfNotasModal';
 
@@ -165,6 +165,32 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
     return registro.nota === -1 ? '' : String(registro.nota);
   };
 
+  // Obter a opção qualitativa selecionada para o dropdown
+  const obterOpcaoSelecionada = (alunoId: string): string => {
+    const registro = notas.find(n => n.alunoId === alunoId && n.atividadeId === currentAtividadeId);
+    if (!registro || registro.nota === undefined || (registro.nota as any) === -1) return '';
+    if ((registro.nota as any) === 'faltou') return 'faltou';
+    
+    if (registro.opcao) {
+      return registro.opcao;
+    }
+    
+    const numNota = Number(registro.nota);
+    if (!isNaN(numNota)) {
+      if (numNota === 3) return '3';
+      if (numNota === 2.5) return '2.5';
+      if (numNota === 2) return '2';
+      if (numNota === 1.8) return '1.8';
+      if (numNota === 1.5) return '1.5';
+      if (numNota === 1) return '1';
+      if (numNota === 0.5) return '0.5';
+      if (numNota === 0) return '0';
+      return String(numNota);
+    }
+    
+    return String(registro.nota);
+  };
+
   const obterNotaMaxima = (tipo: string): number => {
     if (tipo === 'trabalho') return 6;
     if (tipo === 'pluraal') return 1;
@@ -180,8 +206,11 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
   };
 
   const getNotaCellColors = (valorStr: string) => {
-    if (!valorStr) {
+    if (!valorStr || valorStr === '-1') {
       return { bg: '#fff', border: '#cbd5e1', text: 'var(--text-main)' };
+    }
+    if (valorStr === 'faltou') {
+      return { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' };
     }
 
     const valor = Number(valorStr.replace(',', '.'));
@@ -205,9 +234,42 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
     if (!atividade || !selectedTurmaId) return;
 
     const notaMax = obterNotaMaxima(atividade.tipo);
-    const valor = valorStr.trim() === '' ? null : Number(valorStr.replace(',', '.'));
+    const trimmedVal = valorStr.trim().toLowerCase();
+    const optPredefinida = OPCOES_QUALITATIVA.find(o => 
+      o.key === valorStr || 
+      o.key.toLowerCase() === trimmedVal ||
+      o.label.toLowerCase() === trimmedVal ||
+      o.label.toLowerCase().startsWith(trimmedVal)
+    );
 
-    if (valor !== null && (isNaN(valor) || valor < 0 || valor > notaMax)) {
+    let isFaltou = valorStr === 'faltou' || !!optPredefinida?.isFaltou;
+    let valor: number | null = null;
+    let opcaoSalva: string | undefined = undefined;
+
+    if (optPredefinida) {
+      if (optPredefinida.isFaltou) {
+        isFaltou = true;
+        valor = null;
+        opcaoSalva = 'faltou';
+      } else {
+        valor = optPredefinida.valor;
+        opcaoSalva = optPredefinida.key;
+      }
+    } else if (isFaltou) {
+      valor = null;
+      opcaoSalva = 'faltou';
+    } else if (valorStr.trim() === '') {
+      valor = null;
+      opcaoSalva = '';
+    } else {
+      valor = Number(valorStr.replace(',', '.'));
+      const optMatch = OPCOES_QUALITATIVA.find(o => o.valor !== null && o.valor === valor && !o.key.includes('_'));
+      if (optMatch) {
+        opcaoSalva = optMatch.key;
+      }
+    }
+
+    if (!isFaltou && valor !== null && (isNaN(valor) || valor < 0 || valor > notaMax)) {
       alert(`Por favor, informe uma nota válida entre 0 e ${notaMax} para atividades do tipo ${atividade.tipo.toUpperCase()}.`);
       return;
     }
@@ -220,14 +282,25 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
 
     try {
       const docRef = doc(db, 'notas', docId);
-      if (valor === null) {
+      if (isFaltou) {
         await setDoc(docRef, {
           alunoId,
           atividadeId: currentAtividadeId,
           turmaId: selectedTurmaId,
           materiaId: atividade.materiaId,
           bimestreId: atividade.bimestreId,
-          nota: -1 // representa apagado
+          nota: 'faltou',
+          opcao: 'faltou'
+        });
+      } else if (valor === null) {
+        await setDoc(docRef, {
+          alunoId,
+          atividadeId: currentAtividadeId,
+          turmaId: selectedTurmaId,
+          materiaId: atividade.materiaId,
+          bimestreId: atividade.bimestreId,
+          nota: -1, // representa apagado
+          opcao: ''
         });
       } else {
         await setDoc(docRef, {
@@ -236,7 +309,8 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
           turmaId: selectedTurmaId,
           materiaId: atividade.materiaId,
           bimestreId: atividade.bimestreId,
-          nota: valor
+          nota: valor,
+          opcao: opcaoSalva || ''
         });
       }
       setSyncStatus('ok');
@@ -590,47 +664,82 @@ const SharedNotasPage: React.FC<SharedNotasPageProps> = ({
                         </td>
                         
                         <td style={{ padding: '4px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }}>
-                          <div style={{ position: 'relative', display: 'inline-block', width: '90px' }}>
-                            <input 
-                              key={`${aluno.id}_${notaVal}`}
-                              id={`shared-input-nota-${idx}`}
-                              defaultValue={notaVal}
-                              disabled={edicaoBloqueada || atividadeExpirada}
-                              onPaste={(e) => handleTablePaste(e, idx)}
-                              onBlur={(e) => {
-                                if (!atividadeExpirada) {
-                                  salvarNota(aluno.id, e.target.value);
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const proximoInput = document.getElementById(`shared-input-nota-${idx + 1}`);
-                                  if (proximoInput) {
-                                    (proximoInput as HTMLInputElement).focus();
-                                    (proximoInput as HTMLInputElement).select();
-                                  } else {
-                                    (e.target as HTMLInputElement).blur();
+                          <div style={{ position: 'relative', display: 'inline-block', width: atividade.tipo === 'qualitativa' ? '155px' : '90px' }}>
+                            {atividade.tipo === 'qualitativa' ? (
+                              <select
+                                id={`shared-input-nota-${idx}`}
+                                value={obterOpcaoSelecionada(aluno.id)}
+                                disabled={edicaoBloqueada || atividadeExpirada}
+                                onChange={(e) => {
+                                  if (!atividadeExpirada) {
+                                    salvarNota(aluno.id, e.target.value);
                                   }
-                                }
-                              }}
-                              placeholder={atividadeExpirada ? '🔒 Expirado' : (edicaoBloqueada ? '—' : `0-${obterNotaMaxima(atividade.tipo)}`)}
-                              style={{ 
-                                width: '100%', 
-                                textAlign: 'center', 
-                                padding: '4px 8px', 
-                                height: '32px',
-                                border: `1px solid ${atividadeExpirada ? '#fca5a5' : (edicaoBloqueada ? 'var(--border)' : notaColors.border)}`,
-                                borderRadius: '8px', 
-                                fontSize: '13px', 
-                                fontWeight: 700,
-                                background: atividadeExpirada ? '#fff1f2' : (edicaoBloqueada ? '#f1f5f9' : notaColors.bg),
-                                color: atividadeExpirada ? '#e11d48' : (edicaoBloqueada ? '#94a3b8' : notaColors.text),
-                                outline: 'none',
-                                cursor: (atividadeExpirada || edicaoBloqueada) ? 'not-allowed' : 'text',
-                                transition: 'background 160ms ease, border-color 160ms ease'
-                              }}
-                            />
+                                }}
+                                style={{ 
+                                  width: '100%', 
+                                  textAlign: 'center', 
+                                  padding: '4px 6px', 
+                                  height: '32px',
+                                  border: `1px solid ${atividadeExpirada ? '#fca5a5' : (edicaoBloqueada ? 'var(--border)' : (notaVal === 'faltou' ? '#93c5fd' : notaColors.border))}`,
+                                  borderRadius: '8px', 
+                                  fontSize: '11.5px', 
+                                  fontWeight: 700,
+                                  background: atividadeExpirada ? '#fff1f2' : (edicaoBloqueada ? '#f1f5f9' : (notaVal === 'faltou' ? '#dbeafe' : (notaVal === '' ? '#fff' : notaColors.bg))),
+                                  color: atividadeExpirada ? '#e11d48' : (edicaoBloqueada ? '#94a3b8' : (notaVal === 'faltou' ? '#1e40af' : (notaVal === '' ? '#64748b' : notaColors.text))),
+                                  outline: 'none',
+                                  cursor: (atividadeExpirada || edicaoBloqueada) ? 'not-allowed' : 'pointer',
+                                  transition: 'background 160ms ease, border-color 160ms ease'
+                                }}
+                              >
+                                <option value="">—</option>
+                                {OPCOES_QUALITATIVA.map(opt => (
+                                  <option key={opt.key} value={opt.key}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input 
+                                key={`${aluno.id}_${notaVal}`}
+                                id={`shared-input-nota-${idx}`}
+                                defaultValue={notaVal}
+                                disabled={edicaoBloqueada || atividadeExpirada}
+                                onPaste={(e) => handleTablePaste(e, idx)}
+                                onBlur={(e) => {
+                                  if (!atividadeExpirada) {
+                                    salvarNota(aluno.id, e.target.value);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const proximoInput = document.getElementById(`shared-input-nota-${idx + 1}`);
+                                    if (proximoInput) {
+                                      (proximoInput as HTMLInputElement).focus();
+                                      (proximoInput as HTMLInputElement).select();
+                                    } else {
+                                      (e.target as HTMLInputElement).blur();
+                                    }
+                                  }
+                                }}
+                                placeholder={atividadeExpirada ? '🔒 Expirado' : (edicaoBloqueada ? '—' : `0-${obterNotaMaxima(atividade.tipo)}`)}
+                                style={{ 
+                                  width: '100%', 
+                                  textAlign: 'center', 
+                                  padding: '4px 8px', 
+                                  height: '32px',
+                                  border: `1px solid ${atividadeExpirada ? '#fca5a5' : (edicaoBloqueada ? 'var(--border)' : notaColors.border)}`,
+                                  borderRadius: '8px', 
+                                  fontSize: '13px', 
+                                  fontWeight: 700,
+                                  background: atividadeExpirada ? '#fff1f2' : (edicaoBloqueada ? '#f1f5f9' : notaColors.bg),
+                                  color: atividadeExpirada ? '#e11d48' : (edicaoBloqueada ? '#94a3b8' : notaColors.text),
+                                  outline: 'none',
+                                  cursor: (atividadeExpirada || edicaoBloqueada) ? 'not-allowed' : 'text',
+                                  transition: 'background 160ms ease, border-color 160ms ease'
+                                }}
+                              />
+                            )}
                             {isSaving && (
                               <div style={{ position: 'absolute', top: '2px', right: '2px', fontSize: '9px' }}>⏳</div>
                             )}

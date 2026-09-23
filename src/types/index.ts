@@ -197,8 +197,29 @@ export interface Nota {
   materiaId: string;
   /** @fk Chave Estrangeira Redundante -> Bimestre.id | @cascade ON DELETE RESTRICT */
   bimestreId: string;
-  nota: number;
+  nota: number | string;
+  opcao?: string;
 }
+
+export interface OpcaoNotaQualitativa {
+  key: string;
+  label: string;
+  valor: number | null;
+  isFaltou?: boolean;
+}
+
+export const OPCOES_QUALITATIVA: OpcaoNotaQualitativa[] = [
+  { key: '3', label: 'Sim (3.0)', valor: 3 },
+  { key: '2.5', label: 'Parcial (2.5)', valor: 2.5 },
+  { key: '2', label: 'Parcial (2.0)', valor: 2 },
+  { key: '1.8', label: 'Parcial (1.8)', valor: 1.8 },
+  { key: 'ajudou_2', label: 'Ajudou (2.0)', valor: 2 },
+  { key: '1.5', label: 'Atrasado (1.5)', valor: 1.5 },
+  { key: '1', label: 'Atrasado e Ajudado (1.0)', valor: 1 },
+  { key: '0.5', label: 'Atrasado e Parcial (0,5)', valor: 0.5 },
+  { key: '0', label: 'Não (0)', valor: 0 },
+  { key: 'faltou', label: 'Faltou', valor: null, isFaltou: true },
+];
 
 export interface AdminConfig {
   senha?: string;

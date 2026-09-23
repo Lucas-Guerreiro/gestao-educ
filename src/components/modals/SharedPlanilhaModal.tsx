@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import * as XLSX from 'xlsx';
-import { Aluno, Atividade, Turma } from '@/types';
+import { Aluno, Atividade, Turma, OPCOES_QUALITATIVA } from '@/types';
 
 interface SharedPlanilhaModalProps {
   atividade: Atividade;
@@ -54,9 +54,18 @@ const SharedPlanilhaModal: React.FC<SharedPlanilhaModalProps> = ({
     }));
   };
 
-  // Normalizar valor numérico
+  // Normalizar valor numérico ou qualitativo
   const parseValor = (valStr: string): number | null => {
     if (!valStr || valStr.trim() === '' || valStr.trim() === '-') return null;
+    const trimmed = valStr.trim().toLowerCase();
+    const optMatch = OPCOES_QUALITATIVA.find(o => 
+      o.key.toLowerCase() === trimmed || 
+      o.label.toLowerCase() === trimmed ||
+      o.label.toLowerCase().startsWith(trimmed)
+    );
+    if (optMatch && optMatch.valor !== null) {
+      return optMatch.valor;
+    }
     const n = Number(valStr.trim().replace(',', '.'));
     return isNaN(n) ? null : n;
   };
