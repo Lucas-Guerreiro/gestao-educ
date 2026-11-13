@@ -48,6 +48,21 @@ const RankingPage: React.FC<RankingPageProps> = ({
           return (!isNaN(num) && num >= 0) ? num : null;
         };
 
+        // 0. Prova / Exame
+        const provas = ativs.filter(at => at.tipo === 'prova');
+        let notaProva = 0;
+        if (provas.length > 0) {
+          let soma = 0;
+          provas.forEach(at => {
+            const reg = notas.find(n => String(n.alunoId) === String(alunoId) && String(n.atividadeId) === String(at.id));
+            const valorNum = reg ? extrairNotaValida(reg.nota) : null;
+            if (valorNum !== null) {
+              soma += valorNum;
+            }
+          });
+          notaProva = soma / provas.length;
+        }
+
         // 1. Trabalho (máx. 6)
         const trabalhos = ativs.filter(at => at.tipo === 'trabalho');
         let notaTrabalho = 0;
@@ -134,7 +149,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
             }
           });
 
-          const mediaBase = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
+          const mediaBase = Math.min(notaProva + notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
           const mediaBimestralFinal = Math.min(mediaBase + totalBonus, 10.0);
 
           somaMediasBimestrais += mediaBimestralFinal;

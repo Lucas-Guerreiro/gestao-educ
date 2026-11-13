@@ -443,9 +443,23 @@ const NotasPage: React.FC<NotasPageProps> = ({
     }
   };
 
-  // Calcular média bimestral do aluno baseado na soma direta das médias de Trabalho, PLURAAL e Qualitativa
+  // Calcular média bimestral do aluno baseado na soma direta das médias de Prova, Trabalho, PLURAAL e Qualitativa
   const calcularMediaAluno = (alunoId: string) => {
     if (atividadesFiltradas.length === 0) return '—';
+
+    // 0. Prova / Exame - Só soma se não estiver oculto
+    const provas = atividadesFiltradas.filter(at => at.tipo === 'prova');
+    let notaProva = 0;
+    if (provas.length > 0 && !notasOcultas) {
+      let soma = 0;
+      provas.forEach(at => {
+        const notaStr = obterNotaValor(alunoId, at.id);
+        if (notaStr !== '' && Number(notaStr) >= 0) {
+          soma += Number(notaStr);
+        }
+      });
+      notaProva = soma / provas.length;
+    }
 
     // 1. Trabalho (máx. 6) - Só soma se não estiver oculto
     const trabalhos = atividadesFiltradas.filter(at => at.tipo === 'trabalho');
@@ -530,7 +544,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
       }
     });
 
-    const mediaBase = Math.min(notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
+    const mediaBase = Math.min(notaProva + notaTrabalho + notaPluraal + notaQualitativa + pontosExtras, 10.0);
     const mediaFinal = Math.min(mediaBase + totalBonus, 10.0);
     return mediaFinal.toFixed(1);
   };
