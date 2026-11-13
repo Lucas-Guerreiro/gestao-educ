@@ -63,7 +63,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
           notaProva = soma / provas.length;
         }
 
-        // 1. Trabalho (máx. 6)
+        // 1. Trabalho (máx. 6) - Adiciona os pontos diretamente (soma sem dividir)
         const trabalhos = ativs.filter(at => at.tipo === 'trabalho');
         let notaTrabalho = 0;
         if (trabalhos.length > 0) {
@@ -75,7 +75,7 @@ const RankingPage: React.FC<RankingPageProps> = ({
               soma += valorNum;
             }
           });
-          notaTrabalho = soma / trabalhos.length;
+          notaTrabalho = soma;
         }
 
         // 2. PLURAAL (máx. 1)

@@ -461,7 +461,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
       notaProva = soma / provas.length;
     }
 
-    // 1. Trabalho (máx. 6) - Só soma se não estiver oculto
+    // 1. Trabalho (máx. 6) - Adiciona os pontos diretamente (soma sem dividir)
     const trabalhos = atividadesFiltradas.filter(at => at.tipo === 'trabalho');
     let notaTrabalho = 0;
     if (trabalhos.length > 0 && !notasOcultas) {
@@ -472,7 +472,7 @@ const NotasPage: React.FC<NotasPageProps> = ({
           soma += Number(notaStr);
         }
       });
-      notaTrabalho = soma / trabalhos.length;
+      notaTrabalho = soma;
     }
 
     // 2. PLURAAL (máx. 1) - Só soma se não estiver oculto
